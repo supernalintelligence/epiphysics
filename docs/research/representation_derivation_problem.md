@@ -8,7 +8,7 @@
 ## The Real Question
 
 The framework claims:
-1. Optimal representations have simple mechanical structure (sparse T^i_j, high symmetry)
+1. The representations that survive are biased toward simple mechanical structure (sparse T^i_j, high symmetry)
 2. The right level of description is where causal structure is sparse
 
 **But we never derive which representation is optimal.** We just assume someone hands us X^i and T^i_j, then we analyze it.
@@ -32,7 +32,7 @@ If not, we're just relabeling whatever representation domain science already use
 - Prediction of future states
 
 ### The Criterion:
-The Representational Efficiency Conjecture says X* minimizes predictive cost:
+The Representational Efficiency Conjecture grounds the criterion in survival: a representation remains extant when its basin clears its environment's thresholds. The surviving representations are biased toward (but not identical with) the ideal cost-minimizer
 
 $$X^* = \underset{X \in \mathcal{R}}{\operatorname{argmin}}\; C(X, \varepsilon)$$
 
@@ -73,7 +73,7 @@ $$X^* = \underset{X \in \mathcal{R}}{\operatorname{argmin}}\; C(X, \varepsilon)$
 
 If epimechanics just rediscovers Information Bottleneck, it adds nothing.
 
-**The claim is stronger:** The optimal representation has *mechanical* structure — Lagrangian, sparse coupling, conserved quantities.
+**The claim is stronger:** the representations that survive are biased toward *mechanical* structure — Lagrangian, sparse coupling, conserved quantities.
 
 **Test:** Given raw data, can we:
 1. Find the representation that minimizes predictive cost (this is Information Bottleneck)
@@ -107,7 +107,7 @@ If epimechanics just rediscovers Information Bottleneck, it adds nothing.
 
 **What this tests:**
 - Does the learned representation *automatically* have mechanical structure?
-- If yes, epimechanics is describing something real about optimal representations
+- If yes, epimechanics is describing something real about the representations that survive
 - If no, the mechanical structure was imposed, not discovered
 
 ---
@@ -217,7 +217,7 @@ The framework is useful if:
 - It suggests where to look for structure
 
 The framework is *true* only if:
-- Optimal representations actually have Lagrangian structure
+- The representations that survive actually carry Lagrangian structure
 - This can be demonstrated, not just assumed
 
 We don't know if it's true. That's what the empirical program needs to find out.

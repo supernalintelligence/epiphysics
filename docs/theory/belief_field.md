@@ -141,7 +141,7 @@ Causal emergence and computation-as-renormalization are complementary but not id
 
 ### Connection to Representational Efficiency
 
-The [Representational Efficiency principle](./05_ontology_and_open_questions.md) says the optimal representation $X^*$ minimizes predictive cost $C(X, \varepsilon)$. This is a consequence, not a presupposition, of the computation definition. The coarse-graining is chosen by scale (spatial, temporal, or information-theoretic resolution) — not by what maximizes computation. Once you fix the scale, you discover which DOF survive. The Representational Efficiency principle then identifies the *optimal* scale: the one where the surviving DOF are maximally predictive per bit. This breaks the apparent circularity: scale determines what survives; Representational Efficiency determines which scale is optimal.
+The [Representational Efficiency principle](./05_ontology_and_open_questions.md) says the representations that remain extant predict at near-minimal cost $C(X, \varepsilon)$ (the surviving set, biased toward the ideal cost-minimizer $X^*$ rather than coinciding with it). This is a consequence, not a presupposition, of the computation definition. The coarse-graining is chosen by scale (spatial, temporal, or information-theoretic resolution) — not by what maximizes computation. Once you fix the scale, you discover which DOF survive. The Representational Efficiency principle then identifies the *optimal* scale: the one where the surviving DOF are maximally predictive per bit. This breaks the apparent circularity: scale determines what survives; Representational Efficiency determines which scale is optimal.
 
 ### What this adds to existing frameworks
 
@@ -336,7 +336,7 @@ Collective belief fields have properties that individual ones don't:
 
 ## The Representational Efficiency Connection
 
-The [Representational Efficiency principle](./05_ontology_and_open_questions.md) says the optimal representation $X^*$ minimizes predictive cost. Applied to belief fields: the optimal $\hat{V}$ is the one that predicts $V$ at minimal computational cost.
+The [Representational Efficiency principle](./05_ontology_and_open_questions.md) says the representations that remain extant predict at near-minimal cost (the surviving set, biased toward the ideal cost-minimizer $X^*$). Applied to belief fields: the $\hat{V}$ that persists is the one that predicts $V$ at low enough computational cost to be sustained.
 
 This means: entities under computational constraints (which is all entities) cannot maintain a perfect $\hat{V}$. They must compress. The structure of that compression — which futures they track and which they ignore — determines their vulnerability profile. An entity that compresses by ignoring rare events is efficient in normal times and catastrophically wrong in crises. An entity that tracks rare events pays a constant computational overhead for robustness it rarely needs.
 
@@ -421,6 +421,6 @@ What differs is the resolution, the horizon, the update speed, and the computati
 | Consciousness $C$ | [Part 3](./03_intelligence_consciousness_agency.md) | Determines the scope of $\hat{V}$ — how much of state space the entity models |
 | Belief state $b$ | [Decision theory](../applications/decision_and_trajectory.md) | The point-estimate version of $\hat{V}$ at the current state |
 | Potential $V(X)$ | [Part 1](./01_generalized_mechanics.md) | The actual landscape $\hat{V}$ is trying to approximate |
-| Representational Efficiency | [Part 5](./05_ontology_and_open_questions.md) | Optimal $\hat{V}$ minimizes predictive cost |
+| Representational Efficiency | [Part 5](./05_ontology_and_open_questions.md) | The $\hat{V}$ that remains extant predicts at near-minimal cost |
 | Representational manipulation | [Research note](../research/representational_manipulation.md) | Deliberately distorting $\hat{V}_{\text{collective}}$ |
 | Free Energy Principle | [Part 1, Section 4b](./01_generalized_mechanics.md) | Organisms minimize $\Delta V$ by updating $\hat{V}$ toward $V$ |

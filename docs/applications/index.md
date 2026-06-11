@@ -112,7 +112,7 @@ Applications to cultures, civilizations, existential risk, and the long-term dyn
 - Soul $\mathbf{R}(E,t)$ and non-local time $T_{\text{nonlocal}}$ (civilizational legacy)
 - Meta-entity dynamics (nations, religions, ideologies as entities with mass, momentum, coupling)
 - Thermodynamic limits on civilizational efficiency
-- The Representational Efficiency principle (optimal representations predict at minimal computational cost)
+- The Representational Efficiency principle (the representations that remain extant predict at near-minimal computational cost)
 
 ---
 

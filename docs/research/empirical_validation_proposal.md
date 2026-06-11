@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Epimechanics claims that optimal representations of dynamical systems have Lagrangian structure — sparse coupling, conserved quantities, and low-dimensional state spaces. This proposal outlines a research program to test this claim empirically by connecting three existing research directions:
+Epimechanics claims that the representations of dynamical systems which survive (remain extant) are biased toward Lagrangian structure — sparse coupling, conserved quantities, and low-dimensional state spaces. This proposal outlines a research program to test this claim empirically by connecting three existing research directions:
 
 1. **Causal Representation Learning** — discovering causal variables from raw observations
 2. **Physics-Informed Machine Learning** — learning physical structure (Hamiltonians, Lagrangians) from data
@@ -22,9 +22,9 @@ The central hypothesis: these three approaches converge on the same representati
 
 ### Claim 1: Representational Efficiency ↔ Lagrangian Structure
 
-**Statement:** The representation that minimizes predictive cost also has maximal Lagrangian symmetry and sparse coupling.
+**Statement:** The representations that survive an environment's thresholds (the surviving set, biased toward minimal predictive cost) also tend to have maximal Lagrangian symmetry and sparse coupling.
 
-**Why this matters:** If true, finding good representations (an ML problem) is equivalent to finding physical structure (a physics problem). This would explain why neural networks trained on physical systems often discover conserved quantities implicitly.
+**Why this matters:** If true, finding efficient representations (an ML problem) is equivalent to finding physical structure (a physics problem). This would explain why neural networks trained on physical systems often discover conserved quantities implicitly.
 
 **How to test:** 
 - Learn representations from data using information-theoretic criteria (rate-distortion, MDL)
@@ -361,7 +361,7 @@ Phase 2: Systems with unknown structure
 ## Part 7: Connections to Broader Research
 
 ### AI Alignment and Interpretability
-If good representations have Lagrangian structure, this suggests:
+If efficient representations have Lagrangian structure, this suggests:
 - Neural networks that generalize well have discoverable conserved quantities
 - Interpretability might come from finding the "Lagrangian" of a trained model
 - Could inform how to build models with known conservation properties

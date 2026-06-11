@@ -26,6 +26,10 @@ A model of state — the map. Can model actual state, potential state, or any st
 
 How well a representation $X$ tracks a target state $x \in \mathcal{X}$: $\mathcal{F}(X, x) = 1 - d(X, x)$, where $d$ is an appropriate distance or divergence. When $X$ perfectly captures $x$, $\mathcal{F} \to 1$. When $X$ is maximally uninformative, $\mathcal{F} \to 0$. Predictive accuracy scales with fidelity given sufficient computation. Defined in [Part 1: Generalized Mechanics](./01_generalized_mechanics.md).
 
+## Extant Representation
+
+A representation that **remains in existence** in a given environment: its auto-causal loop clears that environment's thresholds, so its stability basin depth $\Delta V$ exceeds the perturbation $\Delta E$ the environment delivers. Extant-ness (survival) is the existence criterion that replaces value-laden talk of a "good" representation; it is measured as persistence ($\rho_{\text{ac}}$ under forcing), not graded against worth. The representations extant in an environment $\mathcal{E}$ form the **surviving set** $\mathcal{S}(\mathcal{E}) = \{X : \Delta V(X) > \Delta E_{\mathcal{E}}\}$, a viability set rather than a unique optimum. The **Representational Efficiency Conjecture** holds that members of $\mathcal{S}(\mathcal{E})$ are biased toward simple mechanical structure (maximal symmetry, sparse coupling tensor, minimal $\dim S$), because under a finite budget that efficiency is what funds the basin. The selection mechanism is the good regulator theorem (to persist is to model the environment) plus the thermodynamics of prediction (modeling it inefficiently wastes the budget). Efficiency is the selected-for trait, specifiable independently of survival; existence is the criterion. Developed in [Part 0: Prelude](./00_prelude.md) and [Part 5: Ontology and Open Questions](./05_ontology_and_open_questions.md).
+
 ## Causor
 
 A **causor** is *that-which-causes*: a higher-level causal mechanism/structure (often loop/operator-like) that produces state change. In Epimechanics, it is the functional middle term in the triad:

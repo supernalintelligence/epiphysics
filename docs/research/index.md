@@ -22,9 +22,10 @@ tts:
 
 ## Current Focus
 
-<<<<<<< Updated upstream
 ### Grounding & Validation
-=======
+
+Key documents:
+
 - [Representational Efficiency Paper](./paper_representational_efficiency.md) — standalone academic paper with theorem, proof, and empirical testing program
 - [Rate-Distortion → Lagrangian Structure](./rate_distortion_lagrangian.md) — the central open problem: does information-theoretic optimality imply Lagrangian structure?
 - [Representational Manipulation](./representational_manipulation.md) — the thermodynamics of disinformation
@@ -36,10 +37,10 @@ tts:
 - [Predictive Representation Dynamics](./predictive_representation_dynamics.md) — prompt-as-Lagrangian, evolving representation enforcers, asymmetric coupling, state transitions, embedding-over-graphs, and self-referential meta-optimization
 - [TP Bridge Experiments — Plain English Explainer](./tp_bridge_explainer_plain_english.md) — what the current TP bridge experiments are testing, what charts mean, and how this maps to Epimechanics
 - [TP Bridge — Architecture-Realistic Trace Update](./tp_bridge_architecture_trace_update.md) — extension from toy runs to architecture-like trace experiments with preserved metric contract
->>>>>>> Stashed changes
 
 | Document | Status | Description |
 |----------|--------|-------------|
+| [Gap Analysis: Critical Path to Universal Prediction](./gap_analysis_universal_prediction_2026-06-10.md) | Active | The dependency tower, the keystone gap, and the one experiment that discriminates it |
 | [Assessment & Next Steps](./ASSESSMENT_AND_NEXT_STEPS_2026-03-30.md) | Active | Current priorities and honest assessment |
 | [Autoresearch Connection](./autoresearch_autocausal_connection.md) | Core | Karpathy's autoresearch as auto-causal loop pattern |
 | [Carrying Capacity and X](./carrying_capacity_and_X.md) | Core | Model capacity bounded by data structure |

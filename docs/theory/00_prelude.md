@@ -36,7 +36,7 @@ bullets:
   - X is a representation, not reality — Hoffman's Interface Theory
   - Entities are anything with causal presence (equivalently, anything representable) — auto-causal density represents persistence, not entity-hood
   - Epimechanics (theory) vs Epiphysics (empirical program)
-  - All representations have epimechanical structure — good ones are predictively efficient
+  - All representations have epimechanical structure — the ones that remain extant are predictively efficient
 tts:
   enabled: true
   provider: openai
@@ -94,7 +94,7 @@ From these co-definitions, five commitments follow:
 2. **Causation as primitive** — the intervention test grounds all other concepts
 3. **Entity as causal presence** — anything representable is an entity
 4. **Grammar vs vocabulary** — Epimechanics provides structural relationships (the form of state evolution, what force and energy mean structurally, how coupling tensors connect entities); domain sciences provide the specific variables, units, and operationalizations
-5. **Efficiency principle** — all representations have mechanical structure; good ones have *simple* mechanical structure
+5. **Efficiency principle** — all representations have mechanical structure; the ones that remain extant have *simple* mechanical structure
 
 ---
 
@@ -222,17 +222,23 @@ Epimechanics provides the equations. Epiphysics provides the measurements. The e
 
 A foundational observation: **all representations have epimechanical structure.** The observation follows from calculus. For any time-varying representation $X(t)$, you can compute $\dot{X}$, $\ddot{X}$, define $p = \mathcal{M}\dot{X}$, and write $F = dp/dt$. The mechanical formalism applies to every representation, including arbitrary or useless ones.
 
-What distinguishes a *well-chosen* representation from a poorly chosen one is not whether it has epimechanical structure (they all have EMech structure) but whether that structure is **predictive at minimal computational cost.** A well-chosen $X$ — one that tracks the system's actual causal structure — yields a Lagrangian with visible symmetries, a coupling tensor that is sparse, and equations of motion that compress the dynamics into few variables. A poorly chosen $X$ yields equations that require tracking everything to predict anything.
+What distinguishes the representations that **survive** — that **remain extant** — is not whether they have epimechanical structure (they all do) but whether they can be sustained against the thresholds their environment imposes. A representation persists when its auto-causal loop holds: the basin depth $\Delta V$ it can maintain exceeds the perturbations $\Delta E$ the environment delivers (the dissolution threshold developed in [Part 2.5](./02_5_entity_interaction.md)). Survival is the criterion, and it is measured as persistence ($\rho_{\text{ac}}$ under that forcing), not graded against worth. *Good* is the wrong word for this: it grades against value; *extant* grades against existence, which is what the framework can measure.
 
-> **Concrete example:** Consider modeling a living cell. A *poorly-chosen* $X$ tracks the 3D position and momentum of every atom (~10¹³ variables). The state space is enormous; predicting the next state requires solving 10¹³ coupled differential equations; the dynamics appear chaotic and unpredictable. A *well-chosen* $X$ tracks metabolic intermediate concentrations (~10³ variables). The state space is small; the dynamics follow recognizable patterns (Michaelis-Menten kinetics, feedback loops); prediction is tractable. Both representations describe the same cell. The difference: the well-chosen $X$ has found the level where causal structure is sparse — where most variables are decoupled most of the time. That's what "representational efficiency" means in practice.
+The representations that survive share a structural signature: a Lagrangian with visible symmetries, a sparse coupling tensor, and equations of motion that compress the dynamics into few variables. A representation lacking that signature — no symmetries, dense coupling — must track everything to predict anything, and (the conjecture below) cannot be sustained on a finite budget. The signature is the *trait*; survival is the *criterion*; the claim is that the first causes the second.
 
-The optimal representation minimizes predictive cost:
+> **Concrete example:** Consider modeling a living cell. A representation $X$ that tracks the 3D position and momentum of every atom (~10¹³ variables) has an enormous state space; predicting the next state requires solving 10¹³ coupled differential equations; no agent on a finite budget can sustain it, so as a working model it does not stay extant. A representation that tracks metabolic intermediate concentrations (~10³ variables) is small; the dynamics follow recognizable patterns (Michaelis-Menten kinetics, feedback loops); prediction is tractable, and the model persists in use. Both describe the same cell. The difference: the sparse representation found the level where causal structure decouples — where most variables are independent most of the time — and that is the level a budget-limited modeler, or the cell regulating itself, can actually hold onto.
 
-$$X^* = \underset{X \in \mathcal{R}}{\operatorname{argmin}}\; C(X, \varepsilon)$$
+**Why survival selects for this signature.** Two established results supply the mechanism, so the link is not a bare assertion. The good regulator theorem ([Conant & Ashby, 1970](https://doi.org/10.1080/00207727008920220)) shows that every system which regulates against an environment must contain a model of it: to persist is to regulate, and to regulate is to model. The thermodynamics of prediction ([Still, Sivak, Bell & Crooks, 2012](https://doi.org/10.1103/PhysRevLett.109.120604)) shows that a system which models its environment inefficiently dissipates more work. Chained: to remain extant an entity must model its environment, and modeling it inefficiently wastes the energy budget it needs to hold its basin against $\Delta E$. The representations that survive are therefore biased toward predictive efficiency, not because efficiency is preferable but because it is what existence costs.
 
-where $C(X, \varepsilon)$ is the computational complexity of predicting $X(t + \Delta t)$ from $X(t)$ to accuracy $\varepsilon$.
+This is the logic of fitness, and it carries the fitness caution: "survives" cannot explain itself, or it becomes survival-of-the-survivors. The escape is that the selected-for trait must be specifiable *independently* of the survival it explains. Here that trait is the structural efficiency above (sparse $T$, symmetry, low $\dim S$), measurable on a representation before observing whether it persists. Existence is the criterion; structural efficiency is the independently measurable trait; the conjecture is the causal link between them.
 
-**The existence of $X^*$ is already proven** — not by Epimechanics, but by multiple independent results in information theory:
+Write $C(X, \varepsilon)$ for the computational cost of predicting $X(t + \Delta t)$ from $X(t)$ to accuracy $\varepsilon$. Selection does not return the single global minimizer $X^* = \operatorname*{argmin}_{X \in \mathcal{R}} C(X, \varepsilon)$; it returns whatever clears the threshold, the **surviving set**
+
+$$\mathcal{S}(\mathcal{E}) = \{\, X \in \mathcal{R} : \Delta V(X) > \Delta E_{\mathcal{E}} \,\}$$
+
+a viability set rather than a point. Selection yields *sufficient* efficiency, not minimal: real systems are satisficing local optima, path-dependent, carrying spandrels and vestigial structure. The conjecture concerns the *bias* of $\mathcal{S}(\mathcal{E})$ toward mechanical structure, not the existence of a global argmin.
+
+**That an efficient representation exists is already proven** — not by Epimechanics, but by multiple independent results in information theory:
 
 - [Rate-distortion theory (Shannon, 1959)](https://ieeexplore.ieee.org/document/5311476): for any source and distortion level $\varepsilon$, there exists an optimal encoding that minimizes information cost. **Theorem.**
 - [Minimum Description Length (Rissanen, 1978)](https://doi.org/10.1214/aos/1176344611): the best model minimizes the sum of model complexity and data misfit, equivalent to Bayesian model selection with a universal prior. **Theorem.**
@@ -243,16 +249,16 @@ These are the same result stated in different mathematical languages. The optima
 
 > ⚠️ **Central open problem:** Everything above is established mathematics. What follows is the conjecture.
 
-**What IS a conjecture** is the connection to mechanical structure: that $X^*$ necessarily has maximal Lagrangian symmetry, sparse coupling tensor, and minimal state-space dimensionality. The connection is Epimechanics' specific claim — that the information-theoretically optimal representation is also the one with the simplest mechanical form.
+**What IS a conjecture** is that the surviving set is biased toward mechanical structure: that members of $\mathcal{S}(\mathcal{E})$ tend to have maximal Lagrangian symmetry, sparse coupling tensor, and minimal state-space dimensionality. This is the *converse* of the easy direction. That such structure reduces cost is near-definitional (see below) and not at stake; that representations cheap-enough-to-survive therefore *carry* such structure is the claim, and it is question (i) in [Part 5](./05_ontology_and_open_questions.md): whether minimizing $C$ produces Lagrangian symmetry, not the reverse.
 
-**Why this is plausible (not just hoped for):**
+**The forward direction is easy — structure reduces cost:**
 - **Symmetries reduce prediction cost:** A symmetric Lagrangian has conserved quantities (Noether), which constrain trajectories and reduce the space of possible futures. Fewer possibilities = cheaper prediction.
 - **Sparse coupling enables parallelism:** When most variables are decoupled most of the time, you can predict subsystems independently. Dense coupling requires tracking everything to predict anything.
 - **Low dimensionality shrinks search:** Fewer state variables = smaller representation = faster computation.
 
 The [renormalization group (Wilson, 1971)](https://doi.org/10.1103/PhysRevB.4.3174), [causal emergence (Hoel et al., 2013)](https://doi.org/10.1073/pnas.1314922110), and the [free energy principle (Friston, 2010)](https://doi.org/10.1038/nrn2787) all demonstrate versions of this connection empirically. What remains is a unified proof connecting rate-distortion optimality to Lagrangian symmetry — the formal statement that makes "simpler mechanical form" precise.
 
-The Representational Efficiency Conjecture reframes what Epimechanics claims. Epimechanics does not claim that reality "has" mechanical structure. It observes that all representations have epimechanical structure (a mathematical triviality), and proposes — with the support of information-theoretic results but without a complete proof — that representations which track real causal structure have *simple* epimechanical structure. Whether reality is "mechanical" or merely "looks mechanical through well-chosen representations" is a question Epimechanics does not need to answer. The empirical test — epiphysics — is whether the predictions hold.
+The Representational Efficiency Conjecture reframes what Epimechanics claims. Epimechanics does not claim that reality "has" mechanical structure. It observes that all representations have epimechanical structure (a mathematical triviality), and proposes — with information-theoretic support but without a complete proof — that the representations which remain extant in a given environment have *simple* epimechanical structure, because that simplicity is what their persistence costs. Whether reality is "mechanical" or merely "looks mechanical through the representations that survive to describe it" is a question Epimechanics does not need to answer. The empirical test — epiphysics — is whether the predictions hold.
 
 [Part 5](./05_ontology_and_open_questions.md) develops the formal statement and open questions of this principle.
 

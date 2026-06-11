@@ -104,7 +104,7 @@ The Church-Turing thesis concerns universal computation — the class of functio
 
 ### Kolmogorov Complexity
 
-Good representations compress the data-generating process into fewer variables — short descriptions. [Kolmogorov complexity](https://doi.org/10.1016/S0019-9958%2864%2990223-2) formalizes minimal description length. Representations that compress well are precisely those that track causal structure, aligning Kolmogorov compression with high predictive information.
+Efficient representations compress the data-generating process into fewer variables — short descriptions. [Kolmogorov complexity](https://doi.org/10.1016/S0019-9958%2864%2990223-2) formalizes minimal description length. Representations that compress well are precisely those that track causal structure, aligning Kolmogorov compression with high predictive information.
 
 ### Autopoiesis
 

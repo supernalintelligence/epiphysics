@@ -108,7 +108,7 @@ Beyond existing multi-scale frameworks, Epimechanics contributes four specific h
 
 1. **The atomic decomposition** — six quantities (bond, strength, loop order, basin depth, $\dot{S}_{\text{int}}$, $\dot{R}_{\text{repair}}$) as a concrete, falsifiable claim about what to measure at each level. This is more specific than Simon's near-decomposability and more quantitative than Rosen's categorical closure.
 
-2. **The Representational Efficiency principle** — connecting optimal representation to mechanical structure. This may reduce to sloppy models' parameter compression in a Lagrangian frame; if so, the contribution is the mechanical interpretation, not a new result. If it generates predictions that sloppy models do not, it is a genuine addition. This has not been tested.
+2. **The Representational Efficiency principle** — connecting the representations that survive to mechanical structure. This may reduce to sloppy models' parameter compression in a Lagrangian frame; if so, the contribution is the mechanical interpretation, not a new result. If it generates predictions that sloppy models do not, it is a genuine addition. This has not been tested.
 
 3. **Computation as renormalization survival** — defining computation as the process by which structure persists across coarse-graining. This connects computation to scale in a way that is precise enough to test (does computational capacity correlate with renormalization-group fixed-point structure?) but has not been tested.
 

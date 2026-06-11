@@ -155,7 +155,7 @@ For any dataset:
 
 ### 3. Representation Learning as Lagrangian Discovery
 
-If the optimal representation has Lagrangian structure (the REP conjecture), then:
+If the representations that survive are biased toward Lagrangian structure (the REP conjecture), then:
 1. The latent space of a well-trained model should have conserved quantities
 2. We can check this: train a model, extract latents, test for conservation laws
 3. Models that discover Lagrangian structure should generalize better

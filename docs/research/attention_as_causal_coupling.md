@@ -90,7 +90,7 @@ Multi-head attention learns different attention patterns in parallel.
 
 ## Attention as Lagrangian Structure Discovery
 
-If the REP conjecture is true (optimal representations are Lagrangian), then:
+If the REP conjecture is true (surviving representations are biased toward Lagrangian structure), then:
 
 1. Attention learns the coupling structure
 2. The learned coupling should be sparse (most $A_{ij} \approx 0$)

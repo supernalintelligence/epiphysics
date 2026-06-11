@@ -122,7 +122,7 @@ This is exactly what the model learns. And:
 
 $$\text{Quality}(\text{Rep}(X)) \propto C(M, D)$$
 
-Good representations = high carrying capacity for the relevant structure.
+Efficient representations = high carrying capacity for the relevant structure.
 
 ### What Makes a Good X?
 

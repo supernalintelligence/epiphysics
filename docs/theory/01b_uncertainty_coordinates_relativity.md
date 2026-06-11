@@ -294,7 +294,7 @@ The same structure applies here. [Part 1](./01_generalized_mechanics.md)'s forma
 
 Epimechanics remains valid. This specifies its domain of validity and extends it to the harder cases.
 
-The question "what is X, exactly?" is one of the harder questions in the program. The answer proposed here: X is a representation - a formal description of some aspect of reality's condition - that takes the form of a probability distribution over a manifold that may be entity-specific and time-varying, accessible only from specific reference frames, with measurement interactions that are part of the system's dynamics. Reality exists independently of X; X is our model of it. The claim is that well-chosen X's have mechanical structure that tracks real dynamics.
+The question "what is X, exactly?" is one of the harder questions in the program. The answer proposed here: X is a representation - a formal description of some aspect of reality's condition - that takes the form of a probability distribution over a manifold that may be entity-specific and time-varying, accessible only from specific reference frames, with measurement interactions that are part of the system's dynamics. Reality exists independently of X; X is our model of it. The claim is that the X's which remain extant have mechanical structure that tracks real dynamics.
 
 ---
 

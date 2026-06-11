@@ -123,7 +123,7 @@ $$T^i{}_j = \frac{\partial \dot{X}^i}{\partial X^j}$$
 3. Verify against oscillation measurements
 
 **The sparse coupling hypothesis:**
-Epimechanics claims optimal representations have sparse T^i_j. Test:
+Epimechanics claims the representations that survive are biased toward sparse T^i_j. Test:
 - Compare dense vs sparse model of same system
 - Which predicts better with fewer parameters?
 - If sparse wins, that's evidence for the framework

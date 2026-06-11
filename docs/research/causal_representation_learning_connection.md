@@ -11,7 +11,7 @@ Three independent research programs are converging on the same problem:
 
 | Program | Question | Answer |
 |---------|----------|--------|
-| **Epimechanics** | What makes a representation "good"? | Sparse coupling, Lagrangian structure, conserved quantities |
+| **Epimechanics** | What makes a representation survive? | Sparse coupling, Lagrangian structure, conserved quantities |
 | **Causal Representation Learning** (Schölkopf) | How do we learn causal variables from raw data? | Independent mechanisms, invariance under intervention |
 | **Physics-Informed ML** (Greydanus, Brunton) | How do we learn physical structure from data? | Hamiltonian/Lagrangian constraints, sparse dynamics |
 
@@ -146,7 +146,7 @@ These are the same claim:
 
 **The connection to ML training:**
 
-When a neural network learns a good representation:
+When a neural network learns an efficient representation:
 - It's finding coordinates where the dynamics are simple
 - Simple dynamics = sparse coupling = independent mechanisms
 - This is why overparameterized networks generalize: they find the representation where the data has simple structure
