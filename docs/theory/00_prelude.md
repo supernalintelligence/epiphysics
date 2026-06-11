@@ -238,6 +238,8 @@ $$\mathcal{S}(\mathcal{E}) = \{\, X \in \mathcal{R} : \Delta V(X) > \Delta E_{\m
 
 a viability set rather than a point. Selection yields *sufficient* efficiency, not minimal: real systems are satisficing local optima, path-dependent, carrying spandrels and vestigial structure. The conjecture concerns the *bias* of $\mathcal{S}(\mathcal{E})$ toward mechanical structure, not the existence of a global argmin.
 
+Sufficiency cuts both ways. The required accuracy is set by the environment, not by the modeler: a representation needs to predict only well enough that its basin clears the perturbations it faces. Below that, it dissolves; above it, the surplus accuracy costs more without deepening the basin past the threshold, so a cheaper representation that merely clears the bar outcompetes the over-accurate one. Survival selects for *threshold-matched* fidelity at minimal cost, not maximal fidelity, and it favors compression: a lossy representation that discards survival-irrelevant detail is cheaper to maintain and therefore more likely to persist, not less. Apollo reached the Moon on Newtonian mechanics; general relativity's extra accuracy was not survival-relevant for that trajectory (GPS, whose timing threshold is tighter, does require it, so the required accuracy is environment-relative). Over-resolution and over-prediction are both wasted cost.
+
 **That an efficient representation exists is already proven** — not by Epimechanics, but by multiple independent results in information theory:
 
 - [Rate-distortion theory (Shannon, 1959)](https://ieeexplore.ieee.org/document/5311476): for any source and distortion level $\varepsilon$, there exists an optimal encoding that minimizes information cost. **Theorem.**
