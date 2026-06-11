@@ -92,7 +92,7 @@ The second term $\dot{\mathcal{M}}\dot{X}$ captures what happens when the repres
 
 ### The self-multiplication connection
 
-A prompt that updates itself based on its own prediction errors is an instance of $\mathbf{T}(X) \cdot X$ — the self-multiplication mechanism. The representation acts on itself to produce a lower-cost representation:
+A prompt that updates itself based on its own prediction errors is an instance of $\mathbf{T}(X) \cdot X$ — the self-multiplication mechanism. The representation acts on itself to produce a higher-fidelity representation:
 
 $$P_{t+1} = f(P_t, X(t), X_{\text{actual}}(t{+}1))$$
 
@@ -127,7 +127,7 @@ $P$ encodes a generalized mass $\mathcal{M}$ whose eigenvalues resolve certain f
 
 At hourly scale, "vessel #4721" is an entity. At yearly scale, "global fleet capacity" is the entity. At decade scale, "trade route topology" is the entity. $P$ that names entities at the wrong granularity will predict poorly not because dynamics changed, but because $\rho_{\text{ac}}$ thresholds are scale-dependent.
 
-- **Signature:** Prediction low-error within entity clusters, high-error at entity boundaries or transitions
+- **Signature:** Prediction accurate within entity clusters, breaks down at entity boundaries or transitions
 - **Fix:** Coarse-grain or refine entity ontology. Apply meta-entity emergence criterion: $\text{EI}(\text{macro}) > \text{EI}(\text{micro})$ at the target timescale
 
 ### Mode 3: Wrong couplings
@@ -520,7 +520,7 @@ The prompt $P$ is the thin edge of a deeper object: the **system** $\mathcal{S}$
 | Memory $\mathcal{M}(t)$ | Accumulated structural knowledge | Generalized mass (resistance to state change; history) |
 | Agents $\{A_k\}$ | Specialized predictors with different representations | Entities with different $P_{\text{rep}}$ |
 | Scoring function $\sigma$ | Evaluates prediction error | Action principle $\delta\!\int\!L\,dt$ (off-shell = divergent prediction) |
-| Selection mechanism | Promotes lower-loss agents/memories, demotes higher-loss | Natural selection; $\rho_{\text{ac}}$ threshold |
+| Selection mechanism | Promotes agents/memories that survive scoring, demotes those that do not | Natural selection; $\rho_{\text{ac}}$ threshold |
 | Data streams $\{D_j(t)\}$ | Incoming observations | State updates $X(t)$ |
 
 The prompt $P(t)$ is what the system **emits** at time $t$ — a compressed projection of its memory into a form usable by the prediction engine. The system is the entity; the prompt is its action.
@@ -557,7 +557,7 @@ where $w_k(t)$ are weights updated by scoring function $\sigma$:
 
 $$w_k(t{+}1) \propto w_k(t) \cdot \exp(-\eta \cdot \text{loss}_k(t))$$
 
-Agents that predict well gain weight. Agents that predict poorly lose weight. Over time, the ensemble converges toward the lowest-loss representation — **but only for the timescale and entity level where each agent has purchase**.
+Agents that predict accurately gain weight; agents that predict inaccurately lose weight. Over time, the ensemble concentrates on the representations that survive the scoring — **but only for the timescale and entity level where each agent has purchase**.
 
 The key insight: different agents should dominate at different timescales:
 - Token-level agents dominate short-horizon prediction
