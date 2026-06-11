@@ -259,7 +259,7 @@ All say the same thing from different angles: **the right representation is the 
 >
 > *Survival criterion (replaces a unique optimum).* A representation remains extant in $\mathcal{E}$ when its basin clears the environmental perturbation, $\Delta V(X) > \Delta E_{\mathcal{E}}$. The relevant object is not the single minimizer $\operatorname{argmin}_X C$ but the **surviving set**
 > $$\mathcal{S}(\mathcal{E}) = \{\, X \in \mathcal{R} : \Delta V(X) > \Delta E_{\mathcal{E}} \,\}$$
-> a viability set, not a point. Selection delivers *sufficient* efficiency to clear the threshold, not the global minimum.
+> a viability set, not a point. Selection delivers *sufficient* efficiency to clear the threshold, not the global minimum. *Relation to $\operatorname{argmin}$:* $\mathcal{S}(\mathcal{E})$ is a viability kernel (Aubin, *Viability Theory*, 1991), of which the static set above is the one-step approximation; the single minimizer is its strong-selection limit, $\operatorname{argmin}_X C = \lim_{\Delta E \uparrow} \mathcal{S}(\mathcal{E})$, coinciding exactly when $\Delta V$ anti-correlates with $C$ (the conjecture itself).
 >
 > *Conjecture.* For systems with causal structure, members of $\mathcal{S}(\mathcal{E})$ are biased toward:
 > - **(a)** Maximal symmetry group in $\mathcal{L}$ - conservation laws via Noether reduce effective dimensionality (conserved quantities = fewer things to predict).
