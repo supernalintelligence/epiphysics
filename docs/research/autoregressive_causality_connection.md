@@ -59,7 +59,7 @@ In epimechanics terms:
 
 - The **cause-plex** is the graph of causal events
 - **Tokenization** is a coarse-graining that maps continuous state to discrete symbols
-- A **good tokenization** preserves causal structure: if A → B in the continuous system, then token(A) → token(B) in the discrete system
+- A tokenization is **structure-preserving** when: if A → B in the continuous system, then token(A) → token(B) in the discrete system
 - **Autoregressive prediction** is learning the transition structure of the coarse-grained cause-plex
 
 **Claim:** A tokenization that preserves causal structure makes autoregressive prediction optimal. A tokenization that destroys causal structure makes it impossible.
@@ -99,7 +99,7 @@ This is different from random masking — it's structured by the actual causal f
 
 ## The ρ_ac Connection
 
-Here's where it gets interesting:
+Here's the key step:
 
 **Auto-causal density (ρ_ac)** measures the fraction of causal flow that loops back on itself.
 
@@ -168,10 +168,10 @@ If the representations that survive are biased toward Lagrangian structure (the 
 
 You said "two representations generally" — I think the deep point is:
 
-1. **Continuous (analog):** State as position in a manifold. Good for physics, bad for computation.
-2. **Discrete (digital):** State as symbol sequence. Good for computation, requires choosing tokenization.
+1. **Continuous (analog):** State as position in a manifold. Suited to physics, unsuited to computation.
+2. **Discrete (digital):** State as symbol sequence. Suited to computation, requires choosing tokenization.
 
-**The bridge:** A good tokenization is a map from continuous to discrete that preserves causal structure.
+**The bridge:** a structure-preserving tokenization maps continuous to discrete while keeping causal structure intact.
 
 **Autoregressive models are optimal for discrete representations** because discrete symbols have a natural ordering (the sequence) and causality flows along that ordering.
 

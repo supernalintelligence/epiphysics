@@ -120,11 +120,11 @@ $$\text{Rep}(X) = \text{representation of state } X$$
 
 This is exactly what the model learns. And:
 
-$$\text{Quality}(\text{Rep}(X)) \propto C(M, D)$$
+$$\text{Efficiency}(\text{Rep}(X)) \propto C(M, D)$$
 
 Efficient representations = high carrying capacity for the relevant structure.
 
-### What Makes a Good X?
+### What Makes an X Survive?
 
 From 00_prelude.md:
 - Sparse in the right basis

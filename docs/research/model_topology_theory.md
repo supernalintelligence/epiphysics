@@ -471,8 +471,8 @@ def track_training_topology(model, training_data):
 ```
 
 **Prediction:** 
-- Good training → topology simplifies (lower Betti, lower effective dim)
-- Bad training → topology stays complex or oscillates
+- Converged training → topology simplifies (lower Betti, lower effective dim)
+- Failed training → topology stays complex or oscillates
 
 ---
 

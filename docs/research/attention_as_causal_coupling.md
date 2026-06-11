@@ -278,8 +278,8 @@ A trained transformer has learned an approximation to the cause-plex of its trai
 ### The test of epimechanics via transformers
 
 If epimechanics is right:
-1. Good transformers should have sparse attention (sparse coupling)
-2. Good transformers should have conserved quantities (Lagrangian structure)
+1. Generalizing transformers should have sparse attention (sparse coupling)
+2. Generalizing transformers should have conserved quantities (Lagrangian structure)
 3. Attention patterns should cluster into Q1-Q5-like categories
 4. ρ_ac computed from attention should predict generalization
 

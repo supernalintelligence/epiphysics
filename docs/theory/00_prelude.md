@@ -115,7 +115,7 @@ Hoffman's result raises a puzzle: if fitness beats truth in evolutionary competi
 The interface view entails three properties:
 - **$X$ can be wrong.** A representation may be inaccurate, incomplete, or misleading. "Calling a tree a car" assigns the tree a representation in a state space (vehicles) where the dynamics don't apply. The tree's measurable properties are unaffected. The mislabel is a coordinate error — it assigns the wrong $X$ to the wrong $S$.
 - **$X$ can be arbitrary.** Any labeling is a representational act. You could call your car a shoe. The label commits you to the existence of something being represented, however poorly.
-- **Some $X$'s are better than others.** Not because they are "more true" but because they track invariant structure, predict dynamics, and compress information more efficiently. Finding the right $X$ is the central empirical challenge.
+- **Some $X$'s survive where others dissolve.** Not because they are "more true" but because they track invariant structure, predict dynamics, and compress information at lower cost. Identifying the $X$ that remains extant is the central empirical challenge.
 
 ### Observer-dependence is a spectrum, not a taxonomy
 
@@ -132,7 +132,7 @@ Between the extremes:
 - **Independent measurements by different observers** — reduces observer-dependence. Agreement across observers is evidence that the representation tracks something beyond any individual observer.
 - **Independent measurements by different methods** — the strongest evidence. If weighing, pushing, and annihilating a rock all give the same mass, the agreement is not a property of any method — it is a property of the rock. The equivalence principle follows: convergence across independent methods establishes that the representation tracks real structure.
 
-The process of moving states along this spectrum — from single-observer assignment toward multi-observer, multi-method convergence — is the scientific method. Science does not discover "objective truth." It identifies representations that are increasingly observer-independent by testing them against independent observations. A state that survives this process is not guaranteed to be "real" — but it is the best representation available.
+The process of moving states along this spectrum — from single-observer assignment toward multi-observer, multi-method convergence — is the scientific method. Science does not discover "objective truth." It identifies representations that are increasingly observer-independent by testing them against independent observations. A state that survives this process is not guaranteed to be "real" — but it is the representation that has survived the most independent tests.
 
 Some useful (but non-exclusive) landmarks on the spectrum:
 

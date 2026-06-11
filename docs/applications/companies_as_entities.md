@@ -50,7 +50,7 @@ tts:
   enableProgress: true
 ---
 
-> **In plain English:** Companies are meta-entities: causal structures that exist across people, documents, and shared patterns, with their own state variables, coupling tensors, and persistence dynamics. The biological analogy (companies are "alive," companies have "genes") has always been intuitively compelling but formally vague. Epimechanics makes it precise: a company is a bond-loop configuration that satisfies the conditions for causal emergence. The genome is the complete set of bonds and loops. Expression is which loops fire under which conditions. And that structure is now becoming readable and writable.
+> **In plain English:** Companies are meta-entities: causal structures that exist across people, documents, and shared patterns, with their own state variables, coupling tensors, and persistence dynamics. The biological analogy (companies are "alive," companies have "genes") has always been intuitive but formally vague. Epimechanics makes it precise: a company is a bond-loop configuration that satisfies the conditions for causal emergence. The genome is the complete set of bonds and loops. Expression is which loops fire under which conditions. And that structure is now becoming readable and writable.
 
 ---
 
@@ -289,7 +289,7 @@ This is a place where the biological analogy needs to be calibrated, not abandon
 
 ## What This Predicts
 
-Epimechanics is only as good as its predictions. Three testable claims follow from this analysis:
+Epimechanics stands or falls on its predictions. Three testable claims follow from this analysis:
 
 ### 1. Explicit genome → higher M&A success rate
 

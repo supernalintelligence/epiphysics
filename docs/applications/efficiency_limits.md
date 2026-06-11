@@ -156,7 +156,7 @@ $$\mathcal{F} = E_{\text{total}} - \mathcal{T}_{\text{org}} \cdot S_{\text{org}}
 
 **Interpretation:** Total energy (budget, labor-hours, attention) minus the portion consumed by disorder (undirected activity times organizational slack). When $\mathcal{T}$ is high (lots of undirected activity) and $S$ is high (lots of slack), free energy drops - less is available for productive work, even if total energy input is large.
 
-**This is genuinely useful framing** even if the numbers are approximate, because it separates two failure modes: (a) insufficient total energy (underfunding, understaffing) and (b) high temperature consuming available energy (chaos, misalignment, noise). The interventions are different. Pouring more energy (hiring, spending) into a high-temperature organization increases $E$ but also increases $\mathcal{T}S$; the net gain in $\mathcal{F}$ may be small or negative.
+**This framing is operationally distinct** even if the numbers are approximate, because it separates two failure modes: (a) insufficient total energy (underfunding, understaffing) and (b) high temperature consuming available energy (chaos, misalignment, noise). The interventions are different. Pouring more energy (hiring, spending) into a high-temperature organization increases $E$ but also increases $\mathcal{T}S$; the net gain in $\mathcal{F}$ may be small or negative.
 
 ---
 
@@ -270,7 +270,7 @@ The strongest predictions are:
 3. A critical Reynolds number beyond which dysfunction onset is sudden, not gradual
 4. A condition under which adding resources *decreases* organizational output
 
-The weakest link is measurement: until generalized temperature, entropy, and free energy have validated operationalizations for organizations, the framework remains a structural proposal - grammar awaiting vocabulary. But even as grammar, it does something useful: it explains *why* the same intervention (e.g., adding process) is the right move in one context (turbulence) and the wrong move in another (duplication). That structural insight does not require precise measurement to be actionable.
+The weakest link is measurement: until generalized temperature, entropy, and free energy have validated operationalizations for organizations, the framework remains a structural proposal - grammar awaiting vocabulary. But even as grammar, it has structural content: it explains *why* the same intervention (e.g., adding process) is the right move in one context (turbulence) and the wrong move in another (duplication). That structural insight does not require precise measurement to be actionable.
 
 ---
 

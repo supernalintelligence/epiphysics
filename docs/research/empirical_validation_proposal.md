@@ -213,7 +213,7 @@ Phase 2: Systems with unknown structure
 ### Learning Representations
 
 **Option A: β-VAE (Variational Autoencoder with information constraint)**
-- Pro: Well-understood, good at finding disentangled representations
+- Pro: Well-understood, effective at finding disentangled representations
 - Con: May not capture causal structure specifically
 
 **Option B: Causal VAE variants (e.g., CausalVAE, DEAR)**

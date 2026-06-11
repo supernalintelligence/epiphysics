@@ -79,9 +79,9 @@ But $V(X)$ is also not fixed. It changes as entities move, as populations shift,
 
 ---
 
-## The Gap: Where Everything Interesting Happens
+## The Gap: Where the Dynamics Concentrate
 
-The deviation $\Delta V = \hat{V} - V$ — the gap between what the entity believes and what is actually the case — is where all interesting dynamics live.
+The deviation $\Delta V = \hat{V} - V$ — the gap between what the entity believes and what is actually the case — is where the dynamics concentrate.
 
 | $\Delta V$ | What it means | Examples |
 |---|---|---|
@@ -286,7 +286,7 @@ In Epimechanics' terms: instinctive $\hat{V}$ is a low-resolution, high-speed ap
 
 ### Cognitive belief field
 
-Constructed by the entity's intelligence $I$ in real time. Updated by observation, reasoning, and learning. The cognitive $\hat{V}$ represents the entity's best current model of the potential landscape.
+Constructed by the entity's intelligence $I$ in real time. Updated by observation, reasoning, and learning. The cognitive $\hat{V}$ represents the entity's current model of the potential landscape.
 
 A strategic analyst's cognitive $\hat{V}$ incorporates data, models, scenarios, and uncertainty estimates. It is slower than instinct but more flexible — it can track $V$ even in novel environments, provided the entity has enough intelligence and data.
 

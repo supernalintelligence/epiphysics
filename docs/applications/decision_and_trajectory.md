@@ -210,10 +210,10 @@ This yields a taxonomy of epistemic failure modes:
 
 | Intelligence | Consciousness | Failure Mode |
 |---|---|---|
-| High $I$, low $C$ | Good predictions, poor observation | **Rationalist trap**: accurate world model in theory, but beliefs are insensitive to evidence because observations are uninformative. The entity is "right in principle" but unable to update from reality. |
-| Low $I$, high $C$ | Poor predictions, good observation | **Reactive mode**: the entity sees clearly but cannot anticipate. Each observation is a surprise. Behavior is stimulus-driven, not planned. |
-| Low $I$, low $C$ | Poor predictions, poor observation | **Drift**: beliefs wander, poorly anchored to either prediction or evidence. |
-| High $I$, high $C$ | Good predictions, good observation | **Calibrated agency**: accurate predictions corrected by rich observation. The entity's beliefs track reality. |
+| High $I$, low $C$ | Accurate predictions, weak observation | **Rationalist trap**: accurate world model in theory, but beliefs are insensitive to evidence because observations are uninformative. The entity is "right in principle" but unable to update from reality. |
+| Low $I$, high $C$ | Inaccurate predictions, rich observation | **Reactive mode**: the entity sees clearly but cannot anticipate. Each observation is a surprise. Behavior is stimulus-driven, not planned. |
+| Low $I$, low $C$ | Inaccurate predictions, weak observation | **Drift**: beliefs wander, weakly anchored to either prediction or evidence. |
+| High $I$, high $C$ | Accurate predictions, rich observation | **Calibrated agency**: accurate predictions corrected by rich observation. The entity's beliefs track reality. |
 
 ### 2.3 Belief State Inertia
 

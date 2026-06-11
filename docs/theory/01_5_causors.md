@@ -304,7 +304,7 @@ Self-containment is not binary. It is tied to the ratio of bond dissolution ener
 | Cells | Variable | Positive | Requires repair |
 | Meta-entities (institutions) | Variable | Positive | Requires renewal |
 
-At the top, entities are unconditionally stable — no maintenance needed. At the bottom, maintenance and auto-causality are what prevent dissolution. The interesting regime for epimechanics is where $\sigma_b / k_BT$ is low enough that bonds degrade measurably, and loops are required to maintain structure.
+At the top, entities are unconditionally stable — no maintenance needed. At the bottom, maintenance and auto-causality are what prevent dissolution. The regime that epimechanics targets is where $\sigma_b / k_BT$ is low enough that bonds degrade measurably, and loops are required to maintain structure.
 
 ---
 

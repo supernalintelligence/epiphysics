@@ -92,7 +92,7 @@ The second term $\dot{\mathcal{M}}\dot{X}$ captures what happens when the repres
 
 ### The self-multiplication connection
 
-A prompt that updates itself based on its own prediction errors is an instance of $\mathbf{T}(X) \cdot X$ — the self-multiplication mechanism. The representation acts on itself to produce better representation:
+A prompt that updates itself based on its own prediction errors is an instance of $\mathbf{T}(X) \cdot X$ — the self-multiplication mechanism. The representation acts on itself to produce a lower-cost representation:
 
 $$P_{t+1} = f(P_t, X(t), X_{\text{actual}}(t{+}1))$$
 
@@ -127,7 +127,7 @@ $P$ encodes a generalized mass $\mathcal{M}$ whose eigenvalues resolve certain f
 
 At hourly scale, "vessel #4721" is an entity. At yearly scale, "global fleet capacity" is the entity. At decade scale, "trade route topology" is the entity. $P$ that names entities at the wrong granularity will predict poorly not because dynamics changed, but because $\rho_{\text{ac}}$ thresholds are scale-dependent.
 
-- **Signature:** Prediction good within entity clusters, poor at entity boundaries or transitions
+- **Signature:** Prediction low-error within entity clusters, high-error at entity boundaries or transitions
 - **Fix:** Coarse-grain or refine entity ontology. Apply meta-entity emergence criterion: $\text{EI}(\text{macro}) > \text{EI}(\text{micro})$ at the target timescale
 
 ### Mode 3: Wrong couplings
@@ -386,13 +386,13 @@ where $D$ is the raw data, $P_{\text{rep}}(D)$ compresses $D$ into a representat
 2. $P_{\text{rep}}$ optimizes to produce representations that $P_{\text{pred}}$ can use effectively
 3. Together they co-optimize: $P_{\text{rep}}$ changes what $P_{\text{pred}}$ sees, $P_{\text{pred}}$'s errors signal what $P_{\text{rep}}$ should change
 
-This is the same co-primitive structure as (Computation, Representation) from Part 0 of Epimechanics: neither is definable without the other. The representation is only good relative to the model that uses it. The model is only good relative to the representation it receives.
+This is the same co-primitive structure as (Computation, Representation) from Part 0 of Epimechanics: neither is definable without the other. The representation only persists relative to the model that uses it. The model only persists relative to the representation it receives.
 
 ### Prompts as representative outcomes of desires
 
 A prompt is not neutral. It encodes what you **want to predict** — which implicitly defines what counts as an entity, what counts as a relevant coupling, and what timescale matters. The prompt is a projection of intent onto the data.
 
-This connects to the decision/trajectory application: the reward function $r$ determines which trajectories are "good," and the prompt encodes that reward implicitly. Different desires (predict price vs. predict geopolitical stability vs. predict supply chain disruption) produce different optimal $P_{\text{rep}}$ for the same raw data.
+This connects to the decision/trajectory application: the reward function $r$ determines which trajectories are high-reward, and the prompt encodes that reward implicitly. Different desires (predict price vs. predict geopolitical stability vs. predict supply chain disruption) produce different optimal $P_{\text{rep}}$ for the same raw data.
 
 ### Training on specific representation levels
 
@@ -497,7 +497,7 @@ The challenge: representation requires knowing what's structurally relevant *bef
 
 ### The representation and the predictive model of that representation
 
-$X_\Gamma$ and $P_{\text{pred}}$ are inseparable. A representation is only "good" relative to the model that uses it. A model is only "good" relative to the representation it receives.
+$X_\Gamma$ and $P_{\text{pred}}$ are inseparable. A representation only persists relative to the model that uses it. A model only persists relative to the representation it receives.
 
 The pair $(X_\Gamma, P_{\text{pred}})$ is the complete predictive system. Optimizing one while holding the other fixed is gradient descent in a saddle landscape. Optimizing both simultaneously — the two-stage loop — is the path to the jointly minimal system.
 
@@ -519,8 +519,8 @@ The prompt $P$ is the thin edge of a deeper object: the **system** $\mathcal{S}$
 |---|---|---|
 | Memory $\mathcal{M}(t)$ | Accumulated structural knowledge | Generalized mass (resistance to state change; history) |
 | Agents $\{A_k\}$ | Specialized predictors with different representations | Entities with different $P_{\text{rep}}$ |
-| Scoring function $\sigma$ | Evaluates prediction quality | Action principle $\delta\!\int\!L\,dt$ (off-shell = bad prediction) |
-| Selection mechanism | Promotes good agents/memories, demotes bad | Natural selection; $\rho_{\text{ac}}$ threshold |
+| Scoring function $\sigma$ | Evaluates prediction error | Action principle $\delta\!\int\!L\,dt$ (off-shell = divergent prediction) |
+| Selection mechanism | Promotes lower-loss agents/memories, demotes higher-loss | Natural selection; $\rho_{\text{ac}}$ threshold |
 | Data streams $\{D_j(t)\}$ | Incoming observations | State updates $X(t)$ |
 
 The prompt $P(t)$ is what the system **emits** at time $t$ — a compressed projection of its memory into a form usable by the prediction engine. The system is the entity; the prompt is its action.
@@ -557,7 +557,7 @@ where $w_k(t)$ are weights updated by scoring function $\sigma$:
 
 $$w_k(t{+}1) \propto w_k(t) \cdot \exp(-\eta \cdot \text{loss}_k(t))$$
 
-Agents that predict well gain weight. Agents that predict poorly lose weight. Over time, the ensemble converges toward the best-performing representation — **but only for the timescale and entity level where each agent has purchase**.
+Agents that predict well gain weight. Agents that predict poorly lose weight. Over time, the ensemble converges toward the lowest-loss representation — **but only for the timescale and entity level where each agent has purchase**.
 
 The key insight: different agents should dominate at different timescales:
 - Token-level agents dominate short-horizon prediction

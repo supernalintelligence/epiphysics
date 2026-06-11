@@ -227,7 +227,7 @@ An additive formula $A = C_{\text{coupling}} + C_{\text{consciousness}}$ would a
 
 ### Cross-terms and the self/other boundary
 
-The allo/auto distinction treats self and other as clean, mutually exclusive targets of representation. This idealization breaks down in precisely the cases where consciousness is most interesting.
+The allo/auto distinction treats self and other as clean, mutually exclusive targets of representation. This idealization breaks down in precisely the cases where consciousness is most developed.
 
 **Second-order and mixed representations.** When an entity models itself modeling another agent - "I believe that she believes X" - the auto-model and allo-model are no longer independent. The representation of one's own belief state is a component of the allo-model. Conversely, social meta-cognition ("she believes that I believe X") requires allo-representing an agent's representation of oneself - the target is simultaneously other and self. These are **cross-terms** in the consciousness tensor that do not reduce to either the allo or auto marginals. They correspond to mixed-index entries $C_{ijk}$ where $i$ ranges over relational targets of the form (self-as-modeled-by-other) or (other-as-modeled-by-self-modeling-other). Empirically, these are associated with medial prefrontal cortex activity in conditions requiring reasoning about one's own reputation or social standing ([Amodio & Frith 2006](https://doi.org/10.1038/nrn1931)).
 
