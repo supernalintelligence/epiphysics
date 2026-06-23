@@ -15,7 +15,9 @@ export async function GET() {
       title: post.metadata.title,
       description: post.metadata.description || '',
       date: post.metadata.date,
-      author: post.metadata.author?.name,
+      author: Array.isArray(post.metadata.authors) && post.metadata.authors.length > 0
+        ? post.metadata.authors.map(a => (typeof a === 'string' ? a : a?.name)).filter(Boolean).join(', ')
+        : (typeof post.metadata.author === 'object' ? post.metadata.author?.name : post.metadata.author),
       image: typeof post.metadata.coverImage === 'string' ? post.metadata.coverImage : post.metadata.coverImage?.url,
     }));
 

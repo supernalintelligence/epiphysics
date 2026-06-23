@@ -86,7 +86,7 @@ export interface PostMetadata {
     substack?: string;
   };
   author?: Author | string;
-  authors?: string;
+  authors?: Array<Author | string>;
   authorUrl?: string;
   authorImage?: string;
   authorBio?: string;

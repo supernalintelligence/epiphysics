@@ -11,6 +11,9 @@ date: 2026-06-10T00:00:00.000Z
 draft: true
 author:
   name: "Ian Derrington"
+authors:
+  - name: "Ian Derrington"
+  - name: "Parnian Barekatain"
 contentType: article
 series: "Epimechanics"
 categories:

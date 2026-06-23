@@ -9,6 +9,9 @@ draft: true
 author:
   name: "Ian Derrington"
   role: "Framework Author"
+authors:
+  - name: "Ian Derrington"
+  - name: "Parnian Barekatain"
 contentType: article
 mediaTypes:
   - text

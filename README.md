@@ -40,9 +40,10 @@ This project is developed collaboratively between human researchers and semi-aut
 
 All substantive theoretical claims are human-authored and human-verified. AI contributions are logged and auditable (see `docs/research/audits/`).
 
-## Author
+## Authors
 
-Ian Derrington
+- Ian Derrington
+- Parnian Barekatain
 
 ## Contributing
 

@@ -302,18 +302,30 @@ export default function PostComponent({ post }: PostComponentProps) {
 
   const renderAsChat = post.metadata.render_as === 'chat';
   
-  const primaryAuthorName =
+  const fallbackAuthorName =
     (typeof post.metadata.author === 'object' && post.metadata.author?.name) ||
     (typeof post.metadata.author === 'string' ? post.metadata.author : undefined) ||
-    post.metadata.authors ||
     'Ian Derrington';
 
-  const primaryAuthorTitle =
-    typeof post.metadata.author === 'object' && post.metadata.author?.title
-      ? post.metadata.author.title
-      : 'Author';
+  // Co-equal primary authors. Prefer the explicit `authors` list when present,
+  // otherwise fall back to the single `author` field.
+  const primaryAuthors: string[] =
+    Array.isArray(post.metadata.authors) && post.metadata.authors.length > 0
+      ? post.metadata.authors
+          .map((a) => (typeof a === 'string' ? a : a?.name))
+          .filter((n): n is string => Boolean(n))
+      : [fallbackAuthorName];
 
-  const primaryAuthorUrl = post.metadata.authorUrl;
+  const primaryAuthorName = primaryAuthors.join(', ');
+
+  const primaryAuthorTitle =
+    primaryAuthors.length > 1
+      ? 'Authors'
+      : (typeof post.metadata.author === 'object' && post.metadata.author?.title) || 'Author';
+
+  // Only link the byline when there is a single named author with a URL.
+  const primaryAuthorUrl =
+    primaryAuthors.length === 1 ? post.metadata.authorUrl : undefined;
 
   const defaultAiAuthors = [
     { name: 'Codex 5.3', role: 'AI Co-Author' },

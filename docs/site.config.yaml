@@ -17,6 +17,9 @@ author:
     github: "https://github.com/supernalintelligence/epiphysics"
     linkedin: "https://www.linkedin.com/in/ian-derrington"
 
+coAuthors:
+  - name: "Parnian Barekatain"
+
 rss:
   title: "Epiphysics"
   description: "Updates from Epiphysics - the empirical science of Epimechanics"

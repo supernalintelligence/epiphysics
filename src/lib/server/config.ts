@@ -25,6 +25,7 @@ export interface SiteConfig {
       threads: string;
     };
   };
+  coAuthors?: Array<{ name: string; link?: string }>;
   rss: {
     title: string;
     description: string;

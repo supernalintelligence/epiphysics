@@ -9,9 +9,9 @@ date: 2026-03-29T00:00:00.000Z
 draft: false
 author:
   name: Ian Derrington
-co_authors:
-  - name: Parnian Barekatain
-    role: Contributing Author
+authors:
+  - name: "Ian Derrington"
+  - name: "Parnian Barekatain"
 contentType: article
 mediaTypes:
   - text

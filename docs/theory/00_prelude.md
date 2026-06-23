@@ -9,6 +9,9 @@ date: 2026-03-17T00:00:00.000Z
 draft: false
 author:
   name: "Ian Derrington"
+authors:
+  - name: "Ian Derrington"
+  - name: "Parnian Barekatain"
 contentType: article
 mediaTypes:
   - text

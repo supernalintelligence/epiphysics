@@ -8,6 +8,9 @@ date: 2026-03-27T03:06:00.000Z
 draft: true
 author:
   name: "Ian Derrington"
+authors:
+  - name: "Ian Derrington"
+  - name: "Parnian Barekatain"
 series: "Epimechanics"
 series_order: 1.6
 tags:

@@ -8,9 +8,9 @@ date: 2026-05-13T00:00:00.000Z
 draft: false
 author:
   name: "Parnian Barekatain"
-co_authors:
+authors:
+  - name: "Parnian Barekatain"
   - name: "Ian Derrington"
-    role: "Framework Author"
 contentType: article
 mediaTypes:
   - text

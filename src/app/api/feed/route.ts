@@ -84,10 +84,17 @@ export async function GET(request: NextRequest) {
       link: `${site.url}/${post.slug}`,
       description: post.metadata.description || post.excerpt,
       content: htmlContent,
-      author: [{
-        name: post.metadata.author?.name || author.name,
-        link: author.link,
-      }],
+      author: (Array.isArray(post.metadata.authors) && post.metadata.authors.length > 0
+        ? post.metadata.authors
+            .map(a => (typeof a === 'string' ? a : a?.name))
+            .filter((n): n is string => Boolean(n))
+            .map(name => ({ name, link: author.link }))
+        : [{
+            name: (typeof post.metadata.author === 'object'
+              ? post.metadata.author?.name
+              : post.metadata.author) || author.name,
+            link: author.link,
+          }]),
       date: new Date(post.metadata.date || new Date()),
       image: imageUrl ? {
         url: imageUrl.startsWith('http') ? imageUrl : `${site.url}${imageUrl}`,
