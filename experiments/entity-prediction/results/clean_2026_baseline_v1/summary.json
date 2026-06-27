@@ -1,0 +1,15 @@
+{
+  "run_name": "clean_2026_baseline_v1",
+  "timestamp": "2026-04-07T17:32:34.505965+00:00",
+  "total_questions": 100,
+  "scored": 93,
+  "errors": 0,
+  "total_input_tokens": 45298,
+  "total_output_tokens": 17378,
+  "total_latency_s": 263.01,
+  "avg_brier_score": 51.0734,
+  "avg_accuracy": 0.4946,
+  "min_brier": 0.0001,
+  "max_brier": 1156.0,
+  "estimated_cost_usd": 0.1058
+}

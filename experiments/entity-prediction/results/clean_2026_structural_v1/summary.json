@@ -1,0 +1,15 @@
+{
+  "run_name": "clean_2026_structural_v1",
+  "timestamp": "2026-04-07T17:42:20.358765+00:00",
+  "total_questions": 100,
+  "scored": 100,
+  "errors": 0,
+  "total_input_tokens": 59098,
+  "total_output_tokens": 14636,
+  "total_latency_s": 243.51,
+  "avg_brier_score": 18464.9555,
+  "avg_accuracy": 0.59,
+  "min_brier": 0.0,
+  "max_brier": 1841756.5995,
+  "estimated_cost_usd": 0.1058
+}

@@ -1,0 +1,13 @@
+{
+  "run_name": "kg_v1_10q",
+  "model": "claude-haiku-4-5-20251001",
+  "questions": 10,
+  "scored": 10,
+  "kg_nodes": 109,
+  "kg_edges": 40,
+  "total_input_tokens": 11871,
+  "total_output_tokens": 2536,
+  "avg_brier": 0.113,
+  "avg_accuracy": 0.9,
+  "estimated_cost_usd": 0.0196
+}

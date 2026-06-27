@@ -1,0 +1,11 @@
+{
+  "run_name": "autocast_baseline_v1_claude-haiku-4-5-20251001_20260407_094508",
+  "timestamp": "2026-04-07T16:45:21.287757+00:00",
+  "total_questions": 5,
+  "scored": 0,
+  "errors": 0,
+  "total_input_tokens": 1163,
+  "total_output_tokens": 604,
+  "total_latency_s": 10.58,
+  "estimated_cost_usd": 0.0033
+}

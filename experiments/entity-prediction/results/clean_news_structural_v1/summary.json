@@ -1,0 +1,15 @@
+{
+  "run_name": "clean_news_structural_v1",
+  "timestamp": "2026-04-07T18:16:07.722414+00:00",
+  "total_questions": 76,
+  "scored": 76,
+  "errors": 0,
+  "total_input_tokens": 75384,
+  "total_output_tokens": 11617,
+  "total_latency_s": 178.46,
+  "avg_brier_score": 24260.9143,
+  "avg_accuracy": 0.6316,
+  "min_brier": 0.0,
+  "max_brier": 1841756.5995,
+  "estimated_cost_usd": 0.1068
+}

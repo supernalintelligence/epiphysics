@@ -1,0 +1,15 @@
+{
+  "run_name": "full_v1_entity_aware_v1",
+  "timestamp": "2026-04-07T17:15:15.716103+00:00",
+  "total_questions": 100,
+  "scored": 100,
+  "errors": 0,
+  "total_input_tokens": 59576,
+  "total_output_tokens": 18172,
+  "total_latency_s": 261.55,
+  "avg_brier_score": 160.3689,
+  "avg_accuracy": 0.68,
+  "min_brier": 0.0,
+  "max_brier": 11613.6544,
+  "estimated_cost_usd": 0.1203
+}

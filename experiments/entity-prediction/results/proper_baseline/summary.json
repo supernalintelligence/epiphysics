@@ -1,0 +1,16 @@
+{
+  "run_name": "proper_baseline",
+  "prompt": "baseline",
+  "model": "claude-haiku-4-5-20251001",
+  "question_set": "2026-01-18",
+  "n": 266,
+  "base_rate": 0.391,
+  "brier": 0.1764,
+  "accuracy": 0.6504,
+  "brier_se": 0.0084,
+  "norm_vs_base_rate": 0.2593,
+  "baseline_always_half": 0.25,
+  "baseline_base_rate": 0.2381,
+  "baseline_always_no": 0.391,
+  "baseline_freeze": 0.2579
+}

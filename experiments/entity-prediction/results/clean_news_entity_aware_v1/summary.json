@@ -1,0 +1,15 @@
+{
+  "run_name": "clean_news_entity_aware_v1",
+  "timestamp": "2026-04-07T18:11:24.580489+00:00",
+  "total_questions": 76,
+  "scored": 76,
+  "errors": 0,
+  "total_input_tokens": 73332,
+  "total_output_tokens": 12963,
+  "total_latency_s": 200.13,
+  "avg_brier_score": 24261.1662,
+  "avg_accuracy": 0.6447,
+  "min_brier": 0.0,
+  "max_brier": 1841756.5995,
+  "estimated_cost_usd": 0.1105
+}

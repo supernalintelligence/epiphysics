@@ -1,0 +1,15 @@
+{
+  "run_name": "cmp_v3_entity_aware_v1",
+  "timestamp": "2026-04-07T16:56:53.142335+00:00",
+  "total_questions": 15,
+  "scored": 15,
+  "errors": 0,
+  "total_input_tokens": 4709,
+  "total_output_tokens": 2611,
+  "total_latency_s": 36.86,
+  "avg_brier_score": 0.0853,
+  "avg_accuracy": 0.6667,
+  "min_brier": 0.0,
+  "max_brier": 0.4039,
+  "estimated_cost_usd": 0.0142
+}

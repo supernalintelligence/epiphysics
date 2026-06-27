@@ -1,0 +1,15 @@
+{
+  "run_name": "cmp_v2_structural_v1",
+  "timestamp": "2026-04-07T16:54:53.060443+00:00",
+  "total_questions": 15,
+  "scored": 5,
+  "errors": 0,
+  "total_input_tokens": 5159,
+  "total_output_tokens": 7500,
+  "total_latency_s": 100.63,
+  "avg_brier_score": 0.0494,
+  "avg_accuracy": 0.8,
+  "min_brier": 0.0,
+  "max_brier": 0.1126,
+  "estimated_cost_usd": 0.0341
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "tranche": "2026-01-18",
+    "questions": 10,
+    "scored": 10,
+    "entities": 0,
+    "couplings": 0,
+    "avg_brier": 0.079,
+    "avg_accuracy": 0.9
+  }
+]

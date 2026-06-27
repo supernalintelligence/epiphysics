@@ -1,0 +1,16 @@
+{
+  "run_name": "phase_a_v4",
+  "model": "claude-haiku-4-5-20251001",
+  "n_extractors": 1,
+  "n_predictors": 1,
+  "tranches": 1,
+  "total_questions": 10,
+  "scored": 10,
+  "final_entities": 6,
+  "final_couplings": 3,
+  "total_input_tokens": 10662,
+  "total_output_tokens": 1935,
+  "avg_brier": 0.0814,
+  "avg_accuracy": 0.9,
+  "estimated_cost_usd": 0.0163
+}

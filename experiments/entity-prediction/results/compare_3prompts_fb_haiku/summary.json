@@ -1,0 +1,11 @@
+{
+  "run_name": "compare_3prompts_fb_haiku",
+  "timestamp": "2026-04-07T16:49:43.423993+00:00",
+  "total_questions": 15,
+  "scored": 0,
+  "errors": 0,
+  "total_input_tokens": 5159,
+  "total_output_tokens": 7500,
+  "total_latency_s": 97.59,
+  "estimated_cost_usd": 0.0341
+}
