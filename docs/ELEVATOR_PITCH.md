@@ -1,117 +1,66 @@
-# Epimechanics: The Elevator Pitch
-
-## One Sentence
-
-**Epimechanics proposes that the mathematical structure of physics — state, mass, force, energy, coupling — applies beyond physical systems, with the state variable X left abstract.**
-
+---
+title: "Epiphysics: the elevator pitch"
+description: "Preserve evidence, compare representations, and learn from predictions made before the outcome."
+date: 2026-11-24T00:00:00.000Z
+draft: false
+author:
+  name: "Epiphysics"
+contentType: article
+tts:
+  enabled: true
+  provider: openai
+  voice: onyx
+  enableSpeed: true
+  enableProgress: true
+feedback:
+  enabled: true
 ---
 
-## The Core Idea
+## One sentence
 
-Physics discovered a powerful grammar: things have states, states change, change has momentum, momentum resists force, force comes from coupling. This grammar — Lagrangian mechanics — works spectacularly for particles, fields, and fluids.
+**Epiphysics is building a research system that preserves what was knowable, compares different representations of a changing system, and tests which ones improve predictions of what happens next.**
 
-**Epimechanics asks:** Does this grammar work more broadly?
+## Thirty seconds
 
-- A belief has *state* (what you think)
-- Beliefs have *mass* (how hard to change)
-- Arguments exert *force* (they push beliefs)
-- Institutions have *fields* (they influence from a distance)
+A company, a software agent, or a network can be described in many ways. Which description helps us predict its behavior? Epiphysics will preserve the evidence available at the time, compare alternative entities and relationships, commit forecasts before outcomes, and make the results reproducible. We start with our own agent and software work, then test transfer to public AI organizations, dependencies, and exchange. The system should also learn from its own failed predictions under an explicit cost budget.
 
-These sound like metaphors. **Epimechanics proposes they're structural truths** — the same mathematical relationships hold, with different constants and state spaces.
+## What works today
 
----
+The first local engine records exact evidence, revisions, snapshots, binary forecasts, outcomes, and corrections. It computes descriptive scores and compares matched questions. A bounded collection cycle uses a constant 0.5 forecast to test whether captured bytes change. The public example is synthetic.
 
-## What's New
+Learned representation search, an autonomous LLM optimizer, independent timestamp witnesses, and real value exchange are planned. This implementation does not yet establish that a richer representation predicts better.
 
-| Standard View | Epimechanics View |
-|---------------|-------------------|
-| Physics metaphors are figurative | Physics structure is literal (in abstract form) |
-| Each domain has its own laws | One grammar, many instantiations |
-| "Mass" of a belief is poetic | Generalized mass $\mathcal{M} = \int \rho_{\text{causal}} d\mu$ is measurable |
+## Why the theory is here
 
----
+**Epimechanics** is the theoretical program; **Epiphysics** is the empirical program. Epimechanics investigates whether ideas such as state, coupling, and resistance to change can become useful mathematical descriptions across domains. Their usefulness must be measured rather than inferred from an analogy to physics.
 
-## The Key Concepts
+A state X is a representation, not reality. An entity is anything representable; its boundary can be revised. Auto-causal density concerns persistence, not entityhood. Where generalized mass is used, the general relation is tensorial, `p_i = M_ij Ẋ^j`; a scalar is an isotropic approximation. A Lagrangian description is a strong structural postulate whose applicability needs evidence.
 
-**Causal event:** Something causes something else. The primitive.
+The observatory does not assume that every useful system has a mechanical form. Text, graphs, learned states, and executable models are competing representations. Earlier abandoned tests remain in the research record; this plan does not present them as validated or restart them without a new rationale.
 
-**State (X):** A representation of where a system is. Can be physical (position), mental (belief), social (reputation).
+## What would convince us?
 
-**Generalized mass (M):** How densely connected a system is internally. Dense connections → hard to change → high mass.
+A candidate must improve on appropriate baselines using the same eligible evidence and a declared budget. It must be tested on future outcomes, retain failures and abstentions, and let another person reproduce the comparison. Transfer to another domain is a separate test.
 
-**Auto-causal density (ρ_ac):** How much a system sustains itself. A flame maintains its own conditions. A habit reinforces its neural pathways. High ρ_ac = entity-like.
+The guiding question is simple: **does this representation earn its cost by helping us predict or act better?** A null result is useful if it tells us what to stop doing.
 
-**Coupling tensor (T):** How systems influence each other across domains. Stress → illness is off-diagonal coupling.
+## Five-slide presentation
 
----
+| Slide | Headline | Message and visual |
+| --- | --- | --- |
+| 1 | What could we know? | Preserve exact evidence and collection time. Points appear as observations; revisions stay separate. |
+| 2 | What is the system? | Compare entities and dependencies. The same points regroup into original simplex-like clusters. |
+| 3 | What happens next? | Commit competing forecasts before outcomes under declared budgets. Branches show alternatives. |
+| 4 | What did we learn? | Show outcomes, costs, failures, and unresolved cases. Link every claim to evidence. |
+| 5 | How does it improve? | Revise and test again. Invite a reproduction, correction, or new question. |
 
-## What This Enables
+The animation illustrates the process; it is not measured data or proof. End with one concrete example and one contribution action, not promised universal prediction or guaranteed virality.
 
-If the framework is valid:
+## Start here
 
-1. **Cross-domain predictions** — Same math predicts behavior in physics, psychology, economics
-2. **Entity definition** — What makes something "a thing" (high ρ_ac, coherent boundaries)
-3. **Measurement** — Soul, consciousness, agency as computable quantities (not mystical)
-4. **Unification** — One vocabulary across sciences
+- [Overview](/overview) — the five-step story.
+- [Observatory](/observatory) — the worked example and implementation status.
+- [Research program](/research/recursive-research-program) — recursive systems, control, and exchange.
+- [Prospective protocol](/experiments/prospective-observatory) — what a credible comparison requires.
 
----
-
-## What's Validated
-
-**Established (not our claim):**
-- Causal set theory: spacetime from causal partial order
-- Lagrangian mechanics: the mathematical structure itself
-
-**Our contributions (testable but not yet tested):**
-- Generalized mass applies outside physics
-- ρ_ac predicts persistence/entity-ness
-- Q1-Q5 descriptors classify bond types across domains
-- Cross-domain coupling is tensorial
-
----
-
-## The Triviality Objection
-
-*"Any abstract framework can be mapped onto anything."*
-
-True. The test: **Does it predict?**
-
-If epimechanics generates predictions that domain-specific theories alone don't make — and those predictions hold — it has empirical content. If not, it's just vocabulary.
-
-We're honest: **predictions are stated, not yet validated.**
-
----
-
-## Start Here
-
-1. **[Series Map](theory/series_map.md)** — Overview of all documents
-2. **[Part 0: Foundations](theory/00_prelude.md)** — The vocabulary
-3. **[Part 1: Generalized Mechanics](theory/01_generalized_mechanics.md)** — The math
-
----
-
-## One Image
-
-```
-          Physical               Abstract
-          Systems                Systems
-             ↓                      ↓
-         State X               State X
-             ↓                      ↓
-    Lagrangian L(X,Ẋ)      Lagrangian L(X,Ẋ)
-             ↓                      ↓
-      Equations of           Equations of
-        Motion                 Motion
-             ↓                      ↓
-       Predictions            Predictions
-             ↓                      ↓
-         TESTED              TO BE TESTED
-```
-
-The left side is physics. The right side is epimechanics.
-
-The structure is the same. The content differs. The question: does the structure carry predictive power?
-
----
-
-*Epimechanics is a proposal. It earns its keep through predictions, not pedigree.*
+The invitation is to inspect, reproduce, and challenge the work. Useful evidence can travel farther than an unsupported claim.

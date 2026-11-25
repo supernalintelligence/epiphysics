@@ -1,7 +1,9 @@
 // src/app/layout.tsx
 import './globals.css';
 import 'katex/dist/katex.min.css';
-import { Inter } from 'next/font/google';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
 import { Providers } from '@/app/providers';
 import { getCachedSections } from '@/lib/content';
 import { getRootPagesConfig } from '@/lib/content/pages-config';
@@ -13,7 +15,7 @@ import { PersonSchema, WebSiteSchema } from '@/components/seo';
 import TTSInit from '@/components/TTSInitializer';
 import SiteResume from '@/components/SiteResume';
 
-const inter = Inter({ subsets: ['latin'] });
+
 
 export const metadata: Metadata = {
   alternates: {
@@ -54,7 +56,7 @@ export default async function RootLayout({
       </head>
       <body className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" suppressHydrationWarning>
         <Analytics />
-        <div className={inter.className}>
+        <div style={{ fontFamily: "Inter, sans-serif" }}>
           <Providers>
             <PageLayout sections={orderedSections} config={config}>
               {children}

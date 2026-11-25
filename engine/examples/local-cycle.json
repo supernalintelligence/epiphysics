@@ -1,0 +1,5 @@
+{
+  "sources": [{"id": "local-signal", "kind": "file", "path": "signal.txt"}],
+  "horizon_seconds": 120,
+  "max_lateness_seconds": 3600
+}

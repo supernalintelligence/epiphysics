@@ -1,53 +1,24 @@
 title: Epiphysics
-description: A human-AI collaboration to understand reality
-
+description: An open research program for representations, recursive AI systems, and predictions grounded in dated evidence
 hero:
-  subtitle: "The mathematical grammar of change — derived from first principles, experiments designed, built collaboratively with AI."
+  subtitle: "How should we model a changing world?"
   quick_links:
-    - title: "Series Map"
-      description: "Start here — what exists, what's proved"
-      link: "/theory/series_map"
+    - title: "The idea"
+      description: "A five-step introduction"
+      link: "/overview"
       type: "writing"
-    - title: "Theory"
-      description: "The Framework"
-      link: "/theory"
+    - title: "Worked example"
+      description: "Inspect a synthetic prediction record"
+      link: "/observatory"
       type: "writing"
-    - title: "Applications"
-      description: "Domain Tests"
-      link: "/applications"
+    - title: "Research program"
+      description: "What exists and what we need to test"
+      link: "/research/recursive-research-program"
       type: "writing"
-    - title: "Research"
-      description: "Papers & Proofs"
-      link: "/research"
-      type: "writing"
-  background_style: "dynamic"
-
-featured_posts:
-  title: Recent Work
-  description: ""
-
-features:
-  title: "Explore"
-  description: ""
-  items:
-    - title: "The Full Derivation"
-      description: "Causal event → spacetime → quantum mechanics → life"
-      icon: zap
-      url: "/theory/series_map"
-    - title: "Why U(1)?"
-      description: "Why quantum mechanics uses complex numbers — derived, not postulated"
-      icon: arrow-right
-      url: "/theory/amplitude-phase-fixed-point-paper"
-    - title: "Accessible Version"
-      description: "No equations. Why your desk gets messy."
-      icon: heart
-      url: "https://ian.ceo/musings/existence_physics_and_life/physics_of_common_sense"
-
 cta:
-  title: Open Source
-  description: "Theory developed. Experiments ready to run. Join us."
+  title: Contribute a question or a result
+  description: "Share a record with its evidence, propose a source, or help design a test."
   button:
-    text: GitHub
-    link: https://github.com/supernalintelligence/epiphysics
-
+    text: Inspect the example
+    link: /observatory
 content: ""

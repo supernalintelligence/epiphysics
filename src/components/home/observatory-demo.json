@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "exported_at": "2026-11-24T10:11:00+00:00",
+  "integrity": {
+    "valid": true,
+    "events": 9,
+    "head": "8623291cbf64853319abfc403cea8be8b4fee5d1ecf1cc40600af90cd72cf54d",
+    "errors": [],
+    "assurance": "Local integrity only. Truncation or a complete rewrite needs an external trusted checkpoint to detect."
+  },
+  "events": [
+    {
+      "seq": 1,
+      "id": "demo-notice",
+      "kind": "demo_notice",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "notice": "Synthetic worked example; fictional inputs, outcomes, and clock. Not empirical validation.",
+        "synthetic": true
+      },
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "5323cae38ccc21375a8f43a81b3757cd0c3c8649ba724da1f21c3c9374b91597"
+    },
+    {
+      "seq": 2,
+      "id": "observation-before",
+      "kind": "observation",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "content_hash": "c09e9077b8574c37f902f6dfedf987c4bcd8e047c6c1b8c43610cb961d2c0341",
+        "event_at": null,
+        "media_type": "text/plain",
+        "published_at": null,
+        "revision_of": null,
+        "size": 54,
+        "source": "synthetic:worker-queue",
+        "timing_basis": "collector clock; source times are claims"
+      },
+      "previous_hash": "5323cae38ccc21375a8f43a81b3757cd0c3c8649ba724da1f21c3c9374b91597",
+      "hash": "87356dc3233361bf29f207481865e5478ad4af2efa3e90802f5e6459ce7fc687"
+    },
+    {
+      "seq": 3,
+      "id": "snapshot-before",
+      "kind": "snapshot",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "cutoff": "2026-11-24T10:00:00+00:00",
+        "manifest_hash": "b510fe1fae444d453d3fad1c9ab7a560268fb709308c656ea738f5a238731836",
+        "observations": [
+          {
+            "content_hash": "c09e9077b8574c37f902f6dfedf987c4bcd8e047c6c1b8c43610cb961d2c0341",
+            "event_hash": "87356dc3233361bf29f207481865e5478ad4af2efa3e90802f5e6459ce7fc687",
+            "id": "observation-before"
+          }
+        ],
+        "watermark": 2
+      },
+      "previous_hash": "87356dc3233361bf29f207481865e5478ad4af2efa3e90802f5e6459ce7fc687",
+      "hash": "faec24842863cf6fcab93c2d305c05a3284ad6ebda3e56a952a99f44fe27eeb5"
+    },
+    {
+      "seq": 4,
+      "id": "representation-before",
+      "kind": "representation",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "method": "handwritten-example",
+        "model": {
+          "entities": [
+            {
+              "basis": "reported",
+              "evidence_ids": [
+                "observation-before"
+              ],
+              "id": "worker-a",
+              "label": "Worker A"
+            },
+            {
+              "basis": "reported",
+              "evidence_ids": [
+                "observation-before"
+              ],
+              "id": "worker-b",
+              "label": "Worker B"
+            }
+          ],
+          "relations": [
+            {
+              "basis": "reported",
+              "evidence_ids": [
+                "observation-before"
+              ],
+              "source": "worker-b",
+              "target": "worker-a",
+              "type": "supplies-data"
+            }
+          ]
+        },
+        "observer": "demo-observer",
+        "parent": null,
+        "snapshot_id": "snapshot-before"
+      },
+      "previous_hash": "faec24842863cf6fcab93c2d305c05a3284ad6ebda3e56a952a99f44fe27eeb5",
+      "hash": "8c64c311b3744978461e8cb09f0024cc10c33616df4bb33ef1b38bf2406c2b22"
+    },
+    {
+      "seq": 5,
+      "id": "question-demo",
+      "kind": "question",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "deadline": "2026-11-24T10:05:00+00:00",
+        "family": "synthetic-worker",
+        "outcome_type": "binary",
+        "resolution_rule": "Synthetic completion record reports zero pending jobs.",
+        "resolve_after": "2026-11-24T10:10:00+00:00",
+        "text": "Will Worker A finish its queued jobs?"
+      },
+      "previous_hash": "8c64c311b3744978461e8cb09f0024cc10c33616df4bb33ef1b38bf2406c2b22",
+      "hash": "996c99c5496039d160df42ba2ff3cfd957a72434e8f2a644e2cf6fb9ea1d065c"
+    },
+    {
+      "seq": 6,
+      "id": "forecast-baseline",
+      "kind": "forecast",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "commitment": "local hash chain only; independently unwitnessed",
+        "cost": {},
+        "method": "baseline",
+        "model": {
+          "identifier": "handwritten-demo",
+          "prompt": "No model was called"
+        },
+        "probability": 0.5,
+        "question_id": "question-demo",
+        "reason": null,
+        "representation_id": "representation-before",
+        "snapshot_id": "snapshot-before",
+        "status": "predicted"
+      },
+      "previous_hash": "996c99c5496039d160df42ba2ff3cfd957a72434e8f2a644e2cf6fb9ea1d065c",
+      "hash": "e1d5a4e45e9cb05e08fb2e98b3f43639beb93ab9287f9461a4e8dec74c6f3aeb"
+    },
+    {
+      "seq": 7,
+      "id": "forecast-illustrative-representation",
+      "kind": "forecast",
+      "recorded_at": "2026-11-24T10:00:00+00:00",
+      "body": {
+        "commitment": "local hash chain only; independently unwitnessed",
+        "cost": {},
+        "method": "illustrative-representation",
+        "model": {
+          "identifier": "handwritten-demo",
+          "prompt": "No model was called"
+        },
+        "probability": 0.7,
+        "question_id": "question-demo",
+        "reason": null,
+        "representation_id": "representation-before",
+        "snapshot_id": "snapshot-before",
+        "status": "predicted"
+      },
+      "previous_hash": "e1d5a4e45e9cb05e08fb2e98b3f43639beb93ab9287f9461a4e8dec74c6f3aeb",
+      "hash": "bb44d781c15fe9a0b6d1d7b66e71d8ecc689481bb6caad367439c81aac148afb"
+    },
+    {
+      "seq": 8,
+      "id": "observation-after",
+      "kind": "observation",
+      "recorded_at": "2026-11-24T10:11:00+00:00",
+      "body": {
+        "content_hash": "f8c80451f25d1ce57e7f6679fede86311b70ca65f2928045067b03415a82de2f",
+        "event_at": null,
+        "media_type": "text/plain",
+        "published_at": null,
+        "revision_of": "observation-before",
+        "size": 31,
+        "source": "synthetic:worker-queue",
+        "timing_basis": "collector clock; source times are claims"
+      },
+      "previous_hash": "bb44d781c15fe9a0b6d1d7b66e71d8ecc689481bb6caad367439c81aac148afb",
+      "hash": "79f3834bd881fc136573ab72892c07a692f2b6aee6b2664a6f2415fc9391804a"
+    },
+    {
+      "seq": 9,
+      "id": "resolution-demo",
+      "kind": "resolution",
+      "recorded_at": "2026-11-24T10:11:00+00:00",
+      "body": {
+        "evidence_ids": [
+          "observation-after"
+        ],
+        "explanation": "The fictional completion record reports zero pending jobs.",
+        "outcome": 1,
+        "question_id": "question-demo",
+        "supersedes": null
+      },
+      "previous_hash": "79f3834bd881fc136573ab72892c07a692f2b6aee6b2664a6f2415fc9391804a",
+      "hash": "8623291cbf64853319abfc403cea8be8b4fee5d1ecf1cc40600af90cd72cf54d"
+    }
+  ],
+  "scores": {
+    "methods": {
+      "baseline": {
+        "attempts": 1,
+        "predicted": 1,
+        "failed": 0,
+        "abstained": 0,
+        "resolved": 1,
+        "pending": 0,
+        "expired": 0,
+        "brier": 0.25,
+        "coverage": 1.0
+      },
+      "illustrative-representation": {
+        "attempts": 1,
+        "predicted": 1,
+        "failed": 0,
+        "abstained": 0,
+        "resolved": 1,
+        "pending": 0,
+        "expired": 0,
+        "brier": 0.09000000000000002,
+        "coverage": 1.0
+      }
+    },
+    "rows": [
+      {
+        "forecast_id": "forecast-baseline",
+        "question_id": "question-demo",
+        "snapshot_id": "snapshot-before",
+        "method": "baseline",
+        "brier": 0.25,
+        "resolution_id": "resolution-demo"
+      },
+      {
+        "forecast_id": "forecast-illustrative-representation",
+        "question_id": "question-demo",
+        "snapshot_id": "snapshot-before",
+        "method": "illustrative-representation",
+        "brier": 0.09000000000000002,
+        "resolution_id": "resolution-demo"
+      }
+    ],
+    "resolution_policy": "latest correction; IDs retained in every score",
+    "interpretation": "Descriptive scores, not a significance or causal claim. Compare matched question/snapshot pairs."
+  },
+  "witness_status": "not independently timestamped",
+  "synthetic": true,
+  "comparison": {
+    "left": "baseline",
+    "right": "illustrative-representation",
+    "matched": 1,
+    "right_minus_left_brier": -0.15999999999999998,
+    "pairs": [
+      {
+        "question_id": "question-demo",
+        "snapshot_id": "snapshot-before"
+      }
+    ],
+    "note": "Same questions and snapshots; model/budget matching and family dependence still require protocol review."
+  }
+}
