@@ -54,3 +54,7 @@ Browser differences, both explained:
 - `npm run dev`, turbo tasks, jest, lint, a full lighthouse run (only `--version`), and `src/scripts/renderMermaid.js` (only `mmdc` directly).
 - Client-side Mermaid (no diagram on the sampled pages), chat UI interaction, a live Anthropic call.
 - The commit claim that reverting any one major brings back a high finding, and the base figure of 94 from the old lockfile.
+
+## Follow-up (not independently reviewed)
+
+Commit 7f1018b applies finding 1: `engines.node` raised to `>=22.19.0`. One line, verified against `npm view` engines for lighthouse 13.6.0 and puppeteer 25.13.0 by the landing session.
