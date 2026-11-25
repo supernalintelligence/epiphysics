@@ -1,0 +1,29 @@
+#!/bin/sh
+# >>> sc-push-secret-guard >>>
+# Managed by `sc git hooks install-guard`. Scans pushed commits for credentials.
+# Bypass (emergency only): SC_SKIP_SECRET_SCAN=true git push
+_sc_push_in=$(cat)
+if [ "${SC_SKIP_SECRET_SCAN:-}" = "true" ]; then
+  echo "Secret scan SKIPPED (SC_SKIP_SECRET_SCAN=true)" >&2
+else
+  command -v sc >/dev/null 2>&1 || { echo "BLOCKED: sc is not on PATH, so the push secret scan cannot run" >&2; exit 1; }
+  while read -r _sc_lref _sc_lsha _sc_rref _sc_rsha; do
+    [ -n "$_sc_lsha" ] || continue
+    case "$_sc_lsha" in *[!0]*) ;; *) continue ;; esac
+    case "$_sc_rsha" in
+      *[!0]*) _sc_rng="$_sc_rsha..$_sc_lsha" ;;
+      *)
+        [ -n "$(git rev-list -n 1 "$_sc_lsha" --not --remotes="$1")" ] || continue
+        _sc_b=$(git rev-list --boundary "$_sc_lsha" --not --remotes="$1" | sed -n 's/^-//p' | head -1)
+        if [ -n "$_sc_b" ]; then _sc_rng="$_sc_b..$_sc_lsha"; else _sc_rng="$_sc_lsha"; fi ;;
+    esac
+    sc security scan --range "$_sc_rng" </dev/null || { echo "BLOCKED: pushed commits $_sc_rng carry a credential, or the scan could not run" >&2; exit 1; }
+  done <<SC_PUSH_SPECS
+$_sc_push_in
+SC_PUSH_SPECS
+fi
+exec <<SC_PUSH_STDIN
+$_sc_push_in
+SC_PUSH_STDIN
+# <<< sc-push-secret-guard <<<
+exec sc git hooks run pre-push
