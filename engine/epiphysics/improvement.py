@@ -160,7 +160,14 @@ def _information_context(preparation, events):
     return False
 
 
+def _check_legacy_queue(events):
+    transitions = [event for event in events if event["kind"] in TRANSITIONS]
+    if transitions and "work:declaration" in transitions[-1]["body"].get("request", {}).get("manifest", {}):
+        raise ValueError("Queued work-contract evidence requires the work entry; a legacy assessment cannot consume it")
+
+
 def _check_decision_origin(preparation, events, after_step):
+    _check_legacy_queue(events)
     transitions = [event for event in events if event["kind"] in TRANSITIONS]
     previous = transitions[-1]["body"]["next_step"] if transitions else None
     if preparation is None:
@@ -744,6 +751,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
     if current["next_step"]["id"] != after_step:
         raise ValueError("Stale predecessor; read status and use the currently queued step")
     previous = current["next_step"]
+    _check_legacy_queue(events)
     if decision_preparation is None:
         _check_decision_origin(None, events, after_step)
     previous_manifest = (ledger.get(current["last_transition"])["body"]["request"]["manifest"]
@@ -771,6 +779,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         actual = transitions[-1]["body"]["next_step"]["id"] if transitions else "initial"
         if actual != after_step:
             raise ValueError("Another worker advanced the queue")
+        _check_legacy_queue(locked_events)
         # Invalid current-step evidence follows the usual durable failure path;
         # stale ownership above still refuses before claiming any work.
         try:
@@ -995,7 +1004,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         return failed
 
 
-def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason):
+def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason, *, validate=None):
     """Close only this already-reaped child's unfinished claim, under the ledger lock."""
     ledger = Ledger(store)
     try:
@@ -1017,6 +1026,8 @@ def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason):
         def validate_recovery(_):
             if any(e["kind"] in TRANSITIONS and e["body"]["run_key"] == run_key for e in ledger.events()):
                 raise ValueError("Run already finished; recovery refused")
+            if validate is not None:
+                validate(ledger)
         ledger.append("improvement_failed", result, f"improvement:{run_key}:failed",
                       exclusive=True, validate=validate_recovery)
         return "diagnosis_queued"
@@ -1050,12 +1061,14 @@ def _dispatch_transition(store, run_key, dispatch_id, pid, delivered_result, exp
 
 
 def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="initial",
-             completed_work="", timeout_seconds=60, retrieval_study_path=None, decision_study_path=None):
+             completed_work="", timeout_seconds=60, retrieval_study_path=None, decision_study_path=None,
+             work_contract_path=None):
     """Spawn one fixed assessment program and persist a bounded process receipt.
 
     This is process supervision for a trusted local checkout, not a security
     sandbox. Builder agents remain separate workers supervised by the desktop.
     """
+    dispatch_began, dispatch_started_at = time.monotonic(), utc_now()
     if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 60:
         raise ValueError("Worker timeout must be positive and at most 60 seconds")
     if not isinstance(run_key, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", run_key):
@@ -1064,9 +1077,14 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         raise ValueError("A nonempty completion description of at most 8000 characters is required")
     if decision_study_path is not None and retrieval_study_path is not None:
         raise ValueError("Dispatch one decision or retrieval study per transition")
+    if work_contract_path is not None and (retrieval_study_path is not None or decision_study_path is not None):
+        raise ValueError("Dispatch exactly one work interface")
+    if work_contract_path is not None and any(value is not None for value in (policy_path, suite_path, candidate)):
+        raise ValueError("Work contracts cannot include ignored legacy candidate or policy inputs")
     store = Path(store).resolve()
-    policy_path, suite_path = str(Path(policy_path).resolve()), str(Path(suite_path).resolve())
-    candidate = candidate if candidate in {"reference", "degraded"} else str(Path(candidate).resolve())
+    if work_contract_path is None:
+        policy_path, suite_path = str(Path(policy_path).resolve()), str(Path(suite_path).resolve())
+        candidate = candidate if candidate in {"reference", "degraded"} else str(Path(candidate).resolve())
     if retrieval_study_path is not None:
         retrieval_study_path = os.path.abspath(retrieval_study_path)
     if decision_study_path is not None:
@@ -1079,17 +1097,30 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         ledger.close()
     expected_request = None
     preparation = None
-    try:
-        policy, _, _, input_bytes = _assessment_inputs(policy_path, suite_path, candidate)
-        preparation = _prepare_retrieval(retrieval_study_path, policy, store)
-        input_bytes.update(_retrieval_inputs(preparation))
-        input_bytes.update(_decision_inputs(_prepare_decision(decision_study_path)))
-        expected_request = {"manifest": {name: digest(raw) for name, raw in input_bytes.items()},
-                            "after_step": after_step, "completed_work": completed_work}
-    except (ValueError, OSError, TypeError, KeyError):
-        # The child reports invalid input through its ordinary exit/output path.
-        # Without a manifest, a prior completion cannot be attributed to this request.
-        pass
+    work_prepared = None
+    if work_contract_path is not None:
+        from . import work_runner
+        work_prepared = work_runner.prepare(work_contract_path, store)
+        declaration = work_prepared['bundle']['declaration']
+        if declaration['id'] != run_key or declaration['after_step'] != after_step:
+            raise ValueError("Work dispatch identity differs from declaration")
+        expected_request = work_prepared['request']
+        remaining = (work_runner.store.instant(declaration['expires_at']) - work_runner.store.instant(utc_now())).total_seconds()
+        work_deadline = min(dispatch_began + timeout_seconds, dispatch_began + declaration['max_seconds'], time.monotonic() + remaining)
+        timeout_seconds = work_deadline - dispatch_began
+        work_runner.alive(work_prepared, work_deadline)
+    if work_prepared is None:
+        try:
+            policy, _, _, input_bytes = _assessment_inputs(policy_path, suite_path, candidate)
+            preparation = _prepare_retrieval(retrieval_study_path, policy, store)
+            input_bytes.update(_retrieval_inputs(preparation))
+            input_bytes.update(_decision_inputs(_prepare_decision(decision_study_path)))
+            expected_request = {"manifest": {name: digest(raw) for name, raw in input_bytes.items()},
+                                "after_step": after_step, "completed_work": completed_work}
+        except (ValueError, OSError, TypeError, KeyError):
+            # Invalid legacy input remains the child's ordinary refusal path.
+            # Without a manifest, prior completion cannot be attributed here.
+            pass
     dispatch_id = uuid.uuid4().hex
     directory = store / "dispatches" / dispatch_id
     directory.mkdir(parents=True, exist_ok=False)
@@ -1099,6 +1130,13 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
                  "--run-key", run_key, "--after-step", after_step, "--completed-work", completed_work]
     environment = {"PATH": os.defpath, "PYTHONPATH": str(engine), "PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1",
                    "PYTHONUTF8": "1", "EPIPHYSICS_DISPATCH_ID": dispatch_id}
+    if work_prepared is not None:
+        capsule = directory / 'work-bundle.json'
+        with capsule.open('xb') as target:
+            target.write(work_prepared['raw'])
+        arguments = [sys.executable, '-s', '-m', 'epiphysics.improvement', '--store', str(store),
+                     'work-assess', '--work-contract', str(capsule)]
+        environment['EPIPHYSICS_EXPECTED_REQUEST_SHA256'] = digest(canonical(expected_request).encode())
     if preparation is not None:
         prepared_path, prepared_hash = _write_retrieval_preparation(directory / "retrieval-input", preparation)
         arguments.extend(["--prepared-retrieval-study", str(prepared_path)])
@@ -1111,7 +1149,8 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         if expected_request is not None:
             environment["EPIPHYSICS_EXPECTED_REQUEST_SHA256"] = digest(canonical(expected_request).encode())
     receipt = {"schema_version": 1, "dispatch_id": dispatch_id, "run_key": run_key,
-               "program": "epiphysics.improvement assess", "started_at": utc_now(), "pid": None,
+               "program": "epiphysics.improvement work-assess" if work_prepared else "epiphysics.improvement assess",
+               "started_at": dispatch_started_at if work_prepared else utc_now(), "pid": None,
                "timeout_seconds": timeout_seconds, "output_limit_bytes": MAX_BYTES,
                "cwd": str(engine), "arguments": arguments, "model_calls": 0, "external_spend": 0,
                "assurance": "Local process supervision; timeout enforcement requires the dispatcher to remain alive"}
@@ -1119,7 +1158,7 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
     process = None
     termination = None
     output_bytes = 0
-    started = time.monotonic()
+    started = dispatch_began if work_prepared else time.monotonic()
     try:
         process = subprocess.Popen(arguments, cwd=engine, env=environment, stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
@@ -1171,16 +1210,32 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
     if process and process.returncode == 0 and termination is None:
         try:
             result = json.loads(raw_output)
-            if not isinstance(result, dict) or result.get("run_key") != run_key or result.get("result") != "assessed":
+            expected_result = 'provisional' if work_prepared else 'assessed'
+            if not isinstance(result, dict) or result.get("run_key") != run_key or result.get("result") != expected_result:
                 raise ValueError("Unexpected worker result")
         except (ValueError, UnicodeDecodeError):
             termination = "invalid_worker_output"
     failed = termination is not None or process is None or process.returncode != 0
+    if work_prepared is not None and not failed:
+        try:
+            result = work_runner.finish(store, work_prepared, dispatch_id,
+                {**receipt, 'ended_at': utc_now(), 'returncode': process.returncode,
+                 'termination': termination, 'output_sha256': digest(raw_output)}, raw_output, work_deadline)
+        except (ValueError, OSError, TypeError, KeyError, sqlite3.Error) as error:
+            failed = True
+            termination = 'work_closure_failed: ' + type(error).__name__ + ': ' + str(error)[:400]
     recovery = "not_needed"
     if failed and process:
         try:
+            guard = (work_runner.recovery_guard(work_prepared, work_deadline, store, dispatch_id, process.pid)
+                     if work_prepared is not None else None)
             recovery = _recover_reaped_dispatch(store, run_key, dispatch_id, process.pid,
-                termination or f"Worker exited with code {process.returncode}")
+                termination or f"Worker exited with code {process.returncode}", validate=guard)
+            if work_prepared is not None:
+                try:
+                    work_runner.alive(work_prepared, work_deadline)
+                except ValueError:
+                    recovery = "recovery_publication_deadline_exceeded"
         except (ValueError, OSError) as error:
             recovery = f"recovery_refused: {error}"
     authoritative = None
@@ -1205,7 +1260,30 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         assessment_status=assessment_status,
         authoritative_transition_id=authoritative["event_id"] if authoritative else None,
         receipt_directory=str(directory))
+    def observe_work_delivery():
+        if work_prepared is None:
+            return False
+        try:
+            work_runner.alive(work_prepared, work_deadline)
+            within_deadline = True
+        except ValueError:
+            within_deadline = False
+        receipt.update(deadline_status="observed_within_deadline" if within_deadline else "exceeded",
+            publication_status="observed_within_deadline" if within_deadline and not failed
+                               else "timely_delivery_not_established",
+            automatic_continuation_allowed=within_deadline and not failed,
+            continuation_status="ready_for_declared_review" if within_deadline and not failed else "requires_inspection")
+        if not within_deadline:
+            receipt.update(result="work_deadline_exceeded", delivery_status="failed",
+                           termination=receipt["termination"] or "work_publication_deadline_exceeded")
+        receipt.update(ended_at=utc_now(), elapsed_seconds=time.monotonic() - started)
+        return not within_deadline
+    observe_work_delivery()
     (directory / "finish.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    if observe_work_delivery():
+        # Preserve any durable transition. Never turn an expired delivery into
+        # ordinary success via the authoritative-result fallback or replay it.
+        (directory / "finish.json").write_text(json.dumps(receipt, indent=2) + "\n")
     return {"result": receipt["result"], "dispatch": receipt, "assessment": result,
             "authoritative_transition": authoritative}
 
@@ -1215,6 +1293,9 @@ def main(argv=None):
     parser.add_argument("--store", required=True)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("status")
+    for command in ('work', 'work-assess'):
+        work = commands.add_parser(command, help='Retained-input invented work fixtures')
+        work.add_argument('--work-contract', required=True)
     for command in ("assess", "dispatch"):
         run = commands.add_parser(command)
         run.add_argument("--policy", required=True)
@@ -1232,7 +1313,18 @@ def main(argv=None):
     args = parser.parse_args(argv)
     ledger = None
     try:
-        if args.command == "dispatch":
+        if args.command == 'work-assess':
+            from . import work_runner
+            result = work_runner.child(args.store, args.work_contract)
+        elif args.command == 'work':
+            from . import work_contracts
+            bundle, _ = work_contracts.read(args.work_contract)
+            work_contracts.validate(bundle)
+            declaration = bundle['declaration']
+            result = dispatch(args.store, None, None, None, declaration['id'], after_step=declaration['after_step'],
+                completed_work='Assess retained invented work inputs', timeout_seconds=declaration['max_seconds'],
+                work_contract_path=args.work_contract)
+        elif args.command == "dispatch":
             result = dispatch(args.store, args.policy, args.suite, args.candidate, args.run_key,
                 after_step=args.after_step, completed_work=args.completed_work, timeout_seconds=args.timeout_seconds,
                 retrieval_study_path=args.retrieval_study, decision_study_path=args.decision_study)
@@ -1243,7 +1335,7 @@ def main(argv=None):
                 retrieval_study_path=args.retrieval_study, _prepared_retrieval_path=args.prepared_retrieval_study,
                 decision_study_path=args.decision_study)
         print(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False))
-        return 2 if result.get("result") in {"failed", "assessment_completed_delivery_failed"} else 0
+        return 2 if result.get("result") in {"failed", "assessment_completed_delivery_failed", "work_deadline_exceeded"} else 0
     except (ValueError, OSError, TypeError, KeyError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 2

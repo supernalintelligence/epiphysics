@@ -577,6 +577,16 @@ def _check_artifacts(prepared):
         _require(prepared["artifacts"][role] == raw, "Captured study source changed")
 
 
+def prepare_work_contract(bundle):
+    """Generic bridge for new retained-input fixtures; domain selection is static."""
+    from . import work_adapters
+    return work_adapters.assess(bundle)
+
+
+def assess_work_contract(bundle):
+    return prepare_work_contract(bundle)
+
+
 def prepare_decision_study(path):
     """Read one fixed request and capture its bounded retained evidence once."""
     # Route the explicit phase before legacy request limits/error filtering.
