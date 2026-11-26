@@ -456,6 +456,28 @@
       "statement": "SQLite FTS5 supplies an existing full-text index and BM25 ranking for a local lexical retrieval baseline. It does not supply an evidence-grounded answer evaluator, historical eligibility rules or a sealed final cohort.",
       "status": "reported_result",
       "basis": "reported"
+    },
+    {
+      "id": "doc_graph_materialization_run",
+      "kind": "document",
+      "title": "Reviewed atomic graph materialization execution record",
+      "repo_path": "docs/planning/runs/2026-11-25-graph-materialization.md"
+    },
+    {
+      "id": "claim_recursive_graph_consumers",
+      "kind": "claim",
+      "title": "Materialized outputs feed another fixed graph operation",
+      "statement": "The committed B2c record reports atomic representations/manifests with full ancestry, 30/30 synthetic consumer checks, 308 passing tests and independent review. A reviewer exercised materialization followed by another transform and materialization. This establishes a checked local recursive consumer path, not learned improvement or semantic equivalence.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_grouped_time_boundary",
+      "kind": "claim",
+      "title": "Logical transaction time must not backdate new evidence",
+      "statement": "B2c review found that a shared transaction timestamp could make new observations or late forecasts appear earlier. The retained fix restricts grouped writes to derived records over existing evidence and requires fresh observations/questions/forecasts outside the group. Synthetic regressions verify this boundary; local collection time remains without independent witness.",
+      "status": "implementation_finding",
+      "basis": "observed"
     }
   ],
   "edges": [
@@ -1002,6 +1024,26 @@
     {
       "source": "claim_fts5_baseline",
       "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_recursive_graph_consumers",
+      "target": "doc_graph_materialization_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_recursive_graph_consumers",
+      "target": "exp_recursive",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_grouped_time_boundary",
+      "target": "doc_graph_materialization_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_grouped_time_boundary",
+      "target": "exp_forecast",
       "type": "motivates"
     }
   ]

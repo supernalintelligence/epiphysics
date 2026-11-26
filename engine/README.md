@@ -216,6 +216,26 @@ PYTHONPATH=engine python3 -m epiphysics --store ./local-study materialize-graphs
 
 A committed completion or exact replay exits 0; recorded rejection exits 2. API checks, their measured denominator and selector integration are documented in the [metric contracts](../docs/experiments/representation-metrics.md).
 
+## C1: frozen lexical retrieval baseline
+
+The lexical baseline freezes explicitly selected observations from one source snapshot before building a fresh in-memory SQLite FTS5 index. Future or unselected sources do not enter either matches or corpus statistics. Passages preserve exact UTF-8 byte ranges, including raw markup. The default is 2,048-byte windows with 256-byte nominal overlap, `unicode61 remove_diacritics 2`, literal OR query terms and five results. BM25 sorts ascending; source ID, offsets and span hash break ties deterministically. A lexical match does not establish answerability.
+
+The public interfaces are `freeze_retrieval_corpus`, `run_lexical_retrieval` and `get_retrieval_run` in `epiphysics.retrieval`. `epiphysics.retrieval_evaluation.project_queries` strips evaluator-only fields; `evaluate_retrieval` checks a completed run against a separate development cohort and returns a report without writing events. The pure candidate receives passages, query IDs/text and config, never gold spans, expected answers or source labels.
+
+```bash
+PYTHONPATH=engine python3 -m epiphysics --store ./local-study freeze-retrieval freeze.json
+PYTHONPATH=engine python3 -m epiphysics --store ./local-study run-retrieval run.json
+PYTHONPATH=engine python3 -m epiphysics --store ./local-study evaluate-retrieval evaluation.json --output new-report.json
+```
+
+All request files are strict bounded JSON objects. Freeze input contains `snapshot_id`, `observation_ids`, optional `config` and optional `event_id`. Run input contains `corpus_id`, `queries` (each with `query_id` and `query`) and `run_key`. Evaluation input contains `cohort` and `run_terminal_id`. A recorded run rejection exits 2; completed runs/replays exit 0. Evaluation output files are exclusive new exports and are never silently replaced. Retain the report, cohort and evaluator artifacts separately when recording an experiment.
+
+The [development inputs](examples/retrieval/README.md) refer to an existing four-source local archive; they are not a replacement for its source bytes. Two fresh run keys and indexes are required to test reproduction. An exact historical replay returns its earlier receipt and does not run another search. Record code/dependency, runtime, source, corpus, passage, config, query, cohort and result identities; runtime changes can affect tokenization and scores.
+
+Source eligibility is distinct from experiment timing. Newly built retrieval code and curated questions may run against an earlier source snapshot as a retrospective development experiment. Their later execution artifacts must never be indexed or backdated into the source corpus. This is not a forecast by a predictor proven to exist at that earlier cutoff.
+
+C1 provides a standalone baseline and evaluator. C2 must validate real retrieval receipts and add them to the improvement controller before its queued `build_retrieval_baseline` action closes. A synthetic capability fraction is not a measured retrieval-quality result. The [metric contracts](../docs/experiments/representation-metrics.md) define full-span coverage, source recall, reciprocal rank, unsupported-query retrieval, empty results and their denominators.
+
 ## Assurance limits
 
 Append-only triggers and hashes protect against accidental edits through this interface. An operator controlling the database, code, or clock can rewrite the entire history. Without an independently witnessed checkpoint, truncation and wholesale rewriting are not externally detectable. A blockchain anchor would establish prior existence of committed bytes under its assumptions; it would not establish truth, completeness, collection time, or a model's actual information access.

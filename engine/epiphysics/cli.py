@@ -86,6 +86,13 @@ def main():
     graph_views.add_argument("file", help="Bounded JSON with parent_manifest_ids, recipe_observation_id, and run_key")
     materialize = sub.add_parser("materialize-graphs", help="Atomically materialize verified graph outputs into representations and manifests")
     materialize.add_argument("file", help="Bounded JSON with completion_id and run_key")
+    freeze_retrieval = sub.add_parser("freeze-retrieval", help="Freeze explicitly selected snapshot sources for lexical retrieval")
+    freeze_retrieval.add_argument("file", help="Bounded JSON with snapshot_id, observation_ids, optional config and event_id")
+    retrieve = sub.add_parser("run-retrieval", help="Run fixed lexical search over a frozen eligible corpus")
+    retrieve.add_argument("file", help="Bounded JSON with corpus_id, queries and run_key; no gold labels")
+    evaluate_retrieval = sub.add_parser("evaluate-retrieval", help="Score a completed retrieval against a separate development cohort")
+    evaluate_retrieval.add_argument("file", help="Bounded JSON with cohort and run_terminal_id")
+    evaluate_retrieval.add_argument("--output", help="Write a new report file; existing files are never replaced")
     assertions = sub.add_parser("assertions", help="Query unsuperseded assertions at a recorded knowledge time")
     assertions.add_argument("--known-at", required=True)
     assertions.add_argument("--valid-at")
@@ -136,6 +143,15 @@ def main():
                 result = execute_graph_views(ledger, **_record_input(args.file))
             elif args.command == "materialize-graphs":
                 result = materialize_graph_outputs(ledger, **_record_input(args.file))
+            elif args.command == "freeze-retrieval":
+                from .retrieval import freeze_retrieval_corpus
+                result = freeze_retrieval_corpus(ledger, **_record_input(args.file))
+            elif args.command == "run-retrieval":
+                from .retrieval import run_lexical_retrieval
+                result = run_lexical_retrieval(ledger, **_record_input(args.file))
+            elif args.command == "evaluate-retrieval":
+                from .retrieval_evaluation import evaluate_retrieval
+                result = evaluate_retrieval(ledger, **_record_input(args.file))
             elif args.command == "score":
                 result = ledger.scores()
             elif args.command == "compare":
@@ -176,6 +192,8 @@ def main():
         if args.command == "graph-views" and result["kind"] == "graph_views_rejected":
             return 2
         if args.command == "materialize-graphs" and result["kind"] == "graph_materialization_rejected":
+            return 2
+        if args.command == "run-retrieval" and result["kind"] == "retrieval_rejected":
             return 2
         return 1 if args.command == "verify" and not result["valid"] else 0
     except (ValueError, OSError, TypeError, KeyError) as error:

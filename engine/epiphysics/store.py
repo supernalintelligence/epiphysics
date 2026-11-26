@@ -220,7 +220,11 @@ class Ledger:
             with path.open("xb") as output:
                 output.write(content)
         except FileExistsError:
-            if digest(path.read_bytes()) != content_hash:
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("Existing blob must be a regular non-symlink file")
+            with path.open("rb") as existing:
+                retained = existing.read(len(content) + 1)
+            if len(retained) != len(content) or digest(retained) != content_hash:
                 raise ValueError("Existing blob is corrupted")
         return self.append("observation", {"source": source, "content_hash": content_hash,
             "size": len(content), "media_type": media_type, "published_at": published_at,

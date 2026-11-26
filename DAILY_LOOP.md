@@ -31,6 +31,12 @@ Default research limits remain zero paid model calls, no purchases, and at most 
 
 The heartbeat depends on host/session availability; the queue does not execute itself. Local evidence becomes a prospective archive through actual observations and remains without independent timestamp assurance until a witness adapter is implemented. Archive local data separately from Git. Keep final evaluation separate from search and tuning; a bad result creates a next question, not permission to revise an earlier forecast or outcome rule.
 
+## Verified SCI coordination
+
+The user authorized coordination with SCI in this work. A local mailbox write alone is not delivery. The B2c run verified an existing native Claude session delivery receipt and an actual SCI reply confirming separate file ownership; see [the run record](docs/planning/runs/2026-11-25-graph-materialization.md). SCI owns its canonical mathematics note and reports no engine dependency. Preserve its files and unrelated shared-checkout edits.
+
+Use an available live-session message tool when it can reach the intended agent. If only the persistent mailbox is available, inspect the documented native-session adapter and the exact existing session state before using it; do not choose “latest,” start a duplicate conversation, resume a busy session, or equate queue acceptance with receipt. Keep delivery evidence and the actual reply in the local coordination record. No idle polling should launch model turns. This is a coordination path for an authorized recipient, not a general outreach permission.
+
 ## Existing falsification cycle
 
 The following project protocol remains available for substantive theory experiments. Its longer work estimates include regular 30-minute/three-step checkpoints and must respect each experiment's resource ceilings. Checkpoints preserve continuity; they do not end an active research session. Preserve the same experiment identity and stopping rule between wakes.

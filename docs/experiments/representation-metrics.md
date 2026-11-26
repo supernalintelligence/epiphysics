@@ -124,6 +124,29 @@ Reports retain every check and diagnostic under `report.materialization_checks`,
 
 Materialization failures select `repair_transform_materialization`. All preceding gates and B2c passing select `build_retrieval_baseline` (Packet C), whose **`retrieval_baseline_reproducibility` remains unmeasured**. Construction costs stay unknown; the bridge does not supply a predictor or a learned action-selection policy. New materialization requires the exact current execution contract; incompatible historical completions require a fresh eligible execution instead of silent migration.
 
+## Frozen lexical retrieval: C1 development measurement
+
+C1 fixes the evaluation contract before its first real baseline run. The initial corpus is four retained policy/protocol sources; twelve builder-visible development queries include eight supported and four unsupported requests. Independent source review checks the gold byte spans and the scope of unsupported claims. This sample is neither a sealed final cohort nor representative coverage of all seven entity families.
+
+The candidate receives explicitly selected eligible source passages and query ID/text only. Gold spans, support labels and rationales remain evaluator inputs. Source selection happens before the index is built, so later or unselected sources cannot affect BM25 statistics. The fixed baseline uses verbatim UTF-8 passages, including raw HTML markup; it does not generate answers or infer source truth. A run receipt binds sources, passage/config/query hashes, implementation dependencies, runtime and ranked results. Runtime/config changes require a new comparison contract.
+
+Report the following separately from synthetic conformance checks:
+
+| Quantity | Denominator and treatment |
+| --- | --- |
+| Macro source recall at 1, 3 and 5 | For each supported query, fraction of required source IDs found; average over all supported queries, including empty results. |
+| Source reciprocal rank at 5 | Inverse rank of the first required source, or zero; average over all supported queries. |
+| Macro gold-span recall at 1, 3 and 5 | Fraction of each query's required gold spans fully covered by the union of returned intervals from the same source. A small overlap does not count as full support. Average over all supported queries. |
+| Gold-span reciprocal rank at 5 | Inverse size of the earliest result prefix fully covering at least one required span, or zero; average over supported queries. |
+| Unsupported-query retrieval rate at 5 | Unsupported queries returning any passage divided by all unsupported queries. This measures lexical retrieval despite absent support, not hallucination or calibrated abstention. |
+| Empty-result rate | Queries with explicit empty results divided by all queries. Distinguish no query terms from no lexical match. |
+
+Every metric includes numerator, denominator and per-query evidence; an empty population has a null value. Missing, mismatched, rejected or malformed runs fail validation rather than becoming a perfect score. Returned spans and gold must resolve to the selected snapshot. Gold is curated and may omit alternative valid evidence; counts are descriptive, with no population confidence or generalization claim.
+
+Reproducibility requires two fresh run keys and independent fresh indexes with identical semantic result hashes under the same recorded inputs/runtime. Replaying an old receipt is not another execution. Acceptance requires provenance/time integrity, bounded execution, honest complete reporting and independent review; **no quality threshold will be chosen after observing the baseline**. Later candidates need a declared comparator and fresh evaluation discipline.
+
+C1's real receipts live in the evidence store. The improvement controller still runs its synthetic assessment and retains `build_retrieval_baseline` until C2 validates and imports actual retrieval evidence. A synthetic probe fraction must not substitute for retrieval quality. Code and query artifacts retained after the source snapshot are execution metadata: this is retrospective development retrieval, not proof that a predictor existed at the earlier cutoff.
+
 ## Prediction, calibration and coverage
 
 For binary outcomes, use mean Brier loss `(p − y)²` or log loss `−[y log p + (1−y) log(1−p)]`, lower being better. CRPS compares a predictive cumulative distribution with a realized scalar outcome; its units follow the outcome. Proper scores reward truthful probabilities in expectation. Calibration compares probabilities with observed frequencies; interval coverage needs interval width alongside it. [Gneiting and Raftery (2007)](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)
