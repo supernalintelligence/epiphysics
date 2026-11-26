@@ -2,7 +2,29 @@
 
 Prioritized list of what needs to be done. Check this file when looking for work.
 
-## High Priority
+## Observatory sequence
+
+- [x] Build the local append-only evidence, snapshot, representation, forecast, resolution, and scoring slice.
+- [x] Add bounded collection cycles and synthetic demonstration data.
+- [x] Clarify the landing page and add a five-step interactive introduction and inspectable example.
+- [x] Validate and integrate this slice on `ian-dev` through independent review; see the 26 November run record.
+- [ ] Promote through the required `ian-dev` → `main` → `production` pull requests after the separate site-loading fix is integrated; verify deployment and rendered layout.
+- [ ] Add an independent witness adapter and verification fixtures; distinguish receipt time from source time.
+- [ ] Add isolated model runners with explicit model/prompt/input manifests and enforced per-run budgets.
+- [ ] Compare a simple baseline, a direct language-model forecast, a fixed entity graph, and a learned representation on the same prospective questions.
+- [ ] Implement evaluator holdout separation, family-aware uncertainty, calibration, and abstention policies before promoting advantage claims.
+- [ ] Study recursive AI control with declared measurable proxies and competing hypotheses; avoid assuming dominance.
+- [ ] Design typed value-exchange events for services, data, compute, money, commitments, reputation, and governance rights; pilot in simulation before settlement adapters.
+- [ ] Add privacy-conscious measurement of example inspection, record downloads, reproductions, corrections, and repeat contributions; report retention and reproduction, not raw page views alone.
+- [ ] Prepare the knowledge-snapshots persona post for Ian's review. Keep it unpublished until reviewed.
+
+The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-recursive-observatory.md`. SCI's reply on the mathematics-note handoff is verified there; observatory review remains pending.
+
+## Existing research queue
+
+Prior items below need their status reconciled against dated experiment records before rerunning.
+
+### High Priority
 
 - [ ] **Run Experiment 2** — quadratic vs quartic on low-dimensional time-series data. Simplest test. See `docs/experiments/index.md` and `docs/research/rate_distortion_lagrangian.md` (Empirical Testing section).
 - [ ] **Add missing citations to paper** — Caticha (2012, Entropic Dynamics), Balasubramanian (1997, Occam factors), Transtrum/Sethna (sloppy models), Cranmer et al. (2020, Lagrangian NNs), Greydanus et al. (2019, Hamiltonian NNs), Galley (2013, non-conservative Lagrangians). File: `docs/research/paper_representational_efficiency.md`

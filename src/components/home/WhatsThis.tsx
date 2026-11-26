@@ -1,22 +1,22 @@
 const cards = [
   {
-    title: 'One Equation, Any Domain',
-    body: 'F = dp/dt works for physics. Epimechanics shows it works for anything that changes: beliefs, institutions, ecosystems. Same math, different substrate.',
+    title: 'A Research Question',
+    body: 'Which representations help us predict changing systems? Epimechanics proposes mathematical candidates; Epiphysics compares them against evidence.',
   },
   {
-    title: 'Derived, Not Assumed',
-    body: 'Spacetime and quantum mechanics — including why amplitudes use complex numbers — derived from causal structure alone. No assumed physics.',
+    title: 'Assumptions Made Visible',
+    body: 'Definitions, structural postulates, conditional results, and empirical claims need different evidence. Each claim should retain its assumptions and limits.',
   },
   {
     title: 'Human + AI',
-    body: 'Humans conceive the theory. AIs audit every proof, check every assumption, maintain consistency across papers. Faster iteration, fewer errors.',
+    body: 'Human researchers and AI collaborators propose, implement, and critique ideas. Reviewable records and independent tests determine what can be claimed.',
   },
 ];
 
 const goals = [
-  { label: '2026', text: 'Run first experiment, publish U(1) derivation' },
-  { label: '2027', text: 'Extend to irreversible systems, build domain applications' },
-  { label: 'Long-term', text: 'Unified framework for predicting change across all domains' },
+  { label: 'Foundation', text: 'Preserve evidence and prospective prediction records' },
+  { label: 'Evaluation', text: 'Compare representations on new outcomes at declared cost' },
+  { label: 'Long-term', text: 'Test transfer between environments and document where it fails' },
 ];
 
 export default function WhatsThis() {
@@ -27,7 +27,7 @@ export default function WhatsThis() {
         <div className="text-center max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">What is this?</h2>
           <p className="mt-3 text-base sm:text-lg text-gray-600 dark:text-gray-300">
-            A generalized mechanics built from causal events — and a new way of doing theoretical science.
+            An open research program for representations, recursive systems, and testable predictions.
           </p>
         </div>
 

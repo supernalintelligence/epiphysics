@@ -17,7 +17,7 @@
     "dev:with-mermaid": "turbo run render-mermaid dev --parallel",
     "preprocess:content": "node scripts/preprocess-content-simple.js",
     "build": "next build",
-    "vercel-build": "node scripts/migrate-images-to-public.js && next build",
+    "vercel-build": "node scripts/migrate-images-to-public.js && node scripts/preprocess-content-simple.js && next build",
     "build:optimized": "next build",
     "build:clear": "node scripts/optimize-build.js --clear-cache",
     "start": "next start",
@@ -50,7 +50,9 @@
     "links:check:external": "node scripts/link-checker.js",
     "dates:check": "node scripts/fix-frontmatter-dates.js --check-only",
     "dates:fix": "node scripts/fix-frontmatter-dates.js",
-    "dates:fix:dry": "node scripts/fix-frontmatter-dates.js --dry-run --verbose"
+    "dates:fix:dry": "node scripts/fix-frontmatter-dates.js --dry-run --verbose",
+    "prebuild": "node scripts/preprocess-content-simple.js",
+    "test:engine": "PYTHONPATH=engine python3 -m unittest discover -s engine/tests -v"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.71.2",

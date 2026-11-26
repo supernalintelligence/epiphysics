@@ -1,4 +1,24 @@
-# Epiphysics Daily Loop (Current)
+# Bounded autonomous research cadence
+
+Run one bounded cycle per scheduled wake, then at most one ready research or engineering task. Use the active worktree until its reviewed changes are landed. Read the current build plan, queue, and latest decisions before editing; coordinate with SCI through the existing authorized project channel when scientific direction or file ownership overlaps.
+
+1. Verify the local ledger before adding evidence. On a failed integrity check, stop writes and preserve the store for diagnosis.
+2. Run `PYTHONPATH=engine python3 -m epiphysics --store .supernal-local/observatory cycle --config engine/examples/project-cycle.json --run-key YYYY-MM-DD-project`, using the current UTC date and running collection from the shared checkout after the slice is landed. Keep that persistent store outside disposable worktrees. Reusing the same completed key is a no-op. Never rewrite timestamps or resolve a missed window from memory.
+3. Refresh `src/components/home/observatory-status.json` with `publish-status`, selecting the canonical shared-checkout README and persistent store. Do this in the managed worktree for the status change; the collector always uses the shared source path. Publish only verified aggregate status through the normal reviewed site workflow. Never copy the private ledger or its raw contents into the website.
+4. Choose the highest-priority unblocked item in `TODO.md`. Work on one item, with a 30-minute active-work limit. Preserve an evidence-backed progress entry under `docs/planning/runs/`; record failures and incomplete work as well as success.
+5. Run checks relevant to that change. Keep final evaluation data separate from search and prompt tuning. A bad result creates a question for the next run, not permission to change an earlier prediction or outcome rule.
+6. Obtain independent review and use the repository's normal landing process for code. Keep public claims tied to actual test results. Draft posts and publication artifacts for review; no unsolicited outreach or automatic social posting.
+7. Report a meaningful completed change, failed run, or decision needed. The scheduler can wake the work; it cannot guarantee research progress or growth.
+
+Default limits: zero paid model calls, no purchases, at most ten explicitly configured sources, one collection attempt per source per run, one core task in progress. HTTPS source additions require documented provenance and a collection purpose; the local README monitor is the initial scheduling test. Expanding model use requires an explicit budget and an implemented budget guard.
+
+The local scheduling service depends on the host being available. Local evidence is not a historical archive until enough forward observations accumulate, and it is not independently timestamped until a witness adapter is implemented. Archive local data separately from Git.
+
+## Existing falsification cycle
+
+The following project protocol remains available for substantive theory experiments; its longer timeboxes do not override the bounded scheduler run above.
+
+## Epiphysics falsification loop
 
 Purpose: keep theory work, experiments, and issue execution moving every day with auditable outputs.
 

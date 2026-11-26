@@ -135,3 +135,8 @@ git_hooks:
     lint: SC_SKIP_LINT
     type_check: SC_SKIP_TYPE_CHECK
     all_hooks: SC_SKIP_HOOKS
+git_sync:
+  dev_branch: ian-dev
+  protected_branches:
+    - main
+    - production

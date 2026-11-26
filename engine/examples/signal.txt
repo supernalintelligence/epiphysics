@@ -1,0 +1,2 @@
+This is a local example source. A collection cycle records its exact bytes.
+Changes are evaluated only when a later capture arrives in the declared window.
