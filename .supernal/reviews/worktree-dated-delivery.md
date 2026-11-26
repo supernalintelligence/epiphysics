@@ -14,6 +14,32 @@ skip_reason: ""
 size: { files: 21, lines: 3137 }
 ---
 
+## Conclusion
+
+Ready to land: yes
+The fixed protocol, registration and first original delivery were accepted and independently audited. Final source, public claims and retained artifacts agree within the reviewed limits; the queued public-map successor is already being implemented separately.
+
+## Checks run
+
+Final source passed 246 decision/delivery tests, six legacy controls and three readiness controls. Separate private programs passed 27 preparation mocks, 15 producer controls and 11 registration controls. Independent preparation, snapshot and final delivery audits passed 48, 23 and 49 checks. The final reviewer checked exact source continuity, retained failures, actual registration/delivery, public claims and final graph/document hashes. The site emitted successful compilation and complete page-generation logs; post-copyedit preprocessing and three homepage evidence guards passed.
+
+## Not verified
+
+No full repository suite, browser/rendered interaction, deployment, independent timestamp witness, general verifier accuracy or predictive benefit is claimed. The post-build bookkeeping wrapper exited 1 after reading a wrong prior-artifact filename; the original build subprocess exit code and total time were not persisted and remain unknown. Retained build artifacts and logs were inspected without rerunning the build. Typecheck/lint are disabled by that build. The public timing-word correction followed the full build and received separate content/guard validation. Private invocation-program findings and earlier plan findings are attributed separately in the exact reviewer report below.
+
+## Findings
+
+- [medium] [fixed] Prevent a late first submission from rescuing the registered primary outcome.
+- [medium] [fixed] Require verification evidence to be effective when used.
+- [medium] [fixed] Require retained oversized bytes rather than accepting an unsupported size claim.
+- [medium] [fixed] Reject boolean registration versions and enforce exact trusted registration bindings.
+- [medium] [fixed] Retain malformed Unicode revision metadata as invalid evidence instead of crashing.
+- [medium] [fixed] Refuse unresolved prerequisites before consuming a queued task.
+- [medium] [fixed] Require the overflow prefix after registration and before its rejection receipt.
+- [medium] [fixed] Preserve exact accepted protocol and criteria bytes through registration.
+- [medium] [fixed] Bound verifier report expansion without dropping token coverage or raising the cap.
+- [low] [fixed] Label enclosing caller wall time separately from the narrower dispatcher subprocess interval.
+
 ## Reviewer report
 
 # C10 final integration and publication review
