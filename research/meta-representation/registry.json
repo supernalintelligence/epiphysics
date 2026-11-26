@@ -740,6 +740,38 @@
       "kind": "experiment",
       "title": "Diagnose retained information loss, late evidence and verification-quality gaps",
       "status": "proposed"
+    },
+    {
+      "id": "doc_decision_information_protocol",
+      "kind": "document",
+      "title": "Retained decision-information diagnostic protocol",
+      "repo_path": "docs/experiments/control-exchange-information-limits.md"
+    },
+    {
+      "id": "doc_decision_information_result",
+      "kind": "document",
+      "title": "Verification claims, retention losses and dated evidence",
+      "repo_path": "docs/experiments/results/2026-11-26-decision-information-limits.md"
+    },
+    {
+      "id": "doc_decision_information_run",
+      "kind": "document",
+      "title": "C9 validation, accepted diagnosis and audit",
+      "repo_path": "docs/planning/runs/2026-11-26-decision-information-limits.md"
+    },
+    {
+      "id": "claim_decision_information_result",
+      "kind": "claim",
+      "title": "Complete records do not establish the truth of verification claims",
+      "statement": "The retained diagnosis reconciled 96 saved attempts without rerunning a candidate. Four of 22 eligible operative exactly bound claims disagreed with stipulated artifact validity across 22 cases; three of 21 positive claims accompanied invalid artifacts. Each compact method lost two observable opportunities through bounded retention; lossless controls recovered those opportunities but still accepted the three invalid deliveries. These are descriptive synthetic results, not real verifier error rates or independent causal proof.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_dated_evidence_quality",
+      "kind": "experiment",
+      "title": "Prepare a future artifact delivery with fixed quality criteria and dated evidence",
+      "status": "proposed"
     }
   ],
   "edges": [
@@ -1566,6 +1598,36 @@
     {
       "source": "exp_decision_information_limits",
       "target": "doc_fresh_decision_result",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_decision_information_limits",
+      "target": "doc_decision_information_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "doc_decision_information_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "doc_decision_information_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_decision_information_limits",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_dated_evidence_quality",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_dated_evidence_quality",
+      "target": "doc_decision_information_result",
       "type": "depends_on"
     }
   ]

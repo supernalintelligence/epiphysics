@@ -15,6 +15,8 @@ In the [fresh decision comparison](results/2026-11-26-fresh-decision-comparison.
 
 The next investigation explains the original 96 attempts using their saved evidence. It creates no new cases and runs no decision candidate. Its question is: **Was the needed information unavailable, lost from the compact record, or present as a claim that disagreed with the outcome?** These explanations can overlap.
 
+The [completed diagnosis](results/2026-11-26-decision-information-limits.md) reconciled all 96 attempts and found four disagreements among 22 eligible verification claims. It selected preparation of a dated evidence-quality protocol. The rules below describe the fixed diagnostic, not a new run.
+
 ## Three different information limits
 
 | Axis | Evidence to inspect | What the diagnosis can establish |

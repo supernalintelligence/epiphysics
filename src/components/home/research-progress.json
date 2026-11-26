@@ -1,30 +1,27 @@
 {
   "recordDate": "2026-11-25",
-  "heading": "Both methods released three invalid deliveries.",
-  "scope": "In 24 simulated cases, two compact records reached the same valid-release total. More complete records recovered missed opportunities, while every method still accepted three invalid artifacts.",
+  "heading": "Three invalid deliveries had passed verification.",
+  "scope": "A diagnosis of 96 saved simulated attempts separates missing evidence from incorrect quality claims. Keeping more information recovered missed opportunities, but did not make the verification claims reliable.",
   "evidence": [
     {
       "id": "coverage",
-      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
+      "href": "/experiments/results/2026-11-26-decision-information-limits",
       "requiredText": [
-        "Completed opportunities supported by available evidence | 7/9 | 7/9 | 9/9",
-        "The net difference was zero."
+        "Each compact method lost two observable opportunities through bounded retention."
       ]
     },
     {
       "id": "diagnosis",
-      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
+      "href": "/experiments/results/2026-11-26-decision-information-limits",
       "requiredText": [
-        "All three invalid-artifact proposals became accepted simulated releases in every arm.",
-        "Zero unauthorized or duplicate effects therefore cannot be read as a general safety result."
+        "Four of 22 eligible verification claims disagreed with stipulated artifact validity."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
+      "href": "/experiments/results/2026-11-26-decision-information-limits",
       "requiredText": [
-        "investigation of information limits",
-        "These exposed cases will not be retuned or rerun to manufacture an improvement."
+        "The accepted diagnosis selects preparation of a dated evidence-quality protocol."
       ]
     }
   ],
@@ -32,29 +29,29 @@
     {
       "id": "coverage",
       "status": "completed",
-      "label": "Different missed opportunities",
-      "value": "7 of 9 each",
-      "measure": "valid opportunities supported by the available evidence",
-      "summary": "Each compact method missed two different storage-pressure cases. Both lossless controls reached all nine observable opportunities. The paired gain was zero.",
-      "linkLabel": "Read the fresh comparison"
+      "label": "Information lost in storage",
+      "value": "2 missed by each",
+      "measure": "observable opportunities in either compact method",
+      "summary": "The two methods missed different opportunities. Both complete-record controls recovered them; the original comparison remains tied.",
+      "linkLabel": "Read the retention diagnosis"
     },
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "Delivery quality",
-      "value": "3 invalid releases",
-      "measure": "accepted in every simulated arm",
-      "summary": "Observed verification said pass; the later stipulated outcome said invalid. The guard checked authority and duplicates, leaving delivery quality unestablished.",
-      "linkLabel": "Inspect the quality gap"
+      "label": "Verification and outcome",
+      "value": "4 of 22",
+      "measure": "eligible claims disagreed with stipulated validity",
+      "summary": "Three positive claims accompanied invalid artifacts. Every method accepted those three simulated deliveries. An authenticated claim did not establish quality.",
+      "linkLabel": "Inspect the verification evidence"
     }
   ],
-  "limits": "One hand-designed exploratory batch; no real payments or program model calls. These frequencies do not estimate real service performance. Local hashes establish consistency, not independent timestamp assurance or completeness.",
+  "limits": "One hand-designed synthetic batch, diagnosed from retained evidence without rerunning a candidate. These frequencies do not estimate real verifier performance. Local hashes establish consistency, not an independent witness of time or truth.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "Which missing facts would change the decision?",
-    "description": "The accepted result selects a diagnosis of information that arrived late, was lost in storage, or disagreed with later artifact quality.",
-    "budget": "Read the retained evidence without rerunning candidates. Preserve original scores and source identities; no increase in authority or live effects.",
+    "question": "What evidence makes a delivery checkable?",
+    "description": "Prepare one future artifact delivery with fixed acceptance criteria, exact contents, and a separately implemented quality check.",
+    "budget": "Retain who made each claim, what it concerned, and when it was available. Preparation does not establish predictive benefit or authorize live exchange.",
     "linkLabel": "Read the result and next question"
   }
 }
