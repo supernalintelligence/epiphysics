@@ -1,0 +1,74 @@
+[
+  {
+    "id": "causal_consistency",
+    "kind": "source",
+    "title": "Causal Consistency of Structural Equation Models",
+    "url": "https://arxiv.org/abs/1707.00819",
+    "date": "2017-07-04",
+    "date_type": "preprint_first_submission",
+    "claim_supported": "Exact transformations formalize intervention consistency between structural causal models.",
+    "limitation": "Requires specified models and interventions; graph resemblance is insufficient.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  },
+  {
+    "id": "performative_prediction",
+    "kind": "source",
+    "title": "Performative Prediction",
+    "url": "https://proceedings.mlr.press/v119/perdomo20a.html",
+    "date": "2020",
+    "date_type": "conference_proceedings_year",
+    "claim_supported": "Predictions used in decisions can change the outcome distribution being modeled.",
+    "limitation": "Convergence and stability results depend on formal assumptions.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  },
+  {
+    "id": "magentic_marketplace",
+    "kind": "source",
+    "title": "Magentic Marketplace: An Open-Source Environment for Studying Agentic Markets",
+    "url": "https://www.microsoft.com/en-us/research/publication/magentic-marketplace-an-open-source-environment-for-studying-agentic-markets/",
+    "date": "2025-10",
+    "date_type": "technical_report_month",
+    "claim_supported": "A simulated two-sided marketplace exposes search and offer-order effects in agent decisions.",
+    "limitation": "Author-reported simulated results do not establish real-market outcomes.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  },
+  {
+    "id": "erc8004",
+    "kind": "source",
+    "title": "ERC-8004: Trustless Agents",
+    "url": "https://eips.ethereum.org/EIPS/eip-8004",
+    "date": "2025-08-13",
+    "date_type": "proposal_creation",
+    "claim_supported": "Draft proposes agent identity, reputation, and validation registries; payments are separate.",
+    "limitation": "Draft as reviewed; registration and feedback do not certify delivered quality or independence.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  },
+  {
+    "id": "x402",
+    "kind": "source",
+    "title": "x402 introduction",
+    "url": "https://github.com/x402-foundation/x402/blob/main/docs/introduction.md",
+    "date": null,
+    "date_type": "undated_live_documentation",
+    "claim_supported": "Describes HTTP-based resource access with payment verification and settlement.",
+    "limitation": "Mutable documentation; payment success is not proof of useful delivery.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  },
+  {
+    "id": "opentimestamps",
+    "kind": "source",
+    "title": "OpenTimestamps",
+    "url": "https://opentimestamps.org/",
+    "date": null,
+    "date_type": "undated_live_documentation",
+    "claim_supported": "Provides creation and verification of proofs of prior existence of committed bytes.",
+    "limitation": "Does not establish truth, completeness, original publication time, or model information access.",
+    "bibliographic_only": true,
+    "reviewed_on": "2026-11-25"
+  }
+]

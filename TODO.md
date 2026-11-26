@@ -22,6 +22,20 @@ The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-
 
 ## Existing research queue
 
+### Representation and knowledge layer
+
+The [research assessment](docs/research/meta-representational-systems.md), [component plan](docs/planning/meta-representation-build.md), and [six proposed protocols](docs/experiments/representation-comparison.md) define the next dependency sequence. The existing bounded daily automation can select these packets; no additional scheduler is required.
+
+- [x] Investigate primary literature and audit existing representation/graph implementations; seed a curated research map with source limitations and conflicting claims.
+- [x] Add an offline validator/compiler that embeds selected committed source documents and emits a reproducible graph artifact.
+- [ ] **Packet A:** extend ledger assertions with source spans, units, world/knowledge times, corrections and unresolved conflicts. Pass E1 preservation fixtures before model integration.
+- [ ] **Packet B:** add versioned representation manifests and transformation runs with declared loss, evidence mappings and registered candidate identities.
+- [ ] **Packet C:** prepare a frozen permitted corpus, source-grounded questions and an offline lexical baseline; separate curator/development/final evaluation roles.
+- [ ] Compare hybrid retrieval and graph challengers at matched reading and total construction costs; preserve shuffled/removed-edge controls.
+- [ ] Coordinate scientific revisions of prompt/Lagrangian and Lawvere claims; preserve hypothesis status until explicit constructions and discriminating tests exist.
+- [ ] Register a prospective representation tournament only after model budgets, evaluator separation and numerical acceptance rules are implemented.
+- [ ] Test bounded ontology revision and control/exchange mechanisms in simulation; keep real settlement adapters downstream of delivery verification.
+
 Prior items below need their status reconciled against dated experiment records before rerunning.
 
 ### High Priority

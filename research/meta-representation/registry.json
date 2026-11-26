@@ -1,0 +1,876 @@
+{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "doc_engine",
+      "kind": "document",
+      "title": "Evidence ledger implementation",
+      "repo_path": "engine/epiphysics/store.py"
+    },
+    {
+      "id": "doc_engine_readme",
+      "kind": "document",
+      "title": "Engine contracts and assurance limits",
+      "repo_path": "engine/README.md"
+    },
+    {
+      "id": "doc_story",
+      "kind": "document",
+      "title": "Story graph parser",
+      "repo_path": "src/lib/story-graph/processor.ts"
+    },
+    {
+      "id": "doc_derivation",
+      "kind": "document",
+      "title": "Representation derivation problem",
+      "repo_path": "docs/research/representation_derivation_problem.md"
+    },
+    {
+      "id": "doc_dynamics",
+      "kind": "document",
+      "title": "Predictive representation dynamics",
+      "repo_path": "docs/research/predictive_representation_dynamics.md"
+    },
+    {
+      "id": "doc_lawvere",
+      "kind": "document",
+      "title": "Self-application and Lawvere note",
+      "repo_path": "docs/theory/self_application_and_lawvere.md"
+    },
+    {
+      "id": "doc_conventions",
+      "kind": "document",
+      "title": "Project scientific conventions",
+      "repo_path": "CLAUDE.md"
+    },
+    {
+      "id": "doc_protocol",
+      "kind": "document",
+      "title": "Prospective observatory protocol",
+      "repo_path": "docs/experiments/prospective-observatory.md"
+    },
+    {
+      "id": "doc_research",
+      "kind": "document",
+      "title": "Recursive research program",
+      "repo_path": "docs/research/recursive-research-program.md"
+    },
+    {
+      "id": "claim_meta",
+      "kind": "claim",
+      "title": "Operational meta-representation",
+      "statement": "A meta-representation records representation families, permitted transformations, preservation obligations and comparative evidence.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_entities",
+      "kind": "claim",
+      "title": "Entityhood is representability",
+      "statement": "The project convention defines an entity as anything representable, with persistence treated separately.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_fixed_entities",
+      "kind": "claim",
+      "title": "Entityhood as persistent fixed points",
+      "statement": "The Lawvere note associates entities with persistent fixed points; this conflicts with the broader project convention.",
+      "status": "contested",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_lawvere_limit",
+      "kind": "claim",
+      "title": "Fixed-point hypotheses are required",
+      "statement": "Lawvere fixed-point results do not establish dynamic attraction, conservation or mechanical structure without additional construction.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_prompt_mechanics",
+      "kind": "claim",
+      "title": "Prompt as Lagrangian",
+      "statement": "A correspondence between prompt revision and Lagrangian dynamics is a hypothesis requiring operational variables and discriminating tests.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_derivation",
+      "kind": "claim",
+      "title": "Construction of variables remains open",
+      "statement": "The project has not derived a general procedure for choosing optimal state variables from observations.",
+      "status": "implementation_finding",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_ledger",
+      "kind": "claim",
+      "title": "Ledger preserves attributed representations",
+      "statement": "The integrated ledger preserves directed typed relationships with evidence scoped to a selected snapshot.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_story",
+      "kind": "claim",
+      "title": "Story parser is a mutable view",
+      "statement": "The story parser uses names as relationship endpoints and time-dependent identifiers rather than an immutable assertion history.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_temporal",
+      "kind": "claim",
+      "title": "Two time axes are necessary",
+      "statement": "World-time claims and collection-time eligibility must remain separate to prevent retrospective knowledge leakage.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_newer",
+      "kind": "claim",
+      "title": "Newer information is not automatically true",
+      "statement": "Preserve disagreement and corrections separately instead of making recency the scientific truth policy.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_graph_task",
+      "kind": "claim",
+      "title": "Graph usefulness depends on task and budget",
+      "statement": "Graph retrieval should be compared with strong text retrieval at matched context and total construction costs.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_memory_eval",
+      "kind": "claim",
+      "title": "Memory requires multiple tests",
+      "statement": "Temporal reasoning, updates, abstention, environment experience and heterogeneous evidence require distinct evaluation tasks.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_graphiti",
+      "kind": "claim",
+      "title": "Graphiti is a candidate adapter",
+      "statement": "Temporal graph and hybrid retrieval functionality can be evaluated behind an adapter while independent source history is retained.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_interchange",
+      "kind": "claim",
+      "title": "Standards describe structure and provenance",
+      "statement": "RDF, PROV-O, SHACL and nanopublications offer complementary interchange, provenance, validation and assertion packaging.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_mdl",
+      "kind": "claim",
+      "title": "Selection must charge the interpreter",
+      "statement": "Description-length comparison requires explicit coding and residual conventions, rather than measuring prompt length alone.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_program",
+      "kind": "claim",
+      "title": "Reusable programs can change representation vocabulary",
+      "statement": "Library learning is a concrete candidate mechanism for expanding the primitives used to express solutions.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_typed",
+      "kind": "claim",
+      "title": "Transformations need preservation contracts",
+      "statement": "Type or semantic obligations can make schema migration accountable; canonical mappings need not be invertible.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_causal",
+      "kind": "claim",
+      "title": "Causal identification is conditional",
+      "statement": "Unsupervised disentanglement is not generally identifiable; interventions can help under specified assumptions.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_abstraction",
+      "kind": "claim",
+      "title": "Causal abstraction concerns interventions",
+      "statement": "Candidate scale changes should be tested for agreement on declared intervention predictions.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_reflection",
+      "kind": "claim",
+      "title": "Reflection must face new evaluation",
+      "statement": "Trace-based candidate search is promising but final evaluation must remain separate from adaptive selection.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_selfproof",
+      "kind": "claim",
+      "title": "Self-improvement guarantees are conditional",
+      "statement": "Formal self-rewrite and incompleteness results do not imply a practical universally improving research agent.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_concentration",
+      "kind": "claim",
+      "title": "Capability can reinforce control",
+      "statement": "Capability gains may increase resources and access rights, which may support further capability growth.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_portability",
+      "kind": "claim",
+      "title": "Portability can distribute control",
+      "statement": "Substitutable providers and portable representations may reduce dependence and concentrated veto rights.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_feedback",
+      "kind": "claim",
+      "title": "Actions change prediction targets",
+      "statement": "Using forecasts to select actions can alter the distribution of subsequent outcomes.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_exchange",
+      "kind": "claim",
+      "title": "Exchange must separate delivery and settlement",
+      "statement": "Offer order, latency, service quality, payment and reputation should be represented and evaluated separately.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_witness",
+      "kind": "claim",
+      "title": "Existence proofs do not establish truth",
+      "statement": "A verified timestamp can support prior existence of committed bytes without proving their truth or availability to a model.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "rep_text",
+      "kind": "representation",
+      "title": "Raw evidence text",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_graph",
+      "kind": "representation",
+      "title": "Fixed typed graph",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_hierarchy",
+      "kind": "representation",
+      "title": "Hierarchy and state graph",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_hybrid",
+      "kind": "representation",
+      "title": "Hybrid text and graph",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_latent",
+      "kind": "representation",
+      "title": "Learned latent state",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_program",
+      "kind": "representation",
+      "title": "Typed executable model",
+      "status": "proposed"
+    },
+    {
+      "id": "rep_control",
+      "kind": "representation",
+      "title": "Control and exchange view",
+      "status": "proposed"
+    },
+    {
+      "id": "transform_split",
+      "kind": "transformation",
+      "title": "Split and merge entities",
+      "status": "proposed"
+    },
+    {
+      "id": "transform_project",
+      "kind": "transformation",
+      "title": "Coarse-grain and project states",
+      "status": "proposed"
+    },
+    {
+      "id": "transform_encode",
+      "kind": "transformation",
+      "title": "Encode text into graph with provenance",
+      "status": "proposed"
+    },
+    {
+      "id": "transform_revise",
+      "kind": "transformation",
+      "title": "Revise representation construction method",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_fidelity",
+      "kind": "experiment",
+      "title": "E1: Provenance and transformation fidelity",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_retrieval",
+      "kind": "experiment",
+      "title": "E2: Retrieval and synthesis ablation",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_forecast",
+      "kind": "experiment",
+      "title": "E3: Prospective representation tournament",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_causal",
+      "kind": "experiment",
+      "title": "E4: Causal coordinates and mechanical hypotheses",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_recursive",
+      "kind": "experiment",
+      "title": "E5: Bounded recursive revision",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_exchange",
+      "kind": "experiment",
+      "title": "E6: Control and exchange mechanisms",
+      "status": "proposed"
+    }
+  ],
+  "edges": [
+    {
+      "source": "claim_meta",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_entities",
+      "target": "doc_conventions",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fixed_entities",
+      "target": "doc_lawvere",
+      "type": "cites"
+    },
+    {
+      "source": "claim_lawvere_limit",
+      "target": "lawvere",
+      "type": "cites"
+    },
+    {
+      "source": "claim_prompt_mechanics",
+      "target": "doc_dynamics",
+      "type": "cites"
+    },
+    {
+      "source": "claim_derivation",
+      "target": "doc_derivation",
+      "type": "cites"
+    },
+    {
+      "source": "claim_ledger",
+      "target": "doc_engine",
+      "type": "cites"
+    },
+    {
+      "source": "claim_story",
+      "target": "doc_story",
+      "type": "cites"
+    },
+    {
+      "source": "claim_temporal",
+      "target": "doc_engine_readme",
+      "type": "cites"
+    },
+    {
+      "source": "claim_temporal",
+      "target": "zep",
+      "type": "cites"
+    },
+    {
+      "source": "claim_newer",
+      "target": "zep",
+      "type": "cites"
+    },
+    {
+      "source": "claim_newer",
+      "target": "doc_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "graphrag",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "rag_vs_graphrag",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "beir",
+      "type": "cites"
+    },
+    {
+      "source": "claim_memory_eval",
+      "target": "longmemeval",
+      "type": "cites"
+    },
+    {
+      "source": "claim_memory_eval",
+      "target": "longmemeval_v2",
+      "type": "cites"
+    },
+    {
+      "source": "claim_memory_eval",
+      "target": "wildgraphbench",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graphiti",
+      "target": "graphiti",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "rdf11",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "prov_o",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "shacl",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "nanopublications",
+      "type": "cites"
+    },
+    {
+      "source": "claim_mdl",
+      "target": "mdl",
+      "type": "cites"
+    },
+    {
+      "source": "claim_program",
+      "target": "dreamcoder",
+      "type": "cites"
+    },
+    {
+      "source": "claim_typed",
+      "target": "synquid",
+      "type": "cites"
+    },
+    {
+      "source": "claim_typed",
+      "target": "functorial_migration",
+      "type": "cites"
+    },
+    {
+      "source": "claim_causal",
+      "target": "disentanglement",
+      "type": "cites"
+    },
+    {
+      "source": "claim_causal",
+      "target": "causal_identification",
+      "type": "cites"
+    },
+    {
+      "source": "claim_abstraction",
+      "target": "causal_consistency",
+      "type": "cites"
+    },
+    {
+      "source": "claim_reflection",
+      "target": "gepa",
+      "type": "cites"
+    },
+    {
+      "source": "claim_reflection",
+      "target": "alphaevolve",
+      "type": "cites"
+    },
+    {
+      "source": "claim_reflection",
+      "target": "adaptive_holdout",
+      "type": "cites"
+    },
+    {
+      "source": "claim_reflection",
+      "target": "doc_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_selfproof",
+      "target": "goedel_machine",
+      "type": "cites"
+    },
+    {
+      "source": "claim_selfproof",
+      "target": "goedel_incompleteness",
+      "type": "cites"
+    },
+    {
+      "source": "claim_concentration",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_portability",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_feedback",
+      "target": "performative_prediction",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "magentic_marketplace",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "erc8004",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "x402",
+      "type": "cites"
+    },
+    {
+      "source": "claim_witness",
+      "target": "opentimestamps",
+      "type": "cites"
+    },
+    {
+      "source": "claim_witness",
+      "target": "doc_engine_readme",
+      "type": "cites"
+    },
+    {
+      "source": "transform_split",
+      "target": "rep_graph",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_split",
+      "target": "rep_hierarchy",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_project",
+      "target": "rep_hierarchy",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_project",
+      "target": "rep_latent",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_encode",
+      "target": "rep_text",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_encode",
+      "target": "rep_graph",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_encode",
+      "target": "rep_hybrid",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_revise",
+      "target": "rep_graph",
+      "type": "transforms"
+    },
+    {
+      "source": "transform_revise",
+      "target": "rep_program",
+      "type": "transforms"
+    },
+    {
+      "source": "exp_fidelity",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "exp_fidelity",
+      "target": "rep_hierarchy",
+      "type": "compares"
+    },
+    {
+      "source": "exp_fidelity",
+      "target": "rep_program",
+      "type": "compares"
+    },
+    {
+      "source": "exp_retrieval",
+      "target": "rep_text",
+      "type": "compares"
+    },
+    {
+      "source": "exp_retrieval",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "exp_retrieval",
+      "target": "rep_hybrid",
+      "type": "compares"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "rep_text",
+      "type": "compares"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "rep_hierarchy",
+      "type": "compares"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "rep_hybrid",
+      "type": "compares"
+    },
+    {
+      "source": "exp_causal",
+      "target": "rep_latent",
+      "type": "compares"
+    },
+    {
+      "source": "exp_causal",
+      "target": "rep_program",
+      "type": "compares"
+    },
+    {
+      "source": "exp_recursive",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "exp_recursive",
+      "target": "rep_program",
+      "type": "compares"
+    },
+    {
+      "source": "exp_exchange",
+      "target": "rep_control",
+      "type": "compares"
+    },
+    {
+      "source": "claim_entities",
+      "target": "claim_fixed_entities",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_fixed_entities",
+      "target": "claim_entities",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_lawvere_limit",
+      "target": "claim_fixed_entities",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_portability",
+      "target": "claim_concentration",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_concentration",
+      "target": "claim_portability",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_meta",
+      "target": "transform_revise",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_derivation",
+      "target": "exp_causal",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_ledger",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_story",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_temporal",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_newer",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "exp_forecast",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_memory_eval",
+      "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_graphiti",
+      "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "transform_encode",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_mdl",
+      "target": "exp_forecast",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_program",
+      "target": "rep_program",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_typed",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_causal",
+      "target": "exp_causal",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_abstraction",
+      "target": "transform_project",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_reflection",
+      "target": "exp_recursive",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_selfproof",
+      "target": "exp_recursive",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_prompt_mechanics",
+      "target": "exp_causal",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_concentration",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_portability",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_feedback",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "rep_control",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_witness",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_retrieval",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_recursive",
+      "target": "exp_forecast",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_exchange",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    }
+  ]
+}

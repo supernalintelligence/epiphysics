@@ -69,3 +69,27 @@ PYTHONPATH=engine python3 -m epiphysics --store /absolute/shared-checkout/.super
 ```
 
 This explicit command atomically replaces only the derived status file. It exports timestamps, counts, source link, and local assurance labels. It refuses a mixed-source store or a failed integrity check, and omits raw contents, local paths, prompts, and internal event IDs. Publish the changed artifact through the normal reviewed site workflow. A missed scheduler wake leaves an older visible capture time; it must not appear as a fresh successful run.
+
+## Offline research knowledge catalog
+
+The knowledge compiler validates a curated research map. It does not determine truth, run experiments, call a model, access the network, or mutate the evidence ledger.
+
+```sh
+PYTHONPATH=engine python3 -m epiphysics.knowledge --repo . --catalog research/meta-representation
+PYTHONPATH=engine python3 -m epiphysics.knowledge --repo . --catalog research/meta-representation --output /tmp/research-map-new.json
+```
+
+Without `--output`, the command validates and prints a summary. With it, validation finishes before creating the artifact, and an existing output file is never replaced. Relative catalog paths are resolved from the Git repository root. Output paths are resolved from the current working directory.
+
+A catalog directory contains `sources-*.json` arrays and `registry.json`, whose shape is `{"schema_version":1,"nodes":[],"edges":[]}`. Every node requires a globally unique `id`, `kind`, and nonempty `title`:
+
+- `source`: requires `bibliographic_only: true`, a credential-free HTTPS `url`, `date`, `date_type`, `reviewed_on`, `claim_supported`, and `limitation`. Bibliographic dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. A null date is allowed only with `date_type: "undated_live_documentation"` or `"mutable_main_revision_unverified"`; `reviewed_on` always requires a real `YYYY-MM-DD`. These are bibliographic metadata, **not archived external source bytes**.
+- `document`: requires an explicit repository-relative `repo_path`. The compiler freezes Git HEAD once and embeds exact UTF-8 text from that committed regular file, its `content_sha256`, and `commit`. It does not read the document's working-tree version. Untracked paths, committed symlinks, and traversal are rejected. Those three generated fields cannot be supplied in the input.
+- `claim`: requires a `statement`, `basis` (`reported`, `inferred`, or `observed`), and `status` (`definition`, `hypothesis`, `reported_result`, `implementation_finding`, or `contested`). Probability and confidence fields are not accepted.
+- `representation`, `transformation`, and `experiment`: require `status: "proposed"` for this initial catalog. A proposed experiment is not a completed or validated result.
+
+Edges require `source`, `target`, and `type`. The allowed endpoint kinds are `cites` (claim → source/document), `challenges` (claim → claim), `motivates` (claim → representation/transformation/experiment), `compares` (experiment → representation), `transforms` (transformation → representation), `depends_on` (any → any), and `implements` (document → representation/transformation). Endpoints must exist. Duplicate triples are rejected; opposite directions and different edge types between the same nodes remain distinct. Contradictory claims are retained rather than resolved automatically.
+
+Catalog JSON is read locally and may be uncommitted; embedded documents always come from the pinned commit. Limits are 5,000 nodes, 100 catalog files plus document entries, 1 MB per document, and 10 MB for catalog inputs plus embedded document bytes. The canonical compiled payload also cannot exceed 10 MB. Sources outside the explicitly named catalog files and documents are not scanned.
+
+The artifact includes UTC `generated_at`, counts, assurance labels, and `graph_payload_hash`: SHA-256 of canonical JSON containing `schema_version`, `commit`, sorted `nodes`, and sorted `edges`. Generation time is excluded from that hash, so identical inputs at the same commit replay identically. Compilation time and Git history make **no historical cutoff-eligibility or independent-timestamp claim**. Validate this compiler with `PYTHONPATH=engine python3 -m unittest discover -s engine/tests -p 'test_knowledge.py' -v`.
