@@ -1164,7 +1164,7 @@
     {
       "source": "exp_html_projection",
       "target": "doc_retrieval_comparison_protocol",
-      "type": "cites"
+      "type": "depends_on"
     },
     {
       "source": "claim_retrieval_support_gap",
@@ -1194,7 +1194,7 @@
     {
       "source": "claim_html_comparison_result",
       "target": "exp_html_projection",
-      "type": "cites"
+      "type": "depends_on"
     },
     {
       "source": "claim_runtime_gate",
