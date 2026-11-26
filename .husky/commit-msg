@@ -1,0 +1,3 @@
+#!/bin/sh
+# sc-managed commit-msg hook. Checks: supernal.yaml git_hooks.commit_msg.
+exec sc git hooks run commit-msg "$1"

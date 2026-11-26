@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "version": "offline-contracts-retrieval-v7",
+  "stage": "offline_fixture",
+  "allow_scale_change": false,
+  "max_assessment_seconds": 30,
+  "external_spend": 0,
+  "required_families": ["software_service", "organization", "person_role", "contract_obligation", "physical_asset", "collective", "representation"]
+}

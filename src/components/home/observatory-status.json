@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "recorded_through": "2026-11-26T00:36:09.938508+00:00",
+  "last_capture_at": "2026-11-26T00:36:09.935411+00:00",
+  "source": "Project README",
+  "source_url": "https://github.com/supernalintelligence/epiphysics/blob/main/README.md",
+  "scope": "Collection check: exact file-byte changes, constant probability 0.5. Not a test of predictive skill.",
+  "integrity": "Local chain and source bytes verified",
+  "timestamp_assurance": "Local collector clock; no independent witness",
+  "observations": 2,
+  "forecasts": 2,
+  "resolved": 0,
+  "pending": 2,
+  "expired": 0,
+  "collection_failures": 0
+}

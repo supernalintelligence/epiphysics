@@ -1,0 +1,52 @@
+{
+  "queries": [
+    {
+      "query_id": "dev-openai-01",
+      "query": "For OpenAI’s standard generally available models versus its image and specialist variants, how much warning should I expect before removal, and what could shorten it?"
+    },
+    {
+      "query_id": "dev-openai-02",
+      "query": "How can a monitoring script find an OpenAI model’s planned removal date without someone reading the announcements each time?"
+    },
+    {
+      "query_id": "dev-anthropic-01",
+      "query": "If an app keeps calling a Claude model after its withdrawal, what happens and which error does the Messages interface return?"
+    },
+    {
+      "query_id": "dev-anthropic-02",
+      "query": "What happens to comparisons against older Claude models when they are retired, and what preservation commitment is intended to lessen the impact?"
+    },
+    {
+      "query_id": "dev-x402-01",
+      "query": "Does x402’s core payment standard specify how an automated client’s spending cap should work?"
+    },
+    {
+      "query_id": "dev-x402-02",
+      "query": "Under x402 v2, may a server run the purchased service before doing any check on the payment?"
+    },
+    {
+      "query_id": "dev-opentimestamps-01",
+      "query": "What fact about a document’s history can a successfully verified OpenTimestamps proof establish?"
+    },
+    {
+      "query_id": "dev-opentimestamps-02",
+      "query": "What fees and signup requirements does OpenTimestamps state for using its calendar servers?"
+    },
+    {
+      "query_id": "dev-openai-03",
+      "query": "What proportion of OpenAI customers actually obtained dedicated capacity to keep a model running after its shutdown date?"
+    },
+    {
+      "query_id": "dev-anthropic-03",
+      "query": "On what exact date will Anthropic make the weights of its retired Claude models publicly downloadable?"
+    },
+    {
+      "query_id": "dev-x402-03",
+      "query": "What percentage of real-world x402 payments failed to settle during 2026?"
+    },
+    {
+      "query_id": "dev-opentimestamps-03",
+      "query": "What was the median wait from submitting a file to a Bitcoin-confirmed OpenTimestamps proof over the past year?"
+    }
+  ]
+}

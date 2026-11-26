@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "version": "offline-contracts-retrieval-v7",
+  "stage": "offline_fixture",
+  "allow_scale_change": false,
+  "max_assessment_seconds": 30,
+  "external_spend": 0,
+  "required_families": [
+    "software_service",
+    "organization",
+    "person_role",
+    "contract_obligation",
+    "physical_asset",
+    "collective",
+    "representation"
+  ],
+  "retrieval_study": {
+    "schema_version": 1,
+    "study_id": "control-development-v1",
+    "snapshot_id": "control-sources-20261126:snapshot",
+    "snapshot_hash": "572c92a0cad1f33a49a44a528ae2a1137fc3ad584ce64d777ebeb37c17f85f3f",
+    "snapshot_manifest_hash": "e0340c56ea51fe17a009e981fefb54d80aa38c29644c6f02cd63a6ffa8eddc9c",
+    "sources_hash": "bf6924b47a5f2b69c4581bade52ad944656aa0039b9921827da38da62b4b17c6",
+    "passages_hash": "b28dadb616ee337e82be12abf7d6a9fde17e25377a18665581f21b7a743f3835",
+    "config_hash": "330c4b5f077d058a352c30633ccf961fc591c23c99592561242c04b701004a48",
+    "corpus_id": "retrieval-corpus:control-development-v1",
+    "corpus_hash": "8506a15404d9377abe3f05744be815711da9030e94a54ab9e5175cfa365fa3d5",
+    "cohort_hash": "5d22925a1241a7f49fd227f5221f7283fdeadcf4c041da30d50d990f807efa35",
+    "gold_hash": "bb14a1f76e29ac083621b7d764ebf70f59657bd0c3a3a11a9c231a836627ec6f",
+    "query_hash": "c13334e2c30917d7ff626b385938955e30cf82935ec423ae2762f231b06cca4a",
+    "implementation_hash": "4cf1766e007d47ea367b4dee7eb811ded9f7fb4c3fac3ea5ee68152da8fa1613",
+    "dependency_hashes": {
+      "epiphysics.assertions": "ee75e15e7e3abaaf598bf252286f55861ca5a4b2866055c4f74f16893f7ad45e",
+      "epiphysics.manifests": "e900ac0f1a758965de70cd6db8a57b85ac1ce414f45847ee3eb3a59063a73912",
+      "epiphysics.store": "bd1d79659c7ca97c987ed0cc8306d97b985928a42dd414f8795098a454de9208"
+    },
+    "runtime_hash": "bbd195a3ce3dbe621affa40c3e43147dbb4ed5d62624c67c19e34a7f1ce39c2f",
+    "run_terminal_hashes": {
+      "retrieval:control-development-v1-a:terminal": "61851e42578ac500b576294934d3de6263d2fca1511006f178449cdf2f6f994e",
+      "retrieval:control-development-v1-b:terminal": "4ef87d6ef5cb5ae741161e05b60922feac5b139471e33491d413e25982a13a11"
+    }
+  }
+}

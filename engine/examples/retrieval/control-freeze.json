@@ -1,0 +1,10 @@
+{
+  "snapshot_id": "control-sources-20261126:snapshot",
+  "observation_ids": [
+    "control-sources-20261126:anthropic-deprecations",
+    "control-sources-20261126:openai-deprecations",
+    "control-sources-20261126:opentimestamps",
+    "control-sources-20261126:x402-v2"
+  ],
+  "event_id": "retrieval-corpus:control-development-v1"
+}

@@ -1,0 +1,60 @@
+{
+  "recordDate": "2026-11-25",
+  "heading": "The evidence was preserved. Retrieval still missed part of it.",
+  "scope": "Our current test follows evidence through a small retrieval system: what was kept, what was returned, and what a question actually required.",
+  "evidence": [
+    {
+      "id": "coverage",
+      "href": "/planning/runs/2026-11-26-retrieval-coverage",
+      "requiredText": [
+        "Complete declared support at 1, 3 and 5 | 5/6 at each cutoff",
+        "All six unsupported questions also returned passages."
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "href": "/planning/runs/2026-11-26-retrieval-diagnosis",
+      "requiredText": [
+        "They omitted the capability-discovery passage, even though that passage survived intact in the indexed representation.",
+        "The diagnostic has not executed at this record's cutoff."
+      ]
+    },
+    {
+      "id": "protocol",
+      "href": "/experiments/retrieval-support-diagnosis",
+      "requiredText": [
+        "The proposal is not an executed experiment.",
+        "Two clause queries can return more windows than one whole query."
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "coverage",
+      "status": "completed",
+      "label": "Coverage check",
+      "value": "5 of 6",
+      "measure": "supported questions had complete evidence",
+      "summary": "Two runs reproduced the same result. All six unsupported questions also returned passages; retrieving text does not establish that a question can be answered.",
+      "linkLabel": "Coverage result"
+    },
+    {
+      "id": "diagnosis",
+      "status": "completed",
+      "label": "Gap diagnosis",
+      "value": "1 gap located",
+      "measure": "required evidence was indexed, but not returned",
+      "summary": "One question asked about both discovering payment capabilities and committing payment state. The five returned passages omitted the discovery evidence. Review found no complete alternative answer in them.",
+      "linkLabel": "Diagnosis record"
+    }
+  ],
+  "limits": "These are visible development questions over four saved sources. No answers were generated. Predictive advantage, broader entity coverage and the cause of the retrieval ranking remain unmeasured.",
+  "next": {
+    "status": "planned",
+    "evidenceId": "protocol",
+    "question": "Does asking the two parts separately recover the missing evidence?",
+    "description": "Prepare one fixed diagnostic: capability discovery, then payment commitment, using the same saved sources and raw-text method. Freeze the clauses, run count and stopping rule before retrieving again.",
+    "budget": "Two top-five lists allow up to ten windows, compared with five in the original test. Recovery would show sensitivity to that change, not a fair-budget improvement.",
+    "linkLabel": "Follow-up rules"
+  }
+}

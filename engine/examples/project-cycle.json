@@ -1,0 +1,5 @@
+{
+  "sources": [{"id": "epiphysics-readme", "kind": "file", "path": "../../README.md"}],
+  "horizon_seconds": 86400,
+  "max_lateness_seconds": 129600
+}

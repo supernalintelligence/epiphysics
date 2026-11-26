@@ -5,6 +5,24 @@ const mdxOptions = require('./mdx.config.js');
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+  poweredByHeader: false,
+  // Increase the timeout for static generation
+  staticPageGenerationTimeout: 120,
+
+  // Security headers for every route
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
 
   // Externalize packages that should not be bundled in serverless functions
   serverExternalPackages: [
@@ -55,6 +73,31 @@ const nextConfig = {
         hostname: '*.vercel.app',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.githubusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.youtube.com',
+        pathname: '/**',
+      },
     ],
     domains: ['localhost', 'epiphysics.xyz', 'www.epiphysics.xyz', 'vercel.app'],
   },
@@ -82,7 +125,23 @@ const nextConfig = {
     optimizePackageImports: ['react-icons', 'lucide-react', '@heroicons/react'],
   },
 
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dev, isServer }) => {
+    // Keep proper error logging during development
+    if (dev) {
+      config.infrastructureLogging = {
+        level: 'warn',
+      };
+    }
+
+    // Fix for mermaid module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      };
+    }
+
     // Mark heavy packages as external for server-side bundles
     if (isServer) {
       config.externals = config.externals || [];
@@ -106,6 +165,8 @@ const nextConfig = {
             vendor: {
               name: 'vendor',
               test: /[\\/]node_modules[\\/]/,
+              // JavaScript only: CSS in this named chunk is emitted as a <script> tag
+              type: /^javascript\//,
               chunks: 'all',
               priority: 10
             }

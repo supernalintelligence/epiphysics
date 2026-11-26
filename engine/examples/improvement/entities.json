@@ -1,0 +1,655 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "relay-services",
+      "family": "software_service",
+      "description": "Synthetic fictional fixture. Aster Studio has two services named Relay in billing and operations. Billing Relay depends on Ledger and separately sends invoices to Ledger. Retrying invoice INV-17 with the same vendor-scoped key must produce one accepted delivery, and only the billing operator can submit it. A post-cutoff incident is unavailable.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "service-registry",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "dependency-manifest",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "invoice-trace",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "operator-policy",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "incident-late",
+          "recorded_at": "2030-01-07T12:00:01Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "scope-homonymous-services",
+          "dimension": "identity",
+          "expected": {
+            "label": "Relay",
+            "entity_ids": [
+              "svc:billing:relay",
+              "svc:operations:relay"
+            ],
+            "same_entity": false
+          },
+          "evidence_ids": [
+            "service-registry"
+          ]
+        },
+        {
+          "id": "dependency-direction",
+          "dimension": "relation_direction",
+          "expected": {
+            "source": "svc:billing:relay",
+            "type": "depends_on",
+            "target": "svc:ledger"
+          },
+          "evidence_ids": [
+            "dependency-manifest"
+          ]
+        },
+        {
+          "id": "parallel-service-relations",
+          "dimension": "relation_type",
+          "expected": [
+            {
+              "source": "svc:billing:relay",
+              "type": "depends_on",
+              "target": "svc:ledger"
+            },
+            {
+              "source": "svc:billing:relay",
+              "type": "sends_invoices_to",
+              "target": "svc:ledger"
+            }
+          ],
+          "evidence_ids": [
+            "dependency-manifest",
+            "invoice-trace"
+          ]
+        },
+        {
+          "id": "invoice-retry-and-authority",
+          "dimension": "workflow",
+          "expected": {
+            "idempotency_key": "vendor-7:INV-17",
+            "attempts": 2,
+            "accepted_deliveries": 1,
+            "authorized_role": "billing-operator"
+          },
+          "evidence_ids": [
+            "invoice-trace",
+            "operator-policy"
+          ]
+        },
+        {
+          "id": "exclude-late-incident",
+          "dimension": "time",
+          "expected": {
+            "known_status_at_cutoff": "available",
+            "late_incident_admissible": false
+          },
+          "evidence_ids": [
+            "service-registry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aster-boundaries",
+      "family": "organization",
+      "description": "Synthetic fictional fixture. Aster Studio is a fictional legal organization containing its design unit and employees. Contractor Jun works with the studio but lies outside its employee boundary. The charter and register disagree about controlling ownership; neither overrides the other. Finance receives delegated approval authority from the studio.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "charter",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "register",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "staff-roster",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "delegation",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "employee-boundary",
+          "dimension": "boundary",
+          "expected": {
+            "organization": "org:aster",
+            "inside": [
+              "person:mira-a",
+              "unit:design"
+            ],
+            "outside_linked": [
+              "contractor:jun"
+            ],
+            "boundary_basis": "employment-and-unit-membership"
+          },
+          "evidence_ids": [
+            "charter",
+            "staff-roster"
+          ]
+        },
+        {
+          "id": "design-unit-parent",
+          "dimension": "hierarchy",
+          "expected": {
+            "child": "unit:design",
+            "parent": "org:aster",
+            "relation": "part_of",
+            "ownership_implied": false
+          },
+          "evidence_ids": [
+            "charter"
+          ]
+        },
+        {
+          "id": "preserve-owner-dispute",
+          "dimension": "contradiction",
+          "expected": {
+            "subject": "org:aster",
+            "predicate": "controlled_by",
+            "alternatives": [
+              {
+                "value": "org:cedar",
+                "evidence": "charter"
+              },
+              {
+                "value": "org:lumen",
+                "evidence": "register"
+              }
+            ],
+            "resolution": "unresolved"
+          },
+          "evidence_ids": [
+            "charter",
+            "register"
+          ]
+        },
+        {
+          "id": "delegation-direction",
+          "dimension": "relation_direction",
+          "expected": {
+            "source": "org:aster",
+            "type": "delegates_payment_approval_to",
+            "target": "committee:finance"
+          },
+          "evidence_ids": [
+            "delegation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mira-roles",
+      "family": "person_role",
+      "description": "Synthetic fictional fixture. Two fictional people named Mira Vale work at separate organizations. Mira A is distinct from the temporary approver role she held through January 5. A later HR correction was recorded after the cutoff and is unavailable. Her recorded work duration is eight hours, not eight days.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "person-directory",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "role-history",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "timesheet",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "hr-late",
+          "recorded_at": "2030-01-08T09:00:00Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "homonymous-people",
+          "dimension": "identity",
+          "expected": {
+            "name": "Mira Vale",
+            "entity_ids": [
+              "person:mira-a",
+              "person:mira-b"
+            ],
+            "same_person": false
+          },
+          "evidence_ids": [
+            "person-directory"
+          ]
+        },
+        {
+          "id": "expired-approval-role",
+          "dimension": "time",
+          "expected": {
+            "person": "person:mira-a",
+            "role": "role:temporary-approver",
+            "valid_from": "2030-01-01T00:00:00Z",
+            "valid_until_exclusive": "2030-01-06T00:00:00Z",
+            "authorized_at_cutoff": false
+          },
+          "evidence_ids": [
+            "role-history"
+          ]
+        },
+        {
+          "id": "person-role-boundary",
+          "dimension": "boundary",
+          "expected": {
+            "person": "person:mira-a",
+            "role": "role:temporary-approver",
+            "same_entity": false,
+            "role_organization": "org:aster"
+          },
+          "evidence_ids": [
+            "person-directory",
+            "role-history"
+          ]
+        },
+        {
+          "id": "work-duration-unit",
+          "dimension": "units",
+          "expected": {
+            "value": 8,
+            "unit": "hour",
+            "person": "person:mira-a"
+          },
+          "evidence_ids": [
+            "timesheet"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invoice-obligation",
+      "family": "contract_obligation",
+      "description": "Synthetic fictional fixture. Fictional Aster owes Cedar 12500 EUR minor units under invoice INV-17. The vendor-scoped key permits one settlement even after retries; only treasury may authorize it within a 50000-minor-unit EUR limit. Two timely amendments disagree on the due date, while an apparent cancellation arrives after the cutoff.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "invoice",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "treasury-policy",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "settlement-log",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "amendment-a",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "amendment-b",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "cancellation-late",
+          "recorded_at": "2030-01-09T00:00:00Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "debtor-creditor-direction",
+          "dimension": "relation_direction",
+          "expected": {
+            "source": "org:aster",
+            "type": "owes",
+            "target": "org:cedar",
+            "invoice": "INV-17"
+          },
+          "evidence_ids": [
+            "invoice"
+          ]
+        },
+        {
+          "id": "currency-and-scale",
+          "dimension": "units",
+          "expected": {
+            "value": 12500,
+            "unit": "minor_currency_unit",
+            "currency": "EUR",
+            "minor_units_per_major": 100
+          },
+          "evidence_ids": [
+            "invoice"
+          ]
+        },
+        {
+          "id": "settlement-idempotency-authority",
+          "dimension": "workflow",
+          "expected": {
+            "idempotency_key": "vendor-7:INV-17",
+            "settlement_count": 1,
+            "authorized_role": "treasury",
+            "authority_limit": {
+              "value": 50000,
+              "currency": "EUR",
+              "unit": "minor_currency_unit"
+            }
+          },
+          "evidence_ids": [
+            "invoice",
+            "treasury-policy",
+            "settlement-log"
+          ]
+        },
+        {
+          "id": "conflicting-due-dates",
+          "dimension": "contradiction",
+          "expected": {
+            "due_date_alternatives": [
+              "2030-01-20",
+              "2030-01-22"
+            ],
+            "resolution": "unresolved",
+            "latest_record_does_not_imply_authority": true
+          },
+          "evidence_ids": [
+            "amendment-a",
+            "amendment-b"
+          ]
+        },
+        {
+          "id": "late-cancellation-excluded",
+          "dimension": "time",
+          "expected": {
+            "obligation_state_at_cutoff": "open",
+            "late_cancellation_admissible": false
+          },
+          "evidence_ids": [
+            "invoice"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tank-assets",
+      "family": "physical_asset",
+      "description": "Synthetic fictional fixture. Two fictional physical tanks share the label Blue but have distinct serial numbers. Sensor S-8 is part of tank T-4; ownership by Aster is a different relation. Its temperature is 298.15 kelvin. A maintenance record exactly at cutoff is eligible; a shutdown record one second later is not.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "asset-register",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "temperature-reading",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "assembly-drawing",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "maintenance-at-cutoff",
+          "recorded_at": "2030-01-07T12:00:00Z"
+        },
+        {
+          "id": "shutdown-late",
+          "recorded_at": "2030-01-07T12:00:01Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "serial-number-identity",
+          "dimension": "identity",
+          "expected": {
+            "label": "Blue",
+            "serial_numbers": [
+              "T-4",
+              "T-9"
+            ],
+            "same_asset": false
+          },
+          "evidence_ids": [
+            "asset-register"
+          ]
+        },
+        {
+          "id": "temperature-unit",
+          "dimension": "units",
+          "expected": {
+            "value": 298.15,
+            "unit": "kelvin",
+            "sensor": "S-8"
+          },
+          "evidence_ids": [
+            "temperature-reading"
+          ]
+        },
+        {
+          "id": "inclusive-observation-cutoff",
+          "dimension": "time",
+          "expected": {
+            "asset": "T-4",
+            "state_at_cutoff": "operating",
+            "shutdown_known": false
+          },
+          "evidence_ids": [
+            "maintenance-at-cutoff"
+          ]
+        },
+        {
+          "id": "part-versus-owner",
+          "dimension": "hierarchy",
+          "expected": {
+            "part": "S-8",
+            "assembly": "T-4",
+            "part_relation": "part_of",
+            "owner": "org:aster",
+            "ownership_relation": "owned_by"
+          },
+          "evidence_ids": [
+            "assembly-drawing",
+            "asset-register"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "harbor-collective",
+      "family": "collective",
+      "description": "Synthetic fictional fixture. Harbor Circle is a fictional informal collective with overlapping personal and organizational membership, not a legal corporation. Mira left on January 5 and Jun joined on January 6. Two eligible rolls dispute Cedar membership. A repair working group is nested within the collective without implying corporate ownership.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "collective-charter",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "membership-events",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "roll-a",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "roll-b",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "informal-boundary",
+          "dimension": "boundary",
+          "expected": {
+            "collective": "collective:harbor",
+            "legal_corporation": false,
+            "member_kinds": [
+              "person",
+              "organization"
+            ],
+            "exclusive_membership": false
+          },
+          "evidence_ids": [
+            "collective-charter"
+          ]
+        },
+        {
+          "id": "membership-over-time",
+          "dimension": "time",
+          "expected": {
+            "at": "2030-01-07T12:00:00Z",
+            "known_person_members": [
+              "person:jun"
+            ],
+            "departed": [
+              "person:mira-a"
+            ],
+            "membership_is_timeless": false
+          },
+          "evidence_ids": [
+            "membership-events"
+          ]
+        },
+        {
+          "id": "disputed-membership",
+          "dimension": "contradiction",
+          "expected": {
+            "member": "org:cedar",
+            "assertions": [
+              {
+                "member": true,
+                "evidence": "roll-a"
+              },
+              {
+                "member": false,
+                "evidence": "roll-b"
+              }
+            ],
+            "resolution": "unresolved"
+          },
+          "evidence_ids": [
+            "roll-a",
+            "roll-b"
+          ]
+        },
+        {
+          "id": "working-group-containment",
+          "dimension": "hierarchy",
+          "expected": {
+            "child": "collective:harbor:repair",
+            "parent": "collective:harbor",
+            "relation": "working_group_of",
+            "corporate_ownership": false
+          },
+          "evidence_ids": [
+            "collective-charter"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "competing-representations",
+      "family": "representation",
+      "description": "Synthetic fictional fixture. Two fictional versioned representations describe Aster with different boundaries using the same evidence. They remain separate from Aster itself. A projection transforms a representation and separately cites it as an input. This fixture and its copied-answer reference are synthetic controls and provide no learned or empirical performance evidence.",
+      "cutoff": "2030-01-07T12:00:00Z",
+      "observations": [
+        {
+          "id": "representation-registry",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "projection-manifest",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "boundary-comparison",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        },
+        {
+          "id": "control-protocol",
+          "recorded_at": "2030-01-06T12:00:00Z"
+        }
+      ],
+      "checks": [
+        {
+          "id": "representation-versus-referent",
+          "dimension": "identity",
+          "expected": {
+            "representation_id": "repr:aster-legal:v1",
+            "referent_id": "org:aster",
+            "same_entity": false,
+            "version": 1
+          },
+          "evidence_ids": [
+            "representation-registry"
+          ]
+        },
+        {
+          "id": "parallel-projection-relations",
+          "dimension": "relation_type",
+          "expected": [
+            {
+              "source": "transform:coarsen:v1",
+              "type": "transforms",
+              "target": "repr:aster-legal:v1"
+            },
+            {
+              "source": "transform:coarsen:v1",
+              "type": "cites_input",
+              "target": "repr:aster-legal:v1"
+            }
+          ],
+          "evidence_ids": [
+            "projection-manifest"
+          ]
+        },
+        {
+          "id": "competing-boundaries-retained",
+          "dimension": "contradiction",
+          "expected": {
+            "representations": [
+              "repr:aster-legal:v1",
+              "repr:aster-collaboration:v1"
+            ],
+            "contractor_inside": [
+              false,
+              true
+            ],
+            "shared_evidence": true,
+            "winner": null
+          },
+          "evidence_ids": [
+            "boundary-comparison"
+          ]
+        },
+        {
+          "id": "oracle-control-status",
+          "dimension": "workflow",
+          "expected": {
+            "reference_mode": "copies_expected_answers",
+            "learned": false,
+            "empirical_validation": false,
+            "claim_scope": "synthetic_query_contract_conformance"
+          },
+          "evidence_ids": [
+            "control-protocol"
+          ]
+        }
+      ]
+    }
+  ]
+}
