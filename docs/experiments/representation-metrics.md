@@ -168,6 +168,20 @@ New candidate identity separates algorithm/recipe from the constructed projectio
 
 Report all four run evaluations, supported/unsupported counts, empty reasons, per-question window/rank changes and the declared cost scopes. BM25 values across different indexed corpora are not comparable confidence scores. A valid differing repeat reports reproduction failure with no paired delta; invalid/incomplete evidence produces no quality summary. A valid completed comparison advances to fresh coverage for a gain, tie or regression. The simpler raw reference remains in use; no quality threshold or adoption rule is inferred from these twelve visible questions.
 
+## Complete evidence and matched questions: C4
+
+The [fresh coverage protocol](retrieval-coverage.md) introduces `retrieval-coverage-evaluation-v2`. Each answerable question has one or more support bundles: every span within a bundle is required, and any complete bundle is sufficient. Exact raw-interval union coverage remains the citation rule. Unsupported questions have no bundle and are excluded from support-score denominators, not counted as vacuously supported.
+
+`complete_support_rate_at_k` counts supported questions with a complete bundle at 1, 3 or 5, divided by all supported questions. `complete_support_mrr_at_5` averages the reciprocal earliest prefix completing a whole bundle, with zero for a miss. `complete_source_set_rate_at_k` asks whether all source IDs of any bundle appear; it does not establish complete support. Every question has one vote, so adding alternative annotations neither penalizes a sufficient answer nor rewards incomplete conjunctions.
+
+Unsupported-query retrieval retains its original meaning: any returned passage through five, divided by all unsupported questions. Empty-result rates retain all valid queries and label-specific breakdowns. Six matched-pair rows compare supported complete coverage and unsupported any-hit status at five; four descriptive buckets account for every pair. No bucket is an answerability classifier, hallucination rate or generated-answer score.
+
+Per-case bundle diagnostics and per-family/relation counts accompany the aggregates. Empty entity families remain explicitly unmeasured, with null rates. Overlapping tags are not additive and this corpus cannot support a seven-family macro or worst-family conclusion. The fresh questions and new scoring definitions make comparisons with C1/C3 aggregates incomparable; two distinct runs within C4 must reproduce under the same frozen contract.
+
+Preparation validates the exact retained cohort, protocol, independent review and pre-run freeze. Its report contains counts and identities, no quality or fabricated outputs. Only validated readiness selects the two intended raw executions. After reproduced evaluation, incomplete support selects inspection of the actual misses; complete support selects investigation of answerability evidence gaps. Neither branch changes the frozen labels or authorizes repetitive tuning on these exposed questions.
+
+The [actual C4 record](../planning/runs/2026-11-26-retrieval-coverage.md) contains two exactly reproduced runs: complete declared support is 5/6 at 1/3/5, complete source sets 6/6, unsupported hits 6/6 and empty results 0/12. The controller selected inspection of the sole incomplete declared bundle case. These are descriptions of the six reviewed pairs; they neither improve nor worsen the earlier cohort's different metric contract.
+
 ## Prediction, calibration and coverage
 
 For binary outcomes, use mean Brier loss `(p − y)²` or log loss `−[y log p + (1−y) log(1−p)]`, lower being better. CRPS compares a predictive cumulative distribution with a realized scalar outcome; its units follow the outcome. Proper scores reward truthful probabilities in expectation. Calibration compares probabilities with observed frequencies; interval coverage needs interval width alongside it. [Gneiting and Raftery (2007)](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)

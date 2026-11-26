@@ -273,5 +273,7 @@ jobs:
                   readonly.close()
           print('Four fresh raw/HTML processes, separate scoring and measured coverage handoff passed on owned evidence.')
           PYTHON
+      - name: Verify prepared coverage and automatic continuation
+        run: python engine/examples/retrieval/coverage-smoke.py
       - name: Run synthetic ledger demo
         run: python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo

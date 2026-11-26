@@ -19,17 +19,17 @@ import tempfile
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, manifests, retrieval_contracts as retrieval, retrieval_evaluation, store
+from . import assertions, manifests, retrieval_contracts as retrieval, retrieval_coverage, retrieval_evaluation, store
 from .store import Ledger, canonical, digest, instant
 
 IMPLEMENTATION_DEPENDENCIES = tuple((m.__name__, m.IMPLEMENTATION_CODE)
-    for m in (store, assertions, manifests, retrieval, retrieval_evaluation))
-MAX_ARTIFACTS = 128
-MAX_ARTIFACT_BYTES = 4_000_000
-MAX_BUNDLE_BYTES = 16_000_000
-MAX_INPUT_BYTES = 1_000_000
-MAX_PREFIX_EVENTS = 256
-MAX_PREFIX_BYTES = 4_000_000
+    for m in (store, assertions, manifests, retrieval, retrieval_evaluation, retrieval_coverage))
+MAX_ARTIFACTS = retrieval_coverage.MAX_ARTIFACTS
+MAX_ARTIFACT_BYTES = retrieval_coverage.MAX_ARTIFACT_BYTES
+MAX_BUNDLE_BYTES = retrieval_coverage.MAX_BUNDLE_BYTES
+MAX_INPUT_BYTES = retrieval_coverage.MAX_BYTES
+MAX_PREFIX_EVENTS = retrieval_coverage.MAX_PREFIX_EVENTS
+MAX_PREFIX_BYTES = retrieval_coverage.MAX_PREFIX_BYTES
 REQUEST_FIELDS = {"schema_version", "study_id", "evidence_store", "cohort_file", "corpus_id", "run_terminal_ids"}
 CONTRACT_FIELDS = {"schema_version", "study_id", "snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
     "corpus_id", "corpus_hash", "cohort_hash", "gold_hash", "query_hash", "sources_hash", "passages_hash",
@@ -38,6 +38,10 @@ COMMON_CONTRACT_FIELDS = CONTRACT_FIELDS - {"implementation_hash", "dependency_h
 REQUEST_FIELDS_V2 = (REQUEST_FIELDS - {"run_terminal_ids"}) | {"arms", "protocol_file"}
 CONTRACT_FIELDS_V2 = COMMON_CONTRACT_FIELDS | {"arms", "protocol_hash"}
 ARM_RECIPES = {"raw": retrieval.RAW_RECIPE, "html": retrieval.HTML_RECIPE}
+REQUEST_COMMON_V3 = {"schema_version", "phase", "study_id", "evidence_store", "cohort_file", "protocol_file",
+    "review_file", "corpus_id", "freeze_event_id"}
+CONTRACT_COMMON_V3 = COMMON_CONTRACT_FIELDS | {"phase", "protocol_hash", "review_hash", "freeze_event_hash",
+    "reference_terminal", "candidate_algorithm_hash", "evaluator_identity_hash", "runtime_hash"}
 _SELF = (Path(__file__), IMPLEMENTATION_SOURCE, IMPLEMENTATION_CODE)
 
 
@@ -85,12 +89,19 @@ def _hash(value):
 
 
 def _request_fields(request):
-    if type(request) is not dict or type(request.get("schema_version")) is not int or request["schema_version"] not in (1, 2):
-        raise ValueError("Assessment schema_version must be 1 or 2")
+    if type(request) is not dict or type(request.get("schema_version")) is not int or request["schema_version"] not in (1, 2, 3):
+        raise ValueError("Assessment schema_version must be 1, 2 or 3")
+    if request["schema_version"] == 3:
+        if request.get("phase") not in ("preparation", "evaluation"):
+            raise ValueError("Coverage phase must be preparation or evaluation")
+        _keys(request, REQUEST_COMMON_V3 | ({"run_terminal_ids"} if request["phase"] == "evaluation" else set()), "coverage request")
+        return
     _keys(request, REQUEST_FIELDS if request["schema_version"] == 1 else REQUEST_FIELDS_V2, "study request")
 
 
 def _run_ids(request):
+    if request["schema_version"] == 3:
+        return request.get("run_terminal_ids", [])
     return request["run_terminal_ids"] if request["schema_version"] == 1 else [
         terminal_id for arm in ARM_RECIPES for terminal_id in request["arms"][arm]["run_terminal_ids"]]
 
@@ -98,6 +109,9 @@ def _run_ids(request):
 def _inputs(request, cohort, declared_contract):
     _request_fields(request)
     version = request["schema_version"]
+    if version == 3:
+        _coverage_inputs(request, cohort, declared_contract)
+        return
     _keys(declared_contract, CONTRACT_FIELDS if version == 1 else CONTRACT_FIELDS_V2, "declared retrieval contract")
     for item in (request, declared_contract):
         if type(item["schema_version"]) is not int or item["schema_version"] != version:
@@ -160,7 +174,47 @@ def _inputs(request, cohort, declared_contract):
     retrieval_evaluation.project_queries(cohort)
 
 
-def _current_sources():
+def _coverage_inputs(request, cohort, contract):
+    evaluated = request["phase"] == "evaluation"
+    _keys(contract, CONTRACT_COMMON_V3 | ({"run_terminal_hashes", "projection_hashes"} if evaluated else set()), "coverage declaration")
+    if type(contract["schema_version"]) is not int or contract["schema_version"] != 3 or contract["phase"] != request["phase"]:
+        raise ValueError("Coverage declaration version/phase mismatch")
+    for value in (request, contract, cohort):
+        if len(_raw(value)) > MAX_INPUT_BYTES:
+            raise ValueError("Coverage input exceeds 1 MB")
+    for key in ("study_id", "corpus_id"):
+        _id(request[key], key)
+        if request[key] != contract[key]:
+            raise ValueError("Coverage request differs from declared " + key)
+    for key in ("evidence_store", "cohort_file", "protocol_file", "review_file"):
+        _id(request[key], key)
+        if not Path(request[key]).is_absolute():
+            raise ValueError("Coverage input paths must be absolute")
+    _id(request["freeze_event_id"], "freeze ID")
+    if request["freeze_event_id"] != retrieval_coverage.freeze_id(request["study_id"]):
+        raise ValueError("Coverage freeze ID must match study")
+    _id(contract["snapshot_id"], "snapshot ID")
+    retrieval_coverage._ref(contract["reference_terminal"], "declared reference terminal")
+    for key in CONTRACT_COMMON_V3 - {"schema_version", "phase", "study_id", "snapshot_id", "corpus_id", "reference_terminal"}:
+        _hash(contract[key])
+    checked = retrieval_evaluation._cohort(cohort)
+    if checked["schema_version"] != 2:
+        raise ValueError("Coverage study requires cohort schema 2")
+    if evaluated:
+        ids = request["run_terminal_ids"]
+        if type(ids) is not list or len(ids) != 2:
+            raise ValueError("Coverage evaluation requires two terminal IDs")
+        for eid in ids:
+            _id(eid, "coverage terminal ID")
+        if len(set(ids)) != 2:
+            raise ValueError("Coverage evaluation requires distinct terminals")
+        for key in ("run_terminal_hashes", "projection_hashes"):
+            _keys(contract[key], set(ids), "coverage output hashes")
+            for value in contract[key].values():
+                _hash(value)
+
+
+def _current_sources(coverage=False):
     path, source, code = _SELF
     if (IMPLEMENTATION_SOURCE != source or IMPLEMENTATION_CODE is not code
             or path.is_symlink() or not path.is_file() or path.stat().st_size != len(source)):
@@ -176,7 +230,15 @@ def _current_sources():
     retrieval_evaluation._implementation_identity()
     sources = retrieval._runtime_sources()
     sources[retrieval_evaluation.__name__] = retrieval_evaluation.IMPLEMENTATION_SOURCE
+    # The shared capture caps affect every schema; retain/guard their actual
+    # source without importing the candidate into the evaluator's closure.
+    sources[retrieval_coverage.__name__] = retrieval_coverage.implementation_source()
     sources[__name__] = source
+    if coverage:
+        for name, raw in retrieval_coverage.runtime_sources().items():
+            if name in sources and sources[name] != raw:
+                raise ValueError("Coverage source closure collision")
+            sources[name] = raw
     return {("data:" if name == "html.entities.html5" else "code:") + name: raw for name, raw in sources.items()}
 
 
@@ -219,7 +281,9 @@ def _check_artifacts(prepared):
 def check_prepared_retrieval_study(prepared):
     """Check captured bytes and current code at controller claim/commit boundaries."""
     _check_artifacts(prepared)
-    for role, raw in _current_sources().items():
+    request = _json(prepared["artifacts"].get("request", b""))
+    _request_fields(request)
+    for role, raw in _current_sources(request["schema_version"] == 3).items():
         if prepared["artifacts"].get(role) != raw:
             raise ValueError("Prepared study validation implementation changed")
 
@@ -278,7 +342,7 @@ def _run_artifact_refs(terminal):
     return refs
 
 
-def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw=None, cohort_raw=None, protocol_raw=None):
+def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw=None, cohort_raw=None, protocol_raw=None, review_raw=None):
     _inputs(request, cohort, declared_contract)
     if type(evidence_ledger) is not Ledger or Ledger is not store.Ledger:
         raise ValueError("Assessment requires the current Ledger class")
@@ -288,16 +352,25 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
         raise ValueError("Evidence roots must not be symlinks")
     artifacts = {"request": _raw(request) if request_raw is None else request_raw,
                  "cohort": _raw(cohort) if cohort_raw is None else cohort_raw,
-                 "declared_contract": _raw(declared_contract), **_current_sources()}
+                 "declared_contract": _raw(declared_contract), **_current_sources(request["schema_version"] == 3)}
     if request["schema_version"] == 2:
         protocol_raw = _read_file(request["protocol_file"], MAX_INPUT_BYTES) if protocol_raw is None else protocol_raw
         if type(protocol_raw) is not bytes or len(protocol_raw) > MAX_INPUT_BYTES or digest(protocol_raw) != declared_contract["protocol_hash"]:
             raise ValueError("Comparison protocol differs from declared bytes")
         artifacts["comparison_protocol"] = protocol_raw
+    if request["schema_version"] == 3:
+        protocol_raw = _read_file(request["protocol_file"], MAX_INPUT_BYTES) if protocol_raw is None else protocol_raw
+        review_raw = _read_file(request["review_file"], MAX_INPUT_BYTES) if review_raw is None else review_raw
+        for name, raw in (("protocol", protocol_raw), ("review", review_raw)):
+            if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES or digest(raw) != declared_contract[name + "_hash"]:
+                raise ValueError("Coverage " + name + " differs from declared original bytes")
+            artifacts["coverage_" + name] = raw
     if _json(artifacts["request"]) != request or _json(artifacts["cohort"]) != cohort:
         raise ValueError("Captured file bytes differ from parsed input")
     with assertions._read_transaction(evidence_ledger):
         selected = [request["corpus_id"], *_run_ids(request)]
+        if request["schema_version"] == 3:
+            selected.extend([request["freeze_event_id"], declared_contract["reference_terminal"]["id"]])
         seqs = []
         for event_id in selected:
             row = evidence_ledger.db.execute("SELECT seq FROM events WHERE id=?", (event_id,)).fetchone()
@@ -305,6 +378,10 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
                 raise ValueError("Missing selected retrieval event")
             seqs.append(row["seq"])
         end = max(seqs)
+        if request["schema_version"] == 3 and request["phase"] == "preparation":
+            freeze_seq = evidence_ledger.db.execute("SELECT seq FROM events WHERE id=?", (request["freeze_event_id"],)).fetchone()["seq"]
+            if end != freeze_seq:
+                raise ValueError("Coverage preparation reference and corpus must precede freeze")
         # Inspect lengths in SQLite before deserializing attacker-sized event JSON.
         sizes = evidence_ledger.db.execute("SELECT COUNT(*), COALESCE(SUM(length(CAST(body AS BLOB)) + length(CAST(id AS BLOB)) + length(CAST(kind AS BLOB)) + length(CAST(recorded_at AS BLOB)) + length(CAST(previous_hash AS BLOB)) + length(CAST(hash AS BLOB)) + 256), 0) FROM events WHERE seq<=?", (end,)).fetchone()
         if sizes[0] > MAX_PREFIX_EVENTS or sizes[1] > MAX_PREFIX_BYTES:
@@ -326,6 +403,12 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
             if sum(ref["size"] for ref in refs) > retrieval.MAX_TOTAL_BYTES:
                 raise ValueError("Selected source bytes exceed 4 MB")
             refs = list(refs)
+            if request["schema_version"] == 3:
+                freeze = by_id[request["freeze_event_id"]]
+                retrieval_coverage._keys(freeze["body"], retrieval_coverage.FREEZE_FIELDS, "captured coverage freeze")
+                retrieval_coverage._keys(freeze["body"]["artifacts"], {"cohort", "protocol", "review"}, "coverage freeze artifacts")
+                refs.extend(freeze["body"]["artifacts"].values())
+                refs.extend(_run_artifact_refs(by_id[declared_contract["reference_terminal"]["id"]]))
             for terminal_id in _run_ids(request):
                 terminal = by_id[terminal_id]
                 refs.extend(_run_artifact_refs(terminal))
@@ -397,6 +480,8 @@ def _candidate(report):
 
 def _measurement(report):
     identity = report["identity"]
+    if report.get("evaluation") == retrieval_coverage.CONTRACT_ID:
+        return _coverage_measurement(identity)
     return _identity({key: identity[key] for key in ("snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
         "corpus_id", "corpus_hash", "sources_hash", "passages_hash", "cohort_hash", "gold_hash", "query_hash", "config_hash", "evaluator")}
         | {"citation_semantics": "complete-raw-source-window-v1",
@@ -479,6 +564,72 @@ def _costs(runs):
             "scope": "Receipt-reported inner times exclude locked revalidation and commit; outer caller records are separate. Builder/reviewer and whole-step costs are unmeasured."}
 
 
+def _coverage_measurement(identity):
+    return _identity({key: identity[key] for key in ("snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
+        "corpus_id", "corpus_hash", "sources_hash", "passages_hash", "cohort_hash", "gold_hash", "query_hash", "config_hash", "evaluator")}
+        | {"citation_semantics": "complete-raw-source-window-v1", "support_semantics": "any_complete_bundle_v1", "pair_bucket_cutoff": 5})
+
+
+def _assess_coverage(ledger, request, contract, prepared, artifacts, bundle):
+    found = retrieval_coverage.get_coverage_freeze(ledger, request["freeze_event_id"])
+    event, ready = found["event"], found["preparation"]
+    body = event["body"]
+    expected = {**ready["lineage"], "study_id": body["study_id"], "protocol_hash": ready["file_hashes"]["protocol"],
+        "review_hash": ready["file_hashes"]["review"], "freeze_event_hash": event["hash"],
+        "reference_terminal": body["reference_terminal"], "candidate_algorithm_hash": body["candidate_algorithm_hash"],
+        "evaluator_identity_hash": body["evaluator_identity_hash"], "runtime_hash": body["runtime_hash"]}
+    if any(contract[key] != value for key, value in expected.items()):
+        raise ValueError("Coverage freeze differs from declared lineage or identity")
+    for role, artifact in (("cohort", "cohort"), ("protocol", "coverage_protocol"), ("review", "coverage_review")):
+        if digest(artifacts[artifact]) != ready["file_hashes"][role]:
+            raise ValueError("Coverage input file differs from frozen original bytes")
+    measurement = _coverage_measurement({**ready["lineage"], "evaluator": ready["evaluator_identity"]})
+    identity = _identity({"adapter_hash": digest(IMPLEMENTATION_SOURCE), "helper_hash": digest(retrieval_coverage.IMPLEMENTATION_SOURCE),
+        "prepared_manifest": prepared["manifest"], "declared_contract_hash": digest(artifacts["declared_contract"]),
+        "protocol_hash": contract["protocol_hash"], "review_hash": contract["review_hash"], "freeze_event_hash": event["hash"]})
+    report = {"schema_version": 3, "phase": request["phase"], "status": "ready" if request["phase"] == "preparation" else "completed",
+        "scope": "fresh_builder_visible_development", "study_id": request["study_id"],
+        "preparation": {"freeze": {"id": event["id"], "hash": event["hash"]},
+            "reference_terminal": deepcopy(body["reference_terminal"]), "run_keys": list(body["run_keys"]), **deepcopy(ready["inventory"])},
+        "candidate_identity": deepcopy(ready["candidate_identity"]), "measurement_contract_identity": measurement,
+        "assessment_identity": identity, "input_bindings": {"prefix_head": bundle["prefix_head"],
+            "request_hash": digest(artifacts["request"]), "cohort_file_hash": digest(artifacts["cohort"]),
+            "protocol_file_hash": digest(artifacts["coverage_protocol"]), "review_file_hash": digest(artifacts["coverage_review"]),
+            "declared_contract_hash": digest(artifacts["declared_contract"]), "corpus_id": request["corpus_id"],
+            "freeze_event_id": event["id"], "reference_terminal_id": body["reference_terminal"]["id"]}}
+    if request["phase"] == "evaluation":
+        ids = [f"retrieval:{key}:terminal" for key in body["run_keys"]]
+        if request["run_terminal_ids"] != ids:
+            raise ValueError("Coverage executions differ from frozen run keys/order")
+        runs, reports = [], []
+        for terminal_id in ids:
+            run = retrieval.get_retrieval_run(ledger, terminal_id, verify_bytes=True)
+            scored = retrieval_evaluation.evaluate_retrieval(ledger, ready["cohort"], terminal_id)
+            if run["hash"] != contract["run_terminal_hashes"][terminal_id] or run["body"]["projection_hash"] != contract["projection_hashes"][terminal_id]:
+                raise ValueError("Coverage output differs from declared observed hash")
+            if _measurement(scored) != measurement:
+                raise ValueError("Coverage evaluation changed the frozen measurement identity")
+            runs.append(run)
+            reports.append(scored)
+        reproduced = _pair(runs, reports)
+        # Pair equality includes every new coverage diagnostic, not just the old
+        # metrics/per-case projection. None is selected from a differing repeat.
+        reproduced["evaluations_equal"] = reproduced["evaluations_equal"] and all(
+            reports[0][key] == reports[1][key] for key in ("matched_pairs", "pair_buckets", "families", "relations", "feature_inventory"))
+        reproduced["value"] = int(reproduced["ordered_results_equal"] and reproduced["evaluations_equal"] and reproduced["projections_equal"])
+        report.update(reproducibility=reproduced, quality={"runs": reports}, costs=_costs(runs),
+            candidate_identity=_candidate(reports[0]), coverage={"contract_id": retrieval_coverage.CONTRACT_ID,
+                "candidate_baseline": "raw", "adoption": "none", "matched_pairs": reports[0]["matched_pairs"] if reproduced["value"] else None,
+                "pair_buckets": reports[0]["pair_buckets"] if reproduced["value"] else None})
+        report["input_bindings"]["run_terminal_ids"] = ids
+        for index, scored in enumerate(reports, 1):
+            artifacts[f"evaluation:{index}"] = _raw(scored)
+    check_prepared_retrieval_study(prepared)
+    artifacts["assessment_report"] = _raw(report)
+    _check_artifacts({"artifacts": artifacts, "manifest": {role: digest(raw) for role, raw in artifacts.items()}})
+    return {"report": report, "artifacts": artifacts}
+
+
 def assess_prepared_retrieval_study(prepared):
     """Validate captured evidence in a temporary store; never re-read source paths."""
     check_prepared_retrieval_study(prepared)
@@ -494,12 +645,18 @@ def assess_prepared_retrieval_study(prepared):
         raise ValueError("Captured evidence prefix mismatch")
     if type(bundle["blobs"]) is not dict or len(bundle["blobs"]) > MAX_ARTIFACTS:
         raise ValueError("Invalid captured blob manifest")
-    expected_roles = {"request", "cohort", "declared_contract", "evidence_bundle", *_current_sources()}
+    expected_roles = {"request", "cohort", "declared_contract", "evidence_bundle", *_current_sources(request["schema_version"] == 3)}
     if request["schema_version"] == 2:
         expected_roles.add("comparison_protocol")
         protocol = artifacts.get("comparison_protocol")
         if type(protocol) is not bytes or len(protocol) > MAX_INPUT_BYTES or digest(protocol) != contract["protocol_hash"]:
             raise ValueError("Captured comparison protocol differs from declared bytes")
+    if request["schema_version"] == 3:
+        for role in ("protocol", "review"):
+            expected_roles.add("coverage_" + role)
+            raw = artifacts.get("coverage_" + role)
+            if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES or digest(raw) != contract[role + "_hash"]:
+                raise ValueError("Captured coverage file differs from declared bytes")
     expected_roles.update("blob:" + h for h in bundle["blobs"])
     if set(artifacts) != expected_roles:
         raise ValueError("Unexpected or missing captured artifacts")
@@ -517,6 +674,8 @@ def assess_prepared_retrieval_study(prepared):
                 [(e["seq"], e["id"], e["kind"], e["recorded_at"], canonical(e["body"]), e["previous_hash"], e["hash"]) for e in bundle["events"]])
             ledger.db.commit()
             ledger.db.execute("PRAGMA query_only=ON")
+            if request["schema_version"] == 3:
+                return _assess_coverage(ledger, request, contract, prepared, artifacts, bundle)
             for terminal_id in _run_ids(request):
                 run = retrieval.get_retrieval_run(ledger, terminal_id, verify_bytes=True)
                 report = retrieval_evaluation.evaluate_retrieval(ledger, cohort, terminal_id)

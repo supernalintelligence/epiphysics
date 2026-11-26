@@ -568,6 +568,40 @@
       "statement": "C3 preflight detected that an unqualified Python command selected a different Python/Unicode/SQLite runtime. It refused before creating an evidence fork or executing retrieval. The preserved original interpreter was verified, the complete suite rerun, and a new freeze linked to the retained refusal. This is a local recovery observation, not independent execution or timestamp assurance.",
       "status": "implementation_finding",
       "basis": "observed"
+    },
+    {
+      "id": "doc_retrieval_coverage_protocol",
+      "kind": "document",
+      "title": "Fresh complete-support and paired-question protocol",
+      "repo_path": "docs/experiments/retrieval-coverage.md"
+    },
+    {
+      "id": "exp_complete_support",
+      "kind": "experiment",
+      "title": "Measure complete evidence on fresh supported and unsupported pairs",
+      "status": "proposed"
+    },
+    {
+      "id": "claim_support_bundle_definition",
+      "kind": "claim",
+      "title": "A sufficient alternative differs from a required conjunction",
+      "statement": "C4 defines support as all exact spans in at least one declared sufficient bundle. This gives each supported question one vote, accepts complete alternatives, and prevents partial alternatives from being combined into an undeclared answer. Semantic sufficiency still requires review; exact byte coverage does not prove answer correctness. The versioned definition is a measurement contract, not an empirical finding.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "doc_retrieval_coverage_run",
+      "kind": "document",
+      "title": "Measured fresh complete-support coverage and diagnostic handoff",
+      "repo_path": "docs/planning/runs/2026-11-26-retrieval-coverage.md"
+    },
+    {
+      "id": "claim_fresh_coverage_result",
+      "kind": "claim",
+      "title": "Fresh paired questions distinguish source selection from complete support",
+      "statement": "C4 preparation validated reviewed inputs without quality claims and selected two fresh raw executions. They reproduced exactly: five of six supported questions had a complete declared bundle at ranks 1, 3 and 5; all six unsupported questions returned passages. The controller selected inspection of the remaining declared-support gap. Three entity families remain unmeasured, and changed questions/scoring prevent a quality delta against C1/C3. No answers or answerability classifier were executed.",
+      "status": "reported_result",
+      "basis": "observed"
     }
   ],
   "edges": [
@@ -1205,6 +1239,41 @@
       "source": "claim_runtime_gate",
       "target": "exp_retrieval",
       "type": "motivates"
+    },
+    {
+      "source": "exp_complete_support",
+      "target": "doc_retrieval_coverage_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_html_comparison_result",
+      "target": "exp_complete_support",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_support_bundle_definition",
+      "target": "doc_retrieval_coverage_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_support_bundle_definition",
+      "target": "exp_complete_support",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_fresh_coverage_result",
+      "target": "doc_retrieval_coverage_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_coverage_result",
+      "target": "doc_retrieval_coverage_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_coverage_result",
+      "target": "exp_complete_support",
+      "type": "depends_on"
     }
   ]
 }

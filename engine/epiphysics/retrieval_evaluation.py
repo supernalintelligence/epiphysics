@@ -37,6 +37,13 @@ MAX_ID_BYTES = 512
 MAX_QUERY_BYTES = 2048
 MAX_SOURCE_BYTES = 1_000_000
 CUTOFFS = (1, 3, 5)
+MAX_BUNDLES_PER_CASE = 4
+MAX_SPANS_PER_BUNDLE = 8
+MAX_SUPPORT_REFS_PER_CASE = 32
+FAMILY_LABELS = ("software_service", "organization", "person_role", "contract_obligation",
+                 "physical_asset", "collective", "representation")
+RELATION_LABELS = ("identity", "authority", "dependency", "obligation", "ordering",
+                   "time_condition", "quantity_unit", "boundary", "representation_assurance")
 CONTRACT = {
     "id": "retrieval-development-evaluation-v1",
     "cohort": "builder-visible development; not a sealed holdout",
@@ -54,6 +61,30 @@ CONTRACT = {
     "bounds": {"cases": MAX_CASES, "gold_spans_per_case": MAX_GOLD_PER_CASE,
                "cohort_bytes": MAX_COHORT_BYTES, "query_bytes": MAX_QUERY_BYTES,
                "id_bytes": MAX_ID_BYTES},
+}
+COVERAGE_CONTRACT = {
+    "id": "retrieval-coverage-evaluation-v2",
+    "cohort": "fresh builder-visible development; not a sealed holdout",
+    "source_scope": "selected_corpus_only",
+    "support_semantics": "any_complete_bundle_v1",
+    "cutoffs": list(CUTOFFS), "minimum_run_top_k": max(CUTOFFS),
+    "complete_support": "macro over answerable queries: any bundle with every required span fully covered by raw interval union",
+    "complete_support_mrr": "macro over answerable queries: reciprocal earliest prefix through 5 completing a whole bundle; zero for a miss",
+    "complete_source_set": "macro over answerable queries: all distinct sources of any one bundle represented; not sufficient support",
+    "unsupported_query_retrieval_rate": CONTRACT["unsupported_query_retrieval_rate"],
+    "empty_outputs": CONTRACT["empty_outputs"],
+    "invalid_execution": CONTRACT["invalid_execution"],
+    "empty_denominator": CONTRACT["empty_denominator"],
+    "span_unit": CONTRACT["span_unit"],
+    "pair_semantics": "one supported and one unsupported case per pair; every case occurs exactly once",
+    "pair_bucket_cutoff": 5,
+    "group_semantics": "overlapping declared tags; supported rates use all answerable cases in the group; no family macro",
+    "family_labels": list(FAMILY_LABELS), "relation_labels": list(RELATION_LABELS),
+    "bounds": {"cases": MAX_CASES, "bundles_per_case": MAX_BUNDLES_PER_CASE,
+               "spans_per_bundle": MAX_SPANS_PER_BUNDLE, "span_references_per_case": MAX_SUPPORT_REFS_PER_CASE,
+               "cohort_bytes": MAX_COHORT_BYTES, "query_bytes": MAX_QUERY_BYTES,
+               "id_bytes": MAX_ID_BYTES, "metadata_bytes": 8192, "limitations": 64,
+               "tags_per_case": 3, "related_prior_question_ids": MAX_CASES},
 }
 
 
@@ -89,7 +120,7 @@ def _span(span):
         raise ValueError("Gold span requires a lowercase SHA-256")
 
 
-def _cohort(cohort):
+def _cohort_v1(cohort):
     _fields(cohort, {"schema_version", "snapshot_id", "cohort", "cases"},
             {"span_convention", "answerability_definition", "limitations"}, "development cohort")
     if type(cohort["schema_version"]) is not int or cohort["schema_version"] != 1:
@@ -144,6 +175,199 @@ def _cohort(cohort):
     if len(canonical(cohort).encode("utf-8")) > MAX_COHORT_BYTES:
         raise ValueError("Development cohort exceeds the canonical byte bound")
     return deepcopy(cohort)
+
+
+def _id_list(value, label, maximum, *, minimum=0):
+    if type(value) is not list or not minimum <= len(value) <= maximum:
+        raise ValueError(f"{label} requires a bounded array")
+    seen = set()
+    for item in value:
+        _text(item, label, MAX_ID_BYTES)
+        if item in seen:
+            raise ValueError(f"Duplicate {label}")
+        seen.add(item)
+    return seen
+
+
+def _tags(value, vocabulary, label):
+    selected = _id_list(value, label, 3)
+    if not selected <= set(vocabulary):
+        raise ValueError(f"Unknown {label}")
+
+
+def _cohort_v2(cohort):
+    _fields(cohort, {"schema_version", "snapshot_id", "cohort", "cohort_id", "source_scope",
+                    "support_semantics", "cases", "pairs", "limitations"}, set(), "coverage cohort")
+    if type(cohort["schema_version"]) is not int or cohort["schema_version"] != 2:
+        raise ValueError("Coverage cohort schema_version must be 2")
+    if (cohort["cohort"] != "development" or cohort["source_scope"] != "selected_corpus_only"
+            or cohort["support_semantics"] != "any_complete_bundle_v1"):
+        raise ValueError("Coverage requires selected-corpus builder-visible development and complete-bundle semantics")
+    for field in ("snapshot_id", "cohort_id"):
+        _text(cohort[field], field, MAX_ID_BYTES)
+    cases, pairs = cohort["cases"], cohort["pairs"]
+    if type(cases) is not list or not 1 <= len(cases) <= MAX_CASES:
+        raise ValueError(f"Coverage requires 1 to {MAX_CASES} cases")
+    if type(pairs) is not list or not 1 <= len(pairs) <= MAX_CASES // 2 or len(cases) != 2 * len(pairs):
+        raise ValueError("Coverage requires exactly one matched pair for every two cases")
+    by_id = {}
+    for case in cases:
+        _fields(case, {"question_id", "query", "pair_id", "answerability", "support_bundles",
+                       "rationale", "family_tags", "relation_tags", "novelty"}, set(), "coverage case")
+        for field in ("question_id", "pair_id"):
+            _text(case[field], field, MAX_ID_BYTES)
+        _text(case["query"], "Query", MAX_QUERY_BYTES, empty=True)
+        _text(case["rationale"], "Rationale", 8192)
+        if case["question_id"] in by_id:
+            raise ValueError("Duplicate question ID")
+        by_id[case["question_id"]] = case
+        if case["answerability"] not in ("answerable", "unanswerable"):
+            raise ValueError("Answerability must be answerable or unanswerable")
+        _tags(case["family_tags"], FAMILY_LABELS, "family tags")
+        _tags(case["relation_tags"], RELATION_LABELS, "relation tags")
+        novelty = case["novelty"]
+        _fields(novelty, {"related_prior_question_ids", "distinction"}, set(), "novelty")
+        _id_list(novelty["related_prior_question_ids"], "related prior question IDs", MAX_CASES)
+        _text(novelty["distinction"], "Novelty distinction", 8192)
+        bundles = case["support_bundles"]
+        if type(bundles) is not list or len(bundles) > MAX_BUNDLES_PER_CASE:
+            raise ValueError("Support bundles must be a bounded array")
+        if bool(bundles) != (case["answerability"] == "answerable"):
+            raise ValueError("Answerable cases require support bundles; unsupported cases require none")
+        bundle_ids, bundle_sets, total = set(), set(), 0
+        for bundle in bundles:
+            _fields(bundle, {"bundle_id", "spans"}, set(), "support bundle")
+            _text(bundle["bundle_id"], "Bundle ID", MAX_ID_BYTES)
+            if bundle["bundle_id"] in bundle_ids:
+                raise ValueError("Duplicate bundle ID within a case")
+            bundle_ids.add(bundle["bundle_id"])
+            spans = bundle["spans"]
+            if type(spans) is not list or not 1 <= len(spans) <= MAX_SPANS_PER_BUNDLE:
+                raise ValueError("Each support bundle requires 1 to 8 nonempty spans")
+            total += len(spans)
+            if total > MAX_SUPPORT_REFS_PER_CASE:
+                raise ValueError("Too many support span references")
+            keys = set()
+            for span in spans:
+                _span(span)
+                key = (span["observation_id"], span["start"], span["end"], span["sha256"])
+                if key in keys:
+                    raise ValueError("Duplicate span within support bundle")
+                keys.add(key)
+            key = tuple(sorted(keys))
+            if key in bundle_sets:
+                raise ValueError("Duplicate support bundle span set")
+            bundle_sets.add(key)
+    used_cases, pair_ids = set(), set()
+    for pair in pairs:
+        _fields(pair, {"pair_id", "supported_question_id", "unsupported_question_id", "anchor_observation_ids",
+                       "changed_requirement", "matching_rationale"}, set(), "matched pair")
+        for field in ("pair_id", "supported_question_id", "unsupported_question_id"):
+            _text(pair[field], field, MAX_ID_BYTES)
+        if pair["pair_id"] in pair_ids:
+            raise ValueError("Duplicate pair ID")
+        pair_ids.add(pair["pair_id"])
+        _id_list(pair["anchor_observation_ids"], "pair anchor IDs", retrieval_contracts.MAX_SOURCES, minimum=1)
+        for field in ("changed_requirement", "matching_rationale"):
+            _text(pair[field], field, 8192)
+        for field, label in (("supported_question_id", "answerable"), ("unsupported_question_id", "unanswerable")):
+            question_id = pair[field]
+            case = by_id.get(question_id)
+            if (case is None or question_id in used_cases or case["answerability"] != label
+                    or case["pair_id"] != pair["pair_id"]):
+                raise ValueError("Pairs must bijectively match each case and its answerability")
+            used_cases.add(question_id)
+    if used_cases != set(by_id):
+        raise ValueError("Every case must occur in exactly one pair")
+    if type(cohort["limitations"]) is not list or len(cohort["limitations"]) > 64:
+        raise ValueError("Cohort limitations must be a bounded array")
+    for value in cohort["limitations"]:
+        _text(value, "Limitation", 8192)
+    if len(canonical(cohort).encode("utf-8")) > MAX_COHORT_BYTES:
+        raise ValueError("Coverage cohort exceeds the canonical byte bound")
+    return deepcopy(cohort)
+
+
+def _cohort(cohort):
+    if type(cohort) is not dict or type(cohort.get("schema_version")) is not int:
+        raise ValueError("Cohort requires an integer schema_version")
+    if cohort["schema_version"] == 1:
+        return _cohort_v1(cohort)
+    if cohort["schema_version"] == 2:
+        return _cohort_v2(cohort)
+    raise ValueError("Cohort schema_version must be 1 or 2")
+
+
+def cohort_identity(cohort):
+    """Hash normalized labels separately from exact candidate-visible queries."""
+    checked = _cohort(cohort)
+    field = "gold_spans" if checked["schema_version"] == 1 else "support_bundles"
+    gold = [{"question_id": case["question_id"], "answerability": case["answerability"], field: case[field]}
+            for case in checked["cases"]]
+    queries = [{"query_id": case["question_id"], "query": case["query"]} for case in checked["cases"]]
+    return {"cohort_hash": _sha(checked), "gold_hash": _sha(gold), "query_hash": _sha(queries)}
+
+
+def coverage_inventory(cohort, selected_source_ids):
+    """Describe annotations and selected sources without scoring any outputs."""
+    checked = _cohort(cohort)
+    if checked["schema_version"] != 2:
+        raise ValueError("Coverage inventory requires cohort schema 2")
+    selected = _id_list(selected_source_ids, "selected source IDs", retrieval_contracts.MAX_SOURCES, minimum=1)
+    cases = checked["cases"]
+    for pair in checked["pairs"]:
+        if not set(pair["anchor_observation_ids"]) <= selected:
+            raise ValueError("Pair anchor must be selected in the retrieval corpus")
+    for case in cases:
+        if any(span["observation_id"] not in selected for bundle in case["support_bundles"] for span in bundle["spans"]):
+            raise ValueError("Gold observation must be selected in the retrieval corpus")
+    groups = {}
+    for name, field, labels in (("families", "family_tags", FAMILY_LABELS), ("relations", "relation_tags", RELATION_LABELS)):
+        groups[name] = {}
+        for label in labels:
+            eligible = [case for case in cases if label in case[field]]
+            positives = sum(case["answerability"] == "answerable" for case in eligible)
+            groups[name][label] = {"queries": len(eligible), "answerable": positives,
+                                   "unanswerable": len(eligible) - positives,
+                                   "status": "represented" if eligible else "unmeasured"}
+    positives = sum(case["answerability"] == "answerable" for case in cases)
+    return {"counts": {"queries": len(cases), "answerable": positives, "unanswerable": len(cases) - positives,
+                       "pairs": len(checked["pairs"]), "selected_sources": len(selected)},
+            "feature_inventory": {
+                "alternative_support_cases": sum(len(case["support_bundles"]) > 1 for case in cases),
+                "joint_support_cases": sum(any(len(bundle["spans"]) > 1 for bundle in case["support_bundles"]) for case in cases),
+                "multisource_support_cases": sum(any(len({span["observation_id"] for span in bundle["spans"]}) > 1
+                                                     for bundle in case["support_bundles"]) for case in cases)}, **groups}
+
+
+def validate_coverage_sources(ledger, cohort, corpus):
+    """Validate selected, eligible, byte-exact support and anchors without a run."""
+    checked = _cohort(cohort)
+    if checked["schema_version"] != 2:
+        raise ValueError("Coverage source validation requires cohort schema 2")
+    if type(ledger) is not _LEDGER_CLASS or _LEDGER_CLASS is not store.Ledger:
+        raise ValueError("Stale or unsupported ledger class; use a fresh reviewed process")
+    with _read_transaction(ledger):
+        now = retrieval_contracts._time(ledger.clock(), "Ledger clock")
+        retained, _ = retrieval_contracts._checked_corpus(ledger, corpus["id"], now, verify_bytes=True)
+        if retained != corpus or checked["snapshot_id"] != retained["body"]["snapshot_id"]:
+            raise ValueError("Cohort snapshot or corpus does not match retained retrieval corpus")
+        sources = retrieval_contracts._projection_sources(ledger, retained, now)
+        coverage_inventory(checked, list(sources))
+        for case in checked["cases"]:
+            for bundle in case["support_bundles"]:
+                for span in bundle["spans"]:
+                    raw = sources[span["observation_id"]]["raw"]
+                    if span["end"] > len(raw):
+                        raise ValueError("Gold span exceeds selected source byte bounds")
+                    selected = raw[span["start"]:span["end"]]
+                    if digest(selected) != span["sha256"]:
+                        raise ValueError("Span hash mismatch")
+                    try:
+                        selected.decode("utf-8", errors="strict")
+                    except UnicodeDecodeError as error:
+                        raise ValueError("Gold span must have valid UTF-8 boundaries") from error
+    return checked
 
 
 def project_queries(cohort) -> list[dict]:
@@ -204,7 +428,99 @@ def _score_case(case, result):
     }
 
 
-def _implementation_identity():
+def _score_coverage_case(case, result):
+    hits = result["hits"][:max(CUTOFFS)]
+    answerable = case["answerability"] == "answerable"
+    bundles = []
+    for bundle in case["support_bundles"]:
+        spans = bundle["spans"]
+        covered = {str(k): sum(_covered(span, hits[:k]) for span in spans) for k in CUTOFFS}
+        first = next((rank for rank in range(1, len(hits) + 1)
+                      if all(_covered(span, hits[:rank]) for span in spans)), None)
+        bundles.append({"bundle_id": bundle["bundle_id"], "required_spans": len(spans),
+                        "covered_spans_at_k": covered,
+                        "complete_at_k": {str(k): covered[str(k)] == len(spans) for k in CUTOFFS},
+                        "first_complete_prefix_at_5": first})
+    completed = [row["first_complete_prefix_at_5"] for row in bundles
+                 if row["first_complete_prefix_at_5"] is not None]
+    first = min(completed) if completed else None
+    source_sets = [{span["observation_id"] for span in bundle["spans"]} for bundle in case["support_bundles"]]
+    return {"query_id": case["question_id"], "query": case["query"], "pair_id": case["pair_id"],
+            "answerability": case["answerability"], "family_tags": list(case["family_tags"]),
+            "relation_tags": list(case["relation_tags"]), "status": result["status"], "reason": result["reason"],
+            "hit_count_at_5": len(hits),
+            "raw_windows": [{key: hit[key] for key in ("rank", "observation_id", "start", "end", "sha256")} for hit in hits],
+            "complete_support_at_k": {str(k): any(row["complete_at_k"][str(k)] for row in bundles)
+                                       if answerable else None for k in CUTOFFS},
+            "complete_source_set_at_k": {str(k): any(sources <= {hit["observation_id"] for hit in hits[:k]}
+                                                     for sources in source_sets) if answerable else None for k in CUTOFFS},
+            "complete_support_first_covered_prefix_at_5": first,
+            "complete_support_reciprocal_rank_at_5": (1 / first if first else 0.0) if answerable else None,
+            "unsupported_retrieval_at_5": bool(hits) if not answerable else None,
+            "bundles": bundles}
+
+
+def _coverage_rates(rows):
+    positives = [row for row in rows if row["answerability"] == "answerable"]
+    unsupported = [row for row in rows if row["answerability"] == "unanswerable"]
+    return {"complete_support_rate_at_k": {
+                str(k): _ratio(sum(row["complete_support_at_k"][str(k)] for row in positives),
+                               len(positives), "macro_query_mean") for k in CUTOFFS},
+            "unsupported_query_retrieval_rate_at_5": _ratio(
+                sum(row["unsupported_retrieval_at_5"] for row in unsupported), len(unsupported), "query_fraction")}
+
+
+def _score_coverage(cohort, results, selected_source_ids):
+    inventory = coverage_inventory(cohort, selected_source_ids)
+    rows = [_score_coverage_case(case, result) for case, result in zip(cohort["cases"], results)]
+    positives = [row for row in rows if row["answerability"] == "answerable"]
+    metrics = _coverage_rates(rows)
+    metrics["complete_source_set_rate_at_k"] = {
+        str(k): _ratio(sum(row["complete_source_set_at_k"][str(k)] for row in positives),
+                       len(positives), "macro_query_mean") for k in CUTOFFS}
+    metrics["complete_support_mrr_at_5"] = _ratio(
+        sum(row["complete_support_reciprocal_rank_at_5"] for row in positives), len(positives), "macro_query_mean")
+    metrics["empty_query_rate"] = _ratio(sum(row["status"] == "empty" for row in rows), len(rows), "query_fraction")
+    metrics["empty_query_rate_by_answerability"] = {}
+    empty_reasons = {}
+    for label in ("answerable", "unanswerable"):
+        group = [row for row in rows if row["answerability"] == label]
+        metrics["empty_query_rate_by_answerability"][label] = _ratio(
+            sum(row["status"] == "empty" for row in group), len(group), "query_fraction")
+    for row in rows:
+        if row["status"] == "empty":
+            empty_reasons[row["reason"]] = empty_reasons.get(row["reason"], 0) + 1
+    groups = {}
+    for name, field in (("families", "family_tags"), ("relations", "relation_tags")):
+        groups[name] = {label: {**counts, **_coverage_rates([row for row in rows if label in row[field]])}
+                        for label, counts in inventory[name].items()}
+    by_id = {row["query_id"]: row for row in rows}
+    matched = []
+    buckets = {"cutoff": 5, "supported_yes_unsupported_yes": 0, "supported_yes_unsupported_no": 0,
+               "supported_no_unsupported_yes": 0, "supported_no_unsupported_no": 0}
+    for pair in cohort["pairs"]:
+        positive, negative = by_id[pair["supported_question_id"]], by_id[pair["unsupported_question_id"]]
+        support = "yes" if positive["complete_support_at_k"]["5"] else "no"
+        unsupported = "yes" if negative["unsupported_retrieval_at_5"] else "no"
+        buckets[f"supported_{support}_unsupported_{unsupported}"] += 1
+        matched.append({"pair_id": pair["pair_id"], "supported_question_id": positive["query_id"],
+                        "unsupported_question_id": negative["query_id"],
+                        "supported_complete_support_at_k": deepcopy(positive["complete_support_at_k"]),
+                        "unsupported_retrieval_at_5": negative["unsupported_retrieval_at_5"],
+                        "unsupported_status": negative["status"], "unsupported_reason": negative["reason"],
+                        "supported_raw_windows": deepcopy(positive["raw_windows"]),
+                        "unsupported_raw_windows": deepcopy(negative["raw_windows"])})
+    return {"counts": {**inventory["counts"], "matched": sum(row["status"] == "matched" for row in rows),
+                       "empty": sum(row["status"] == "empty" for row in rows), "empty_reasons": empty_reasons,
+                       "execution_failures": 0, "missing_outputs": 0},
+            "metrics": metrics, "per_case": rows, "matched_pairs": matched, "pair_buckets": buckets,
+            "feature_inventory": inventory["feature_inventory"], **groups}
+
+
+def _implementation_identity(cohort_schema_version=1):
+    if type(cohort_schema_version) is not int or cohort_schema_version not in (1, 2):
+        raise ValueError("Evaluator identity requires cohort schema 1 or 2")
+    contract = CONTRACT if cohort_schema_version == 1 else COVERAGE_CONTRACT
     path, source, code = _PINNED_SELF
     if _MODULE.IMPLEMENTATION_CODE is not code or _MODULE.IMPLEMENTATION_SOURCE != source:
         raise ValueError("Evaluator reloaded after import; use a fresh reviewed process")
@@ -232,7 +548,12 @@ def _implementation_identity():
                "unicode_version": unicodedata.unidata_version}
     return {"source_hash": digest(source), "dependencies": hashes,
             "dependencies_hash": _sha(hashes), "runtime": runtime, "runtime_hash": _sha(runtime),
-            "contract": deepcopy(CONTRACT), "contract_hash": _sha(CONTRACT)}
+            "contract": deepcopy(contract), "contract_hash": _sha(contract)}
+
+
+def evaluator_identity(cohort_schema_version=1):
+    """Return the guarded loaded scorer identity for the selected cohort contract."""
+    return _implementation_identity(cohort_schema_version)
 
 
 def _candidate_identity(body):
@@ -270,8 +591,9 @@ def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
         raise ValueError("Stale evaluator callable after reload; use a fresh reviewed process")
     if type(ledger) is not _LEDGER_CLASS or _LEDGER_CLASS is not store.Ledger:
         raise ValueError("Stale or unsupported ledger class; use a fresh reviewed process")
-    evaluator = _implementation_identity()
     checked = _cohort(cohort)
+    version = checked["schema_version"]
+    evaluator = _implementation_identity(version)
     queries = project_queries(checked)
     _text(run_terminal_id, "Run terminal ID", MAX_ID_BYTES)
     with _read_transaction(ledger):
@@ -294,19 +616,54 @@ def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
         sources = {source["observation_id"]: source for source in cb["sources"]}
         # get_retrieval_run has already bounded and verified selected full blobs.
         # Only then may the public span resolver read those bounded sources.
-        for case in checked["cases"]:
-            for span in case["gold_spans"]:
-                source = sources.get(span["observation_id"])
-                if source is None:
-                    raise ValueError("Gold observation must be selected in the retrieval corpus")
-                if span["end"] > source["size"]:
-                    raise ValueError("Gold span exceeds selected source byte bounds")
-                resolve_span(ledger, checked["snapshot_id"], span)
+        if version == 2:
+            validate_coverage_sources(ledger, checked, corpus)
+        else:
+            for case in checked["cases"]:
+                for span in case["gold_spans"]:
+                    source = sources.get(span["observation_id"])
+                    if source is None:
+                        raise ValueError("Gold observation must be selected in the retrieval corpus")
+                    if span["end"] > source["size"]:
+                        raise ValueError("Gold span exceeds selected source byte bounds")
+                    resolve_span(ledger, checked["snapshot_id"], span)
         for result in results:
             if (result["status"] not in ("matched", "empty")
                     or (result["status"] == "matched") != bool(result["hits"])):
                 raise ValueError("Invalid execution status; failures are not successful empty retrieval")
-        per_case = [_score_case(case, result) for case, result in zip(checked["cases"], results)]
+        per_case = ([_score_case(case, result) for case, result in zip(checked["cases"], results)]
+                    if version == 1 else [])
+    identity = {
+        **cohort_identity(checked),
+        "snapshot_id": cb["snapshot_id"], "snapshot_hash": cb["snapshot_hash"],
+        "snapshot_manifest_hash": cb["snapshot_manifest_hash"],
+        "corpus_id": corpus["id"], "corpus_hash": corpus["hash"],
+        "sources_hash": cb["sources_hash"], "sources": deepcopy(cb["sources"]),
+        "passages_hash": cb["passages_hash"], "config_hash": cb["config_hash"],
+        "retriever_implementation_hash": body["implementation_hash"],
+        "retriever_artifacts": deepcopy(body["artifacts"]),
+        "retriever_runtime": deepcopy(body["runtime"]), "retriever_runtime_hash": body["runtime_hash"],
+        "evaluator": evaluator, "run_terminal_id": run["id"], "run_terminal_hash": run["hash"],
+        "results_hash": body["results_hash"],
+        "receipt_schema_version": body["schema_version"], "candidate": _candidate_identity(body),
+        "execution": {"schema_version": body["schema_version"], "runner_implementation_hash": body["implementation_hash"],
+                      "runner_artifact": deepcopy(body["artifacts"]["implementation"]),
+                      "run_terminal_id": run["id"], "run_terminal_hash": run["hash"]},
+    }
+    if version == 2:
+        scored = _score_coverage(checked, results, list(sources))
+        if _implementation_identity(version) != evaluator:
+            raise ValueError("Evaluator implementation or runtime changed during evaluation")
+        return {"schema_version": 2, "evaluation": COVERAGE_CONTRACT["id"], "status": "completed",
+                "cohort": "development", "identity": identity, **scored,
+                "limitations": [
+                    "Fresh builder-visible development over selected sources, not a sealed holdout or generalization estimate.",
+                    "Complete raw-span support is not answer correctness or proof that every sufficient alternative was annotated.",
+                    "Unsupported-query retrieval measures lexical matches, not hallucination or calibrated abstention.",
+                    "Family/relation tags overlap; unrepresented groups remain unmeasured and no family macro is computed.",
+                    "Matched pairs are related curated cases, not independent population samples.",
+                    "Invalid or incomplete runs receive no metric report; separate executions are required for reproduction.",
+                ]}
     positives = [row for row in per_case if row["answerability"] == "answerable"]
     unsupported = [row for row in per_case if row["answerability"] == "unanswerable"]
     metrics = {}
@@ -323,26 +680,7 @@ def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
     for row in per_case:
         if row["status"] == "empty":
             empty_reasons[row["reason"]] = empty_reasons.get(row["reason"], 0) + 1
-    gold = [{"question_id": case["question_id"], "answerability": case["answerability"],
-             "gold_spans": case["gold_spans"]} for case in checked["cases"]]
-    identity = {
-        "cohort_hash": _sha(checked), "gold_hash": _sha(gold), "query_hash": body["query_hash"],
-        "snapshot_id": cb["snapshot_id"], "snapshot_hash": cb["snapshot_hash"],
-        "snapshot_manifest_hash": cb["snapshot_manifest_hash"],
-        "corpus_id": corpus["id"], "corpus_hash": corpus["hash"],
-        "sources_hash": cb["sources_hash"], "sources": deepcopy(cb["sources"]),
-        "passages_hash": cb["passages_hash"], "config_hash": cb["config_hash"],
-        "retriever_implementation_hash": body["implementation_hash"],
-        "retriever_artifacts": deepcopy(body["artifacts"]),
-        "retriever_runtime": deepcopy(body["runtime"]), "retriever_runtime_hash": body["runtime_hash"],
-        "evaluator": evaluator, "run_terminal_id": run["id"], "run_terminal_hash": run["hash"],
-        "results_hash": body["results_hash"],
-        "receipt_schema_version": body["schema_version"], "candidate": _candidate_identity(body),
-        "execution": {"schema_version": body["schema_version"], "runner_implementation_hash": body["implementation_hash"],
-                      "runner_artifact": deepcopy(body["artifacts"]["implementation"]),
-                      "run_terminal_id": run["id"], "run_terminal_hash": run["hash"]},
-    }
-    if _implementation_identity() != evaluator:
+    if _implementation_identity(version) != evaluator:
         raise ValueError("Evaluator implementation or runtime changed during evaluation")
     return {
         "schema_version": 1, "evaluation": CONTRACT["id"], "status": "completed", "cohort": "development",

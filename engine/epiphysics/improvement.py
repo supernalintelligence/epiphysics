@@ -23,7 +23,7 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_evaluation, retrieval_indexing, source_span_checks, store, transformation_checks, transforms
+from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_evaluation, retrieval_indexing, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
@@ -34,7 +34,7 @@ from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -50,6 +50,7 @@ _IMPLEMENTATIONS = {
                          "retrieval": retrieval, "retrieval_evaluator": retrieval_evaluation,
                          "retrieval_assessment": retrieval_assessment,
                          "retrieval_contracts": retrieval_contracts, "retrieval_indexing": retrieval_indexing,
+                         "retrieval_coverage": retrieval_coverage,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -214,6 +215,9 @@ def status(ledger):
 def select_next(report, run_key):
     """Version-one transparent priority rule, not a calibrated utility predictor."""
     m = report["metrics"]
+    ready = report.get("coverage_preparation")
+    if ready is not None and (ready.get("schema_version") != 3 or ready.get("phase") != "preparation" or ready.get("status") != "ready"):
+        raise ValueError("Coverage readiness must be validated before choosing a successor")
     worst = min(report["families"], key=lambda f: (report["families"][f]["accuracy"], f))
     choices = [
         ("repair_time_eligibility", "temporal_violations", 0, "decrease", m["temporal_violations"] > 0,
@@ -236,7 +240,9 @@ def select_next(report, run_key):
          "Actual graph partition/merge operations failed or lack a preservation, conflict, ancestry, loss, or receipt check; inspect graph_view_checks diagnostics."),
         ("repair_transform_materialization", "output_manifest_materialization", 1, "increase", m.get("output_manifest_materialization") != 1,
          "Actual output materialization failed or lacks a binding, ancestry, forecast-consumer, atomicity or replay check; inspect materialization_checks diagnostics."),
-        ("build_retrieval_baseline", "retrieval_baseline_reproducibility", 1, "increase", report.get("actual_retrieval") is None,
+        ("execute_fresh_coverage_baseline", None, None, "increase", ready is not None,
+         "Reviewed fresh coverage inputs are frozen. Execute the two declared raw-baseline runs; retrieval quality remains unmeasured."),
+        ("build_retrieval_baseline", "retrieval_baseline_reproducibility", 1, "increase", report.get("actual_retrieval") is None and ready is None,
          "Representation, assertion, manifest, graph-operation and output materialization probes pass. Build a source-backed reproducible retrieval baseline (Packet C); retrieval_baseline_reproducibility remains unmeasured."),
     ]
     actual = report.get("actual_retrieval")
@@ -244,8 +250,10 @@ def select_next(report, run_key):
         if actual.get("status") != "completed":
             raise ValueError("Actual retrieval must be validated before choosing a successor")
         quality = actual["quality"]["runs"][0]
-        at_one = quality["metrics"]["gold_span_recall_at_k"]["1"]["value"]
-        at_five = quality["metrics"]["gold_span_recall_at_k"]["5"]["value"]
+        coverage = actual.get("schema_version") == 3 and actual.get("phase") == "evaluation"
+        coverage_metric = "complete_support_rate_at_k" if coverage else "gold_span_recall_at_k"
+        at_one = quality["metrics"][coverage_metric]["1"]["value"]
+        at_five = quality["metrics"][coverage_metric]["5"]["value"]
         gap = at_one is not None and at_five is not None and (at_one < 1 or at_five < 1)
         comparison = actual.get("comparison")
         completed_comparison = actual.get("schema_version") == 2 and comparison is not None and comparison.get("kind") == "fixed-raw-html-v1"
@@ -254,7 +262,11 @@ def select_next(report, run_key):
             ("repair_retrieval_reproducibility", "retrieval_baseline_reproducibility", 1, "increase",
              actual["reproducibility"]["value"] != 1,
              "Valid repeated retrieval runs disagree within an arm; inspect projections, ordered results and per-query evaluation before reporting a comparison delta."),
-            ("prepare_retrieval_representation_comparison", metric, None, "increase", gap and not completed_comparison,
+            ("inspect_fresh_support_failures", "retrieval_complete_support_rate_at_5", None, "increase", coverage and at_five is not None and at_five < 1,
+             "Fresh reproduced coverage lacks a complete support bundle for some questions. Inspect retained evidence and returned windows; do not tune recipes or rewrite frozen labels."),
+            ("prepare_answerability_evidence_gaps", "retrieval_unsupported_query_retrieval_rate_at_5", None, "decrease", coverage,
+             "Fresh reproduced support is covered. Document unsupported hit patterns and unmeasured entity families before any separately scoped answerability method or new evidence acquisition."),
+            ("prepare_retrieval_representation_comparison", metric, None, "increase", not coverage and gap and not completed_comparison,
              "Actual development retrieval misses required support or ranks it below first place. Separate indexing recipe from source/gold/scoring identity, then predeclare a bounded source-span-preserving representation comparator. No quality floor is inferred."),
             ("prepare_retrieval_coverage_evaluation", "retrieval_unsupported_query_retrieval_rate_at_5", None, "decrease", True,
              "The fixed representation comparison is complete; retain the raw baseline and predeclare fresh-question coverage/answerability evaluation regardless of gain, tie or regression. Do not repeat recipe tuning on visible gold." if completed_comparison else
@@ -270,16 +282,25 @@ def select_next(report, run_key):
             "selection_rule": "existing integrity and conformance priorities, then missing or unreproduced actual retrieval, then measured support-ranking and coverage gaps",
             "forecast_kind": "target and directional hypothesis; probability and cost unestimated",
             "candidate_actions": ranked, "scale_change_allowed": False}
-    if actual is not None and chosen["metric"].startswith("retrieval_"):
+    if ready is not None and chosen["action"] == "execute_fresh_coverage_baseline":
+        decision.update(measurement_contract_hash=ready["measurement_contract_identity"]["hash"],
+            candidate_algorithm_hash=ready["candidate_identity"]["algorithm_hash"],
+            evidence={"study_id": ready["study_id"], "freeze": ready["preparation"]["freeze"],
+                "reference_terminal": ready["preparation"]["reference_terminal"],
+                "run_keys": ready["preparation"]["run_keys"], "indexing_recipe": retrieval_contracts.RAW_RECIPE,
+                "counts": ready["preparation"]["counts"], "quality": "unmeasured"})
+    if actual is not None and chosen["metric"] is not None and chosen["metric"].startswith("retrieval_"):
         decision["measurement_contract_hash"] = actual["measurement_contract_identity"]["hash"]
         decision["candidate_hash"] = actual["candidate_identity"]["hash"]
         decision["evidence"] = {
             "study_id": actual["study_id"],
-            "gold_span_recall_at_k": quality["metrics"]["gold_span_recall_at_k"],
+            coverage_metric: quality["metrics"][coverage_metric],
             "unsupported_query_retrieval_rate_at_5": quality["metrics"]["unsupported_query_retrieval_rate_at_5"],
             "support_gap_query_ids": [row["query_id"] for row in quality["per_case"]
-                if row["answerability"] == "answerable" and row["gold_span_recall_at_k"]["1"]["value"] < 1],
+                if row["answerability"] == "answerable" and (not row["complete_support_at_k"]["5"] if coverage else row["gold_span_recall_at_k"]["1"]["value"] < 1)],
         }
+        if coverage:
+            decision["evidence"].update(coverage=actual["coverage"], families=actual["preparation"]["families"])
         if actual.get("comparison") is not None:
             decision["evidence"]["comparison"] = {key: actual["comparison"][key] for key in
                 ("kind", "status", "delta", "operational_baseline", "adoption", "continuation")}
@@ -295,7 +316,11 @@ def _metric_value(report, metric):
             return None
         metrics = actual["quality"]["runs"][0]["metrics"]
         if metric in {"retrieval_gold_span_recall_at_1", "retrieval_gold_span_recall_at_5"}:
-            return metrics["gold_span_recall_at_k"][metric[-1]]["value"]
+            values = metrics.get("gold_span_recall_at_k")
+            return None if values is None else values[metric[-1]]["value"]
+        if metric == "retrieval_complete_support_rate_at_5":
+            values = metrics.get("complete_support_rate_at_k")
+            return None if values is None else values["5"]["value"]
         if metric == "retrieval_unsupported_query_retrieval_rate_at_5":
             return metrics["unsupported_query_retrieval_rate_at_5"]["value"]
     return report["metrics"].get(metric)
@@ -303,6 +328,8 @@ def _metric_value(report, metric):
 
 def _forecast_result(previous, report, previous_manifest, current_manifest):
     metric = previous.get("metric")
+    if metric is None:
+        return {"status": "unmeasured", "step_id": previous["id"], "metric": None}
     actual_metric = metric is not None and metric.startswith("retrieval_")
     if previous_manifest is not None and not actual_metric:
         changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe", "materialization", "materialization_probe")
@@ -471,8 +498,11 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         report["materialization_checks"] = materialization_probe
         report["metrics"].update(materialization_probe["metrics"])
         if actual is not None:
-            report["actual_retrieval"] = actual
-            report["metrics"]["retrieval_baseline_reproducibility"] = actual["reproducibility"]["value"]
+            if actual.get("schema_version") == 3 and actual.get("phase") == "preparation":
+                report["coverage_preparation"] = actual
+            else:
+                report["actual_retrieval"] = actual
+                report["metrics"]["retrieval_baseline_reproducibility"] = actual["reproducibility"]["value"]
             retrieval_assessment.check_prepared_retrieval_study(preparation["prepared"])
         if {name: digest(raw) for name, raw in inputs.items()} != manifest:
             raise ValueError("Assessment input bytes changed after claim")
@@ -485,7 +515,10 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": ("Synthetic conformance checks plus separately reported validated retrospective development retrieval; no quality improvement or independent execution witness is inferred. " if actual is not None else "Synthetic conformance assessment with fixed local checks; ") + "queued builds, deployment and scale promotion remain supervised"}
+                  "scope": ("Synthetic conformance checks plus verified fresh-cohort preparation; retrieval quality remains unmeasured. "
+                            if actual is not None and actual.get("phase") == "preparation" else
+                            "Synthetic conformance checks plus separately reported validated retrospective development retrieval; no quality improvement or independent execution witness is inferred. "
+                            if actual is not None else "Synthetic conformance assessment with fixed local checks; ") + "queued builds, deployment and scale promotion remain supervised"}
         if actual is not None:
             identity = {"input_manifest": dict(manifest),
                         "retrieval_assessment_hash": actual["assessment_identity"]["hash"]}
