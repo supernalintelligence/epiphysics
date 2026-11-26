@@ -699,6 +699,46 @@
       "id": "exp_fresh_decision_comparison",
       "kind": "experiment",
       "title": "Compare frozen decision views on one new exploratory cohort",
+      "status": "reported_exploratory_result"
+    },
+    {
+      "id": "doc_fresh_decision_protocol",
+      "kind": "document",
+      "title": "Fixed fresh decision comparison protocol",
+      "repo_path": "docs/experiments/control-exchange-fresh-comparison.md"
+    },
+    {
+      "id": "doc_fresh_decision_result",
+      "kind": "document",
+      "title": "Equal fresh totals and invalid-delivery effects",
+      "repo_path": "docs/experiments/results/2026-11-26-fresh-decision-comparison.md"
+    },
+    {
+      "id": "doc_fresh_decision_run",
+      "kind": "document",
+      "title": "C8 custody, validation and continuation record",
+      "repo_path": "docs/planning/runs/2026-11-26-fresh-decision-comparison.md"
+    },
+    {
+      "id": "claim_fresh_decision_retention",
+      "kind": "claim",
+      "title": "Fresh scripted tradeoffs remain paired rather than aggregate gains",
+      "statement": "One post-freeze 24-case scripted cohort produced 96 retained attempts. Both compact methods completed 7/9 observable and 7/11 world opportunities, with two successful releases unique to each method and net difference 0. Both lossless controls reached 9/9 observable and 9/11 world opportunities. This is a descriptive result for hand-designed mechanisms, not representative performance or superiority of graph notation.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_exchange_quality_gap",
+      "kind": "claim",
+      "title": "Authority checks leave delivery-quality errors visible",
+      "statement": "Each of four fixed arms produced 3 accepted simulated releases for artifacts later stipulated invalid, despite 0 unauthorized and 0 duplicate effects. Positive observed verification and actual artifact quality were separate facts in these deliberately constructed cases. This records a limit of the declared guard and evidence contract, not an estimate of real verifier error prevalence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_decision_information_limits",
+      "kind": "experiment",
+      "title": "Diagnose retained information loss, late evidence and verification-quality gaps",
       "status": "proposed"
     }
   ],
@@ -1481,6 +1521,51 @@
     {
       "source": "exp_fresh_decision_comparison",
       "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_fresh_decision_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "doc_fresh_decision_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_fresh_decision_comparison",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_decision_information_limits",
+      "target": "doc_fresh_decision_result",
       "type": "depends_on"
     }
   ]

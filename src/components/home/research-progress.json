@@ -1,30 +1,30 @@
 {
   "recordDate": "2026-11-25",
-  "heading": "Different records missed different decisions.",
-  "scope": "We tested two ways to keep the same dated evidence for a simulated exchange. Both reached the same overall result, with different failures.",
+  "heading": "Both methods released three invalid deliveries.",
+  "scope": "In 24 simulated cases, two compact records reached the same valid-release total. More complete records recovered missed opportunities, while every method still accepted three invalid artifacts.",
   "evidence": [
     {
       "id": "coverage",
-      "href": "/experiments/results/2026-11-26-decision-pilot",
+      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
       "requiredText": [
-        "The compact views each missed a different storage-pressure case.",
-        "Completed opportunities supported by available evidence | 4/5 | 4/5"
+        "Completed opportunities supported by available evidence | 7/9 | 7/9 | 9/9",
+        "The net difference was zero."
       ]
     },
     {
       "id": "diagnosis",
-      "href": "/experiments/results/2026-11-26-decision-pilot",
+      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
       "requiredText": [
-        "All four recorded that proposal as unauthorized in the simulated world.",
-        "Zero effects demonstrates the common simulation guard, not the safety of either observer or a working distributed authorization service."
+        "All three invalid-artifact proposals became accepted simulated releases in every arm.",
+        "Zero unauthorized or duplicate effects therefore cannot be read as a general safety result."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/control-exchange-decision-pilot",
+      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
       "requiredText": [
-        "a separate custodian may generate one 24-case exploratory comparison.",
-        "The comparison concerns the complete retention and decision system; differences in selected facts or construction work cannot be attributed to graph encoding alone."
+        "investigation of information limits",
+        "These exposed cases will not be retuned or rerun to manufacture an improvement."
       ]
     }
   ],
@@ -32,29 +32,29 @@
     {
       "id": "coverage",
       "status": "completed",
-      "label": "Storage tradeoff",
-      "value": "4 of 5 each",
+      "label": "Different missed opportunities",
+      "value": "7 of 9 each",
       "measure": "valid opportunities supported by the available evidence",
-      "summary": "The chronological and relational views each missed a different storage-pressure case. Both lossless controls reached all five observable opportunities.",
-      "linkLabel": "Read the comparison"
+      "summary": "Each compact method missed two different storage-pressure cases. Both lossless controls reached all nine observable opportunities. The paired gain was zero.",
+      "linkLabel": "Read the fresh comparison"
     },
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "Late revocation",
-      "value": "1 unsafe proposal",
-      "measure": "after a revocation arrived too late",
-      "summary": "Authority changed before the observer received the news. Both views proposed release; the simulated guard refused it. Better organization cannot recover evidence that had not arrived by the decision.",
-      "linkLabel": "See the failure and its limits"
+      "label": "Delivery quality",
+      "value": "3 invalid releases",
+      "measure": "accepted in every simulated arm",
+      "summary": "Observed verification said pass; the later stipulated outcome said invalid. The guard checked authority and duplicates, leaving delivery quality unestablished.",
+      "linkLabel": "Inspect the quality gap"
     }
   ],
-  "limits": "Twelve exposed synthetic cases; no real payments or model calls. Equal aggregate scores do not establish general capability. The guard knows stipulated world state; an actual distributed service would need to establish its own authority and timing guarantees.",
+  "limits": "One hand-designed exploratory batch; no real payments or program model calls. These frequencies do not estimate real service performance. Local hashes establish consistency, not independent timestamp assurance or completeness.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "Do these tradeoffs persist on new cases?",
-    "description": "Prepare one 24-case exploratory comparison after independent review, including invalid artifacts and dispute timing as well as late information and storage pressure.",
-    "budget": "Keep the same two compact views, decision rule, resource limits and independent evaluator. Report every failure and opportunity; no live effects or increase in authority.",
-    "linkLabel": "Read the experiment boundaries"
+    "question": "Which missing facts would change the decision?",
+    "description": "The accepted result selects a diagnosis of information that arrived late, was lost in storage, or disagreed with later artifact quality.",
+    "budget": "Read the retained evidence without rerunning candidates. Preserve original scores and source identities; no increase in authority or live effects.",
+    "linkLabel": "Read the result and next question"
   }
 }
