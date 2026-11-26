@@ -1,4 +1,5 @@
 import copy
+from contextlib import ExitStack
 import json
 import os
 import subprocess
@@ -38,6 +39,20 @@ class ImprovementTests(unittest.TestCase):
     def run_assessment(self, candidate="reference", run_key="first", after="initial", work="Run a synthetic control"):
         return improvement.assess(self.ledger, self.policy, self.suite, candidate, run_key,
                                   after_step=after, completed_work=work)
+
+    def stub_capability_probes(self):
+        """Isolate queue/selector behavior; real probes retain separate coverage."""
+        stack = ExitStack()
+        self.addCleanup(stack.close)
+        for name, metrics in (
+            ("run_source_span_checks", ("source_span_resolution", "assertion_history_preservation")),
+            ("run_manifest_checks", ("representation_manifest_preservation",)),
+            ("run_transformation_checks", ("transformation_preservation",)),
+            ("run_graph_view_checks", ("split_merge_preservation",)),
+            ("run_materialization_checks", ("output_manifest_materialization",)),
+        ):
+            stack.enter_context(patch.object(improvement, name,
+                return_value={"metrics": {metric: 1 for metric in metrics}, "scope": "owned queue/selector test stub"}))
 
     def test_completion_atomically_queues_successor_and_replay_is_noop(self):
         result = self.run_assessment()
@@ -198,7 +213,8 @@ class ImprovementTests(unittest.TestCase):
             improvement.status(self.ledger)
 
     def test_concurrent_workers_cannot_claim_same_successor(self):
-        self.run_assessment()
+        self.stub_capability_probes()
+        self.assertEqual(self.run_assessment()["result"], "assessed")
         barrier = threading.Barrier(2)
         results = []
         def worker(key):
@@ -286,7 +302,9 @@ class ImprovementTests(unittest.TestCase):
         self.assertEqual([], self.ledger.events("improvement_completed"))
 
     def test_selector_requires_all_prior_and_materialization_metrics_before_retrieval(self):
+        self.stub_capability_probes()
         result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
         report = result["report"]
         cases = [("temporal_violations", 1, "repair_time_eligibility"),
                  ("provenance", 0.9, "repair_evidence_mapping"),

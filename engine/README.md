@@ -334,6 +334,44 @@ The supervisor checks progress every 30 minutes or three core steps, then contin
 
 Retained support failures can now use the schema-3 `support_diagnosis` phase. It checks original receipts and exact source intervals, retains independent semantic review as attributed claims, and binds the result to the actual queued predecessor. A checked diagnosis records follow-up preparation or clarification atomically; it does not rerun retrieval or emit a new quality score. The [study instructions](examples/retrieval/README.md#diagnose-a-retained-support-gap) describe exact additional fields, review categories and replay limits.
 
+The subsequent `support_probe` phase accepts two fixed clause-query executions from that queued preparation. It verifies the pre-execution envelope, each exact request, the inherited evidence boundary and actual caller receipts before comparing results. The report remains a separate development diagnostic; reproduced outcomes select decision-pilot preparation, disagreement selects repair, and incomplete evidence fails with retained inputs. See the [fixed-probe instructions](examples/retrieval/README.md#accept-a-fixed-clause-probe).
+
+The decision pilot executes a different task: twelve owned simulated release-or-hold attempts under two 2,048-byte views and two lossless controls. `decision_pilot` gives fixed child programs only public cutoff-eligible bytes; `decision_evaluation` independently resolves stipulated rights, artifact outcomes and case-local effects. Worker responses and evaluated rows are persisted during execution. A failed or incomplete run cannot become a complete-cohort score. See the [owned inputs and reproduction instructions](examples/control-exchange/README.md).
+
+`--decision-study FILE` accepts the retained decision results through the same completion-to-successor controller. It is mutually exclusive with `--retrieval-study`. The validator captures the owned cohort, report, attempt journal, contracts and source bytes; checks all 48 slots and independent denominators; and never executes a candidate. Both dispatcher input identity and the current queued predecessor are checked before consuming work. Completed requests remain idempotent, and completion revalidates captured evidence. A checked development comparison selects `prepare_fresh_decision_comparison`; failed conformance selects `repair_decision_pilot`. Neither changes the existing authority, spending or scale limits. A local journal is not an independent execution witness.
+
+The separate `fresh_comparison` phase extends that path to one registered 24-case exploratory batch: 96 attempts and 194 journal records. Its original views, policy, evaluator and contracts remain fixed. `examples/control-exchange/fresh-generator.py` is a custodian-only generator; `fresh-caller.py` is the exclusive execution caller and must be invoked inside the reviewed outer process envelope. Do not invoke either to preview cases or repeat a claimed run. Unit tests use separate individual cases or mocked transport. Generation custody, the caller's first read, and execution receipts are separate artifacts. The validator recomputes all rows, strata, paired counts and the declared triage rule from retained bytes without calling the candidate. The controller matches the entire historical accepted development event under its claim and completion locks, preserving the old implementation identities.
+
+Fresh results select repair, preparation of a nonacting prospective test, or investigation of information limits. The latter two are research tasks for the supervisor, not executable generic assessments: omission of their specific evidence is refused. There is no automatic repeat, learned selector, live authority or scale promotion. Fresh-only evidence caps are 16 MiB report, 24 MiB journal and 48 MiB bundle so all 96 maximal failure prefixes can survive validation; existing development caps and 30/60-second program limits stay fixed. See the [fresh comparison protocol](../docs/experiments/control-exchange-fresh-comparison.md).
+
+### Diagnose retained decision information
+
+The `information_limits_diagnosis` phase uses the same `--decision-study FILE` entry point. Its [contract](examples/control-exchange/information-contract.json) covers the 96 accepted fresh attempts. It parses dated evidence and retained source/view mappings, reconciles the original metrics, and reports supplemental retention and verification-quality findings. It never executes the original decision candidates. Controller acceptance still runs the existing synthetic conformance probes.
+
+A request has these exact fields; paths must be absolute and identifiers must come from verified ledger state:
+
+```json
+{
+  "schema_version": 1,
+  "study_id": "your-diagnosis-id",
+  "phase": "information_limits_diagnosis",
+  "origin": {"step_id": "CURRENT_QUEUED_STEP_ID"},
+  "ledger_path": "/absolute/path/to/persistent-improvement-store",
+  "evidence_origin": {"event_id": "ACCEPTED_C8_EVENT_ID", "event_hash": "ACCEPTED_C8_EVENT_HASH"},
+  "queue_parent": {"event_id": "CURRENT_TRANSITION_ID", "event_hash": "CURRENT_TRANSITION_HASH"},
+  "paths": {"contract": "/absolute/path/to/information-contract.json"},
+  "supplemental_evidence": {}
+}
+```
+
+The two event identities coincide only for the initial handoff. A checked repair/review or verified failed attempt uses its own immediate queue parent while keeping the accepted C8 origin. The loader opens the existing ledger read-only, captures the bounded historical prefix ending at that parent, and resolves C8 observations and content-addressed blobs. Old worktree paths are metadata, never locators. Current diagnostic/helper/controller sources are separately identified; historical code is never executed. The retained view decoder must match the accepted view format.
+
+Optional supplemental entries are named `outer_execution` and `custodian_process`, each with `path`, `sha256` and `source`. They are separately attributed local receipts, not invented C8 input roles. Omit them when unavailable. They cannot replace a missing accepted artifact or establish an external time witness.
+
+`prepare_diagnosis` and `check_prepared_diagnosis` capture/check inputs and ancestry without computing the case diagnosis. `assess_prepared_diagnosis` returns a compact checked report, a separate `diagnostic_table` artifact, and measured diagnostic wall time outside the deterministic report. The controller captures both outputs. Exact successful replay checks input identity and returns the recorded result without calling the diagnostic; changed inputs under the same run key are refused.
+
+Initial evidence errors and stale/unrelated ancestry refuse before claim, leaving the queue unchanged. A durable C9 failure requires the captured prior request, its actual claim and original semantic parent before a corrected full diagnostic can consume it. Generic fixture assessments and failure notes cannot substitute. A successful corrected diagnostic writes one completion and its normal successor, without an intermediate requeue. The [protocol](../docs/experiments/control-exchange-information-limits.md) defines the three nonexclusive axes, explicit unknowns and bounded next steps. The [accepted result](../docs/experiments/results/2026-11-26-decision-information-limits.md) reconciled 96 retained attempts and selected `prepare_dated_evidence_quality_protocol`. No original candidate was rerun.
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:

@@ -628,6 +628,150 @@
       "statement": "C5 reconciled the exposed C4 joint question with its saved receipts and exact source intervals. Discovery support was absent from the five returned windows but complete in the retained raw projection. Independent semantic review found no alternative complete answer in those windows. The fixed worker preserved all original scores and source bytes and selected one bounded follow-up preparation. This local diagnosis does not identify the ranking cause, demonstrate query-decomposition benefit or measure generated answers.",
       "status": "reported_result",
       "basis": "observed"
+    },
+    {
+      "id": "doc_fixed_clause_probe_protocol",
+      "kind": "document",
+      "title": "Fixed two-clause development diagnostic",
+      "repo_path": "docs/experiments/retrieval-fixed-clause-probe.md"
+    },
+    {
+      "id": "exp_fixed_clause_probe",
+      "kind": "experiment",
+      "title": "Check separate clause support under an explicit larger selection budget",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_control_exchange_decisions",
+      "kind": "experiment",
+      "title": "Compare dated views for authorization, delivery and simulated settlement",
+      "status": "proposed"
+    },
+    {
+      "id": "doc_fixed_clause_probe_run",
+      "kind": "document",
+      "title": "Fixed clause recovery with a larger retrieval budget",
+      "repo_path": "docs/experiments/results/2026-11-26-retrieval-probe.md"
+    },
+    {
+      "id": "claim_fixed_clause_probe_result",
+      "kind": "claim",
+      "title": "Separate clauses recover support under a larger selection budget",
+      "statement": "Two fixed local repetitions returned identical ordered results. Discovery support was complete at five passages and commitment support at one. The union of both top-five lists covers the original complete bundles using ten distinct passages rather than five. A post-execution transport repair preserved the unchanged measurement core without new retrieval. The actual controller selected one offline control/exchange decision-pilot preparation. This visible development diagnostic is not an equal-budget quality improvement, adoption result, predictive advantage or business advantage.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "doc_decision_pilot_protocol",
+      "kind": "document",
+      "title": "Owned release-or-hold comparison protocol",
+      "repo_path": "docs/experiments/control-exchange-decision-pilot.md"
+    },
+    {
+      "id": "doc_decision_pilot_result",
+      "kind": "document",
+      "title": "Two compact records with opposite missed decisions",
+      "repo_path": "docs/experiments/results/2026-11-26-decision-pilot.md"
+    },
+    {
+      "id": "doc_decision_pilot_run",
+      "kind": "document",
+      "title": "C7 execution, review and continuation record",
+      "repo_path": "docs/planning/runs/2026-11-26-decision-pilot.md"
+    },
+    {
+      "id": "claim_decision_retention_result",
+      "kind": "claim",
+      "title": "Equal development totals can conceal opposite retention losses",
+      "statement": "In one owned twelve-case simulation, both 2048-byte views completed four of five observable opportunities and four of seven world opportunities, but missed opposite storage-pressure cases. Both lossless controls completed five of five observable opportunities. This is an exposed development comparison of full retention/view systems, not graph superiority, broad predictive capability or live exchange evidence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_decision_late_rights",
+      "kind": "claim",
+      "title": "Identical available evidence can conceal different actual rights",
+      "statement": "The constructed baseline and late-revocation cases supplied identical candidate bytes and produced the same release proposal, although authority differed in the stipulated world. Each arm therefore retained one unauthorized proposal, which the common world-state guard refused. No duplicate or unauthorized effects were observed, but this guard conformance does not establish observer safety or a realizable distributed authorization service.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_fresh_decision_comparison",
+      "kind": "experiment",
+      "title": "Compare frozen decision views on one new exploratory cohort",
+      "status": "proposed"
+    },
+    {
+      "id": "doc_fresh_decision_protocol",
+      "kind": "document",
+      "title": "Fixed fresh decision comparison protocol",
+      "repo_path": "docs/experiments/control-exchange-fresh-comparison.md"
+    },
+    {
+      "id": "doc_fresh_decision_result",
+      "kind": "document",
+      "title": "Equal fresh totals and invalid-delivery effects",
+      "repo_path": "docs/experiments/results/2026-11-26-fresh-decision-comparison.md"
+    },
+    {
+      "id": "doc_fresh_decision_run",
+      "kind": "document",
+      "title": "C8 custody, validation and continuation record",
+      "repo_path": "docs/planning/runs/2026-11-26-fresh-decision-comparison.md"
+    },
+    {
+      "id": "claim_fresh_decision_retention",
+      "kind": "claim",
+      "title": "Fresh scripted tradeoffs remain paired rather than aggregate gains",
+      "statement": "One post-freeze 24-case scripted cohort produced 96 retained attempts. Both compact methods completed 7/9 observable and 7/11 world opportunities, with two successful releases unique to each method and net difference 0. Both lossless controls reached 9/9 observable and 9/11 world opportunities. This is a descriptive result for hand-designed mechanisms, not representative performance or superiority of graph notation.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_exchange_quality_gap",
+      "kind": "claim",
+      "title": "Authority checks leave delivery-quality errors visible",
+      "statement": "Each of four fixed arms produced 3 accepted simulated releases for artifacts later stipulated invalid, despite 0 unauthorized and 0 duplicate effects. Positive observed verification and actual artifact quality were separate facts in these deliberately constructed cases. This records a limit of the declared guard and evidence contract, not an estimate of real verifier error prevalence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_decision_information_limits",
+      "kind": "experiment",
+      "title": "Diagnose retained information loss, late evidence and verification-quality gaps",
+      "status": "proposed"
+    },
+    {
+      "id": "doc_decision_information_protocol",
+      "kind": "document",
+      "title": "Retained decision-information diagnostic protocol",
+      "repo_path": "docs/experiments/control-exchange-information-limits.md"
+    },
+    {
+      "id": "doc_decision_information_result",
+      "kind": "document",
+      "title": "Verification claims, retention losses and dated evidence",
+      "repo_path": "docs/experiments/results/2026-11-26-decision-information-limits.md"
+    },
+    {
+      "id": "doc_decision_information_run",
+      "kind": "document",
+      "title": "C9 validation, accepted diagnosis and audit",
+      "repo_path": "docs/planning/runs/2026-11-26-decision-information-limits.md"
+    },
+    {
+      "id": "claim_decision_information_result",
+      "kind": "claim",
+      "title": "Complete records do not establish the truth of verification claims",
+      "statement": "The retained diagnosis reconciled 96 saved attempts without rerunning a candidate. Four of 22 eligible operative exactly bound claims disagreed with stipulated artifact validity across 22 cases; three of 21 positive claims accompanied invalid artifacts. Each compact method lost two observable opportunities through bounded retention; lossless controls recovered those opportunities but still accepted the three invalid deliveries. These are descriptive synthetic results, not real verifier error rates or independent causal proof.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_dated_evidence_quality",
+      "kind": "experiment",
+      "title": "Prepare a future artifact delivery with fixed quality criteria and dated evidence",
+      "status": "proposed"
     }
   ],
   "edges": [
@@ -1324,6 +1468,166 @@
     {
       "source": "claim_support_diagnosis_result",
       "target": "exp_support_diagnosis",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_fixed_clause_probe",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_support_diagnosis_result",
+      "target": "exp_fixed_clause_probe",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "doc_fixed_clause_probe_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "exp_fixed_clause_probe",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "exp_control_exchange_decisions",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "rep_text",
+      "type": "compares"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "doc_decision_pilot_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_fresh_decision_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "doc_fresh_decision_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_fresh_decision_comparison",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_decision_information_limits",
+      "target": "doc_fresh_decision_result",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_decision_information_limits",
+      "target": "doc_decision_information_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "doc_decision_information_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "doc_decision_information_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_decision_information_limits",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_dated_evidence_quality",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_dated_evidence_quality",
+      "target": "doc_decision_information_result",
       "type": "depends_on"
     }
   ]

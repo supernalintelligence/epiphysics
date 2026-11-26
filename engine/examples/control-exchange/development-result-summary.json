@@ -1,0 +1,915 @@
+{
+  "schema_version": 1,
+  "contract_id": "control-exchange-release-hold-v1",
+  "cohort_id": "decision-pilot-development-v1",
+  "cohort_hash": "eeb052a9c8561c59ac011198a4f6dd2cf2b238f63cd0283b16b9a37fd2ef39a6",
+  "stage": "exposed_development",
+  "declared_case_count": 12,
+  "source_hashes": {
+    "decision_evaluation.py": "5a2a868e0520237b314366619361bb1bdb7f22fd52232a58e684cfc27ac9f198",
+    "decision_pilot.py": "fa066457406e999b7aec146e50fcb4ed7b18b8d96c78e923869133ef290de090",
+    "decision_policy.py": "57991e37af060391588dc983c06004240b6b68a620fc12b885bd436a9113a077",
+    "decision_views.py": "35649e1aa70fdc047eb1e9470289b9c90305aaba8c0405f98eb2da25ee561984"
+  },
+  "checks": {
+    "all_outputs_valid": true,
+    "fixed_policy_conformance": true,
+    "lossless_reference_parity": true,
+    "program_deadline_met": true,
+    "same_input_same_output": true,
+    "source_unchanged": true
+  },
+  "limits": {
+    "lossless_view_bytes": 32768,
+    "normal_view_bytes": 2048,
+    "program_seconds": 30,
+    "worker_output_bytes": 65536
+  },
+  "next_step": {
+    "action": "prepare_fresh_decision_comparison",
+    "live_effects_allowed": false,
+    "metric_status": "exposed development measurements; no adoption claim",
+    "reason": "Development wiring passed; freeze and review before generating one new 24-case exploratory batch",
+    "scale_change_allowed": false
+  },
+  "resources": {
+    "accounting": "Child wall contains its stage times. Parent wall includes computation and attempt journaling through final source verification, excluding final report serialization/persistence. Do not add nested totals. Lossless arms are separate controls; retain caller wall time separately.",
+    "agent_and_review_cost": null,
+    "external_program_spend": 0,
+    "memory_bytes": null,
+    "model_calls": 0,
+    "parent_wall_seconds": 7.600442791997921
+  },
+  "scope": "Owned synthetic development only; retention and view systems compared together; no generalization or live authority claim",
+  "retained_report_sha256": "b4475ad656e3fa6224a1cfa43110b5635e64819876a8e06ffd5985624720d5f9",
+  "arms": [
+    {
+      "recipe": "flat-recency-v1",
+      "budget_bytes": 2048,
+      "control": false,
+      "summary": {
+        "case_count": 12,
+        "counts": {
+          "cases": 12,
+          "duplicate_opportunity_cases": 2,
+          "failed_attempts": 0,
+          "forbidden_cases": 3,
+          "hold_outputs": 7,
+          "not_ready_or_invalid_cases": 0,
+          "ordinary_attempts": 10,
+          "release_proposals": 5,
+          "visible_actionable_opportunities": 5,
+          "world_opportunities": 7
+        },
+        "effect_scope": "Each case starts from its independent stipulated state; equal keys across cases do not share effects.",
+        "effects_by_release_key": {
+          "346fe8c8a06ebf3dbfa5a8e7abd347ffbb6e995cbaaa51dd55292b06b226fb64": {
+            "attempts": 10,
+            "duplicate_effects": 0,
+            "new_effects": 3
+          },
+          "56a7b166b7c3e0dc00830300e87310cf9cece9a72990d2368c610e67f2e8e47d": {
+            "attempts": 2,
+            "duplicate_effects": 0,
+            "new_effects": 1
+          }
+        },
+        "evaluation_contract_id": "release-hold-evaluation-v1",
+        "metrics": {
+          "duplicate_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_attempts": {
+            "denominator": 2,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "evidence_unjustified_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "hold_rate": {
+            "denominator": 12,
+            "numerator": 7,
+            "value": 0.5833333333333334
+          },
+          "invalid_artifact_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_observable_opportunities": {
+            "denominator": 5,
+            "numerator": 1,
+            "value": 0.2
+          },
+          "missed_world_opportunities": {
+            "denominator": 7,
+            "numerator": 3,
+            "value": 0.42857142857142855
+          },
+          "observable_opportunity_completion": {
+            "denominator": 5,
+            "numerator": 4,
+            "value": 0.8
+          },
+          "unauthorized_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "unauthorized_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 1,
+            "value": 0.08333333333333333
+          },
+          "unauthorized_release_proposals_forbidden": {
+            "denominator": 3,
+            "numerator": 1,
+            "value": 0.3333333333333333
+          },
+          "valid_output_completion": {
+            "denominator": 12,
+            "numerator": 12,
+            "value": 1.0
+          },
+          "valid_timely_release": {
+            "denominator": 7,
+            "numerator": 4,
+            "value": 0.5714285714285714
+          }
+        },
+        "schema_version": 1
+      },
+      "cases": [
+        {
+          "case_id": "dev-01",
+          "mechanism": "complete visible evidence",
+          "view_bytes": 787,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-02",
+          "mechanism": "late-observed revocation",
+          "view_bytes": 787,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "refused"
+        },
+        {
+          "case_id": "dev-03",
+          "mechanism": "visible revocation",
+          "view_bytes": 861,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-04",
+          "mechanism": "later regrant",
+          "view_bytes": 936,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-05",
+          "mechanism": "missing cutoff verification",
+          "view_bytes": 644,
+          "complete": true,
+          "action": "hold",
+          "reason": "missing_verification",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-06",
+          "mechanism": "contradictory verification",
+          "view_bytes": 933,
+          "complete": true,
+          "action": "hold",
+          "reason": "conflicting_evidence",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-07",
+          "mechanism": "observed earlier release",
+          "view_bytes": 1000,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-08",
+          "mechanism": "duplicate attempt identifier",
+          "view_bytes": 1000,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-09",
+          "mechanism": "role renaming with correct direction",
+          "view_bytes": 923,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-10",
+          "mechanism": "reversed grant edge",
+          "view_bytes": 923,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-11",
+          "mechanism": "old task evidence with recent notes",
+          "view_bytes": 2048,
+          "complete": false,
+          "action": "hold",
+          "reason": "incomplete_evidence",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-12",
+          "mechanism": "older high-proximity notes with recent task evidence",
+          "view_bytes": 1999,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        }
+      ]
+    },
+    {
+      "recipe": "task-proximity-v1",
+      "budget_bytes": 2048,
+      "control": false,
+      "summary": {
+        "case_count": 12,
+        "counts": {
+          "cases": 12,
+          "duplicate_opportunity_cases": 2,
+          "failed_attempts": 0,
+          "forbidden_cases": 3,
+          "hold_outputs": 7,
+          "not_ready_or_invalid_cases": 0,
+          "ordinary_attempts": 10,
+          "release_proposals": 5,
+          "visible_actionable_opportunities": 5,
+          "world_opportunities": 7
+        },
+        "effect_scope": "Each case starts from its independent stipulated state; equal keys across cases do not share effects.",
+        "effects_by_release_key": {
+          "346fe8c8a06ebf3dbfa5a8e7abd347ffbb6e995cbaaa51dd55292b06b226fb64": {
+            "attempts": 10,
+            "duplicate_effects": 0,
+            "new_effects": 3
+          },
+          "56a7b166b7c3e0dc00830300e87310cf9cece9a72990d2368c610e67f2e8e47d": {
+            "attempts": 2,
+            "duplicate_effects": 0,
+            "new_effects": 1
+          }
+        },
+        "evaluation_contract_id": "release-hold-evaluation-v1",
+        "metrics": {
+          "duplicate_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_attempts": {
+            "denominator": 2,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "evidence_unjustified_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "hold_rate": {
+            "denominator": 12,
+            "numerator": 7,
+            "value": 0.5833333333333334
+          },
+          "invalid_artifact_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_observable_opportunities": {
+            "denominator": 5,
+            "numerator": 1,
+            "value": 0.2
+          },
+          "missed_world_opportunities": {
+            "denominator": 7,
+            "numerator": 3,
+            "value": 0.42857142857142855
+          },
+          "observable_opportunity_completion": {
+            "denominator": 5,
+            "numerator": 4,
+            "value": 0.8
+          },
+          "unauthorized_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "unauthorized_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 1,
+            "value": 0.08333333333333333
+          },
+          "unauthorized_release_proposals_forbidden": {
+            "denominator": 3,
+            "numerator": 1,
+            "value": 0.3333333333333333
+          },
+          "valid_output_completion": {
+            "denominator": 12,
+            "numerator": 12,
+            "value": 1.0
+          },
+          "valid_timely_release": {
+            "denominator": 7,
+            "numerator": 4,
+            "value": 0.5714285714285714
+          }
+        },
+        "schema_version": 1
+      },
+      "cases": [
+        {
+          "case_id": "dev-01",
+          "mechanism": "complete visible evidence",
+          "view_bytes": 893,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-02",
+          "mechanism": "late-observed revocation",
+          "view_bytes": 893,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "refused"
+        },
+        {
+          "case_id": "dev-03",
+          "mechanism": "visible revocation",
+          "view_bytes": 984,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-04",
+          "mechanism": "later regrant",
+          "view_bytes": 1075,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-05",
+          "mechanism": "missing cutoff verification",
+          "view_bytes": 727,
+          "complete": true,
+          "action": "hold",
+          "reason": "missing_verification",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-06",
+          "mechanism": "contradictory verification",
+          "view_bytes": 1062,
+          "complete": true,
+          "action": "hold",
+          "reason": "conflicting_evidence",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-07",
+          "mechanism": "observed earlier release",
+          "view_bytes": 1134,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-08",
+          "mechanism": "duplicate attempt identifier",
+          "view_bytes": 1134,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-09",
+          "mechanism": "role renaming with correct direction",
+          "view_bytes": 1069,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-10",
+          "mechanism": "reversed grant edge",
+          "view_bytes": 1069,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-11",
+          "mechanism": "old task evidence with recent notes",
+          "view_bytes": 1937,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-12",
+          "mechanism": "older high-proximity notes with recent task evidence",
+          "view_bytes": 1959,
+          "complete": false,
+          "action": "hold",
+          "reason": "incomplete_evidence",
+          "effect": "held"
+        }
+      ]
+    },
+    {
+      "recipe": "flat-recency-v1",
+      "budget_bytes": 32768,
+      "control": true,
+      "summary": {
+        "case_count": 12,
+        "counts": {
+          "cases": 12,
+          "duplicate_opportunity_cases": 2,
+          "failed_attempts": 0,
+          "forbidden_cases": 3,
+          "hold_outputs": 6,
+          "not_ready_or_invalid_cases": 0,
+          "ordinary_attempts": 10,
+          "release_proposals": 6,
+          "visible_actionable_opportunities": 5,
+          "world_opportunities": 7
+        },
+        "effect_scope": "Each case starts from its independent stipulated state; equal keys across cases do not share effects.",
+        "effects_by_release_key": {
+          "346fe8c8a06ebf3dbfa5a8e7abd347ffbb6e995cbaaa51dd55292b06b226fb64": {
+            "attempts": 10,
+            "duplicate_effects": 0,
+            "new_effects": 4
+          },
+          "56a7b166b7c3e0dc00830300e87310cf9cece9a72990d2368c610e67f2e8e47d": {
+            "attempts": 2,
+            "duplicate_effects": 0,
+            "new_effects": 1
+          }
+        },
+        "evaluation_contract_id": "release-hold-evaluation-v1",
+        "metrics": {
+          "duplicate_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_attempts": {
+            "denominator": 2,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "evidence_unjustified_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "hold_rate": {
+            "denominator": 12,
+            "numerator": 6,
+            "value": 0.5
+          },
+          "invalid_artifact_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_observable_opportunities": {
+            "denominator": 5,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_world_opportunities": {
+            "denominator": 7,
+            "numerator": 2,
+            "value": 0.2857142857142857
+          },
+          "observable_opportunity_completion": {
+            "denominator": 5,
+            "numerator": 5,
+            "value": 1.0
+          },
+          "unauthorized_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "unauthorized_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 1,
+            "value": 0.08333333333333333
+          },
+          "unauthorized_release_proposals_forbidden": {
+            "denominator": 3,
+            "numerator": 1,
+            "value": 0.3333333333333333
+          },
+          "valid_output_completion": {
+            "denominator": 12,
+            "numerator": 12,
+            "value": 1.0
+          },
+          "valid_timely_release": {
+            "denominator": 7,
+            "numerator": 5,
+            "value": 0.7142857142857143
+          }
+        },
+        "schema_version": 1
+      },
+      "cases": [
+        {
+          "case_id": "dev-01",
+          "mechanism": "complete visible evidence",
+          "view_bytes": 787,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-02",
+          "mechanism": "late-observed revocation",
+          "view_bytes": 787,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "refused"
+        },
+        {
+          "case_id": "dev-03",
+          "mechanism": "visible revocation",
+          "view_bytes": 861,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-04",
+          "mechanism": "later regrant",
+          "view_bytes": 936,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-05",
+          "mechanism": "missing cutoff verification",
+          "view_bytes": 644,
+          "complete": true,
+          "action": "hold",
+          "reason": "missing_verification",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-06",
+          "mechanism": "contradictory verification",
+          "view_bytes": 933,
+          "complete": true,
+          "action": "hold",
+          "reason": "conflicting_evidence",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-07",
+          "mechanism": "observed earlier release",
+          "view_bytes": 1000,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-08",
+          "mechanism": "duplicate attempt identifier",
+          "view_bytes": 1000,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-09",
+          "mechanism": "role renaming with correct direction",
+          "view_bytes": 923,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-10",
+          "mechanism": "reversed grant edge",
+          "view_bytes": 923,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-11",
+          "mechanism": "old task evidence with recent notes",
+          "view_bytes": 2261,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-12",
+          "mechanism": "older high-proximity notes with recent task evidence",
+          "view_bytes": 2261,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        }
+      ]
+    },
+    {
+      "recipe": "task-proximity-v1",
+      "budget_bytes": 32768,
+      "control": true,
+      "summary": {
+        "case_count": 12,
+        "counts": {
+          "cases": 12,
+          "duplicate_opportunity_cases": 2,
+          "failed_attempts": 0,
+          "forbidden_cases": 3,
+          "hold_outputs": 6,
+          "not_ready_or_invalid_cases": 0,
+          "ordinary_attempts": 10,
+          "release_proposals": 6,
+          "visible_actionable_opportunities": 5,
+          "world_opportunities": 7
+        },
+        "effect_scope": "Each case starts from its independent stipulated state; equal keys across cases do not share effects.",
+        "effects_by_release_key": {
+          "346fe8c8a06ebf3dbfa5a8e7abd347ffbb6e995cbaaa51dd55292b06b226fb64": {
+            "attempts": 10,
+            "duplicate_effects": 0,
+            "new_effects": 4
+          },
+          "56a7b166b7c3e0dc00830300e87310cf9cece9a72990d2368c610e67f2e8e47d": {
+            "attempts": 2,
+            "duplicate_effects": 0,
+            "new_effects": 1
+          }
+        },
+        "evaluation_contract_id": "release-hold-evaluation-v1",
+        "metrics": {
+          "duplicate_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "duplicate_release_proposals_attempts": {
+            "denominator": 2,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "evidence_unjustified_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "hold_rate": {
+            "denominator": 12,
+            "numerator": 6,
+            "value": 0.5
+          },
+          "invalid_artifact_release_proposals": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_observable_opportunities": {
+            "denominator": 5,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "missed_world_opportunities": {
+            "denominator": 7,
+            "numerator": 2,
+            "value": 0.2857142857142857
+          },
+          "observable_opportunity_completion": {
+            "denominator": 5,
+            "numerator": 5,
+            "value": 1.0
+          },
+          "unauthorized_effects": {
+            "denominator": 12,
+            "numerator": 0,
+            "value": 0.0
+          },
+          "unauthorized_release_proposals_all": {
+            "denominator": 12,
+            "numerator": 1,
+            "value": 0.08333333333333333
+          },
+          "unauthorized_release_proposals_forbidden": {
+            "denominator": 3,
+            "numerator": 1,
+            "value": 0.3333333333333333
+          },
+          "valid_output_completion": {
+            "denominator": 12,
+            "numerator": 12,
+            "value": 1.0
+          },
+          "valid_timely_release": {
+            "denominator": 7,
+            "numerator": 5,
+            "value": 0.7142857142857143
+          }
+        },
+        "schema_version": 1
+      },
+      "cases": [
+        {
+          "case_id": "dev-01",
+          "mechanism": "complete visible evidence",
+          "view_bytes": 893,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-02",
+          "mechanism": "late-observed revocation",
+          "view_bytes": 893,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "refused"
+        },
+        {
+          "case_id": "dev-03",
+          "mechanism": "visible revocation",
+          "view_bytes": 984,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-04",
+          "mechanism": "later regrant",
+          "view_bytes": 1075,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-05",
+          "mechanism": "missing cutoff verification",
+          "view_bytes": 727,
+          "complete": true,
+          "action": "hold",
+          "reason": "missing_verification",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-06",
+          "mechanism": "contradictory verification",
+          "view_bytes": 1062,
+          "complete": true,
+          "action": "hold",
+          "reason": "conflicting_evidence",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-07",
+          "mechanism": "observed earlier release",
+          "view_bytes": 1134,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-08",
+          "mechanism": "duplicate attempt identifier",
+          "view_bytes": 1134,
+          "complete": true,
+          "action": "hold",
+          "reason": "duplicate_release",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-09",
+          "mechanism": "role renaming with correct direction",
+          "view_bytes": 1069,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-10",
+          "mechanism": "reversed grant edge",
+          "view_bytes": 1069,
+          "complete": true,
+          "action": "hold",
+          "reason": "authority_absent_or_revoked",
+          "effect": "held"
+        },
+        {
+          "case_id": "dev-11",
+          "mechanism": "old task evidence with recent notes",
+          "view_bytes": 2536,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        },
+        {
+          "case_id": "dev-12",
+          "mechanism": "older high-proximity notes with recent task evidence",
+          "view_bytes": 2536,
+          "complete": true,
+          "action": "release",
+          "reason": "release_requirements_satisfied",
+          "effect": "accepted"
+        }
+      ]
+    }
+  ]
+}

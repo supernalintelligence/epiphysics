@@ -1,0 +1,40 @@
+{
+  "accepted_effect_metric": "new accepted effects with NOT artifact_ready_valid; denominators: all cases, not-ready/invalid cases, all accepted effects",
+  "arms": 4,
+  "attempts": 96,
+  "axes": [
+    "dated_availability",
+    "bounded_retention",
+    "verification_quality"
+  ],
+  "cases": 24,
+  "contract_id": "decision-information-diagnosis-v1",
+  "evidence_unit": "Accepted C8 case/arm rows; verification claims counted once per cohort/case/event identity",
+  "journal_records": 194,
+  "limits": {
+    "bundle_bytes": 50331648,
+    "candidate_executions": 0,
+    "diagnostic_seconds": 10,
+    "event_bytes": 1048576,
+    "external_spend": 0,
+    "live_effects": false,
+    "model_calls": 0,
+    "new_cases": 0,
+    "output_bytes": 1048576,
+    "prefix_bytes": 8388608,
+    "prefix_events": 4096,
+    "request_bytes": 32768
+  },
+  "phase": "information_limits_diagnosis",
+  "review_rule": "An accepted review continuation may prepare a protocol only with the identical verified nonempty unresolved identity/reason set; unknowns remain unresolved",
+  "schema_version": 1,
+  "scope": "Retained synthetic engineering diagnosis; no new experiment, predictive lift, adoption or live authority",
+  "stage": "retained_diagnostic",
+  "successors": [
+    "prepare_dated_evidence_quality_protocol",
+    "repair_decision_information_diagnosis",
+    "review_unresolved_decision_evidence"
+  ],
+  "unknown_rule": "Missing or insufficient evidence remains explicit; harms overlap and are never summed",
+  "verification_denominator": "distinct eligible operative exactly-bound verified verification claims with a bound retained outcome; separate case count"
+}
