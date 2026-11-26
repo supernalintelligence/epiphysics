@@ -161,12 +161,16 @@ jobs:
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')
           PY
-      - name: Verify actual lexical retrieval and separate scoring
+      - name: Verify actual retrieval and measured controller handoff
         run: |
           python - <<'PYTHON'
+          import json
           import os
+          from pathlib import Path
+          import subprocess
+          import sys
           import tempfile
-          from epiphysics.store import Ledger, digest
+          from epiphysics.store import Ledger, canonical, digest
           from epiphysics.assertions import resolve_span
           from epiphysics.retrieval import freeze_retrieval_corpus, run_lexical_retrieval
           from epiphysics.retrieval_evaluation import evaluate_retrieval, project_queries
@@ -201,7 +205,50 @@ jobs:
                   assert ledger.verify()['valid']
               finally:
                   ledger.close()
-          print('Owned synthetic retrieval reproduced on fresh indexes; separate scoring and source spans verified.')
+              root = Path(directory)
+              identity = report['identity']
+              declaration = {
+                  'schema_version': 1, 'study_id': 'owned-ci-study',
+                  **{key: identity[key] for key in ('snapshot_id', 'snapshot_hash', 'snapshot_manifest_hash',
+                      'corpus_id', 'corpus_hash', 'cohort_hash', 'gold_hash', 'query_hash',
+                      'sources_hash', 'passages_hash', 'config_hash')},
+                  'implementation_hash': identity['retriever_implementation_hash'],
+                  'dependency_hashes': {name: ref['content_hash'] for name, ref in first['body']['artifacts']['dependencies'].items()},
+                  'runtime_hash': first['body']['runtime_hash'],
+                  'run_terminal_hashes': {run['id']: run['hash'] for run in (first, second)},
+              }
+              policy = json.loads(Path('engine/examples/improvement/policy.json').read_text())
+              policy['retrieval_study'] = declaration
+              (root / 'cohort.json').write_text(canonical(cohort))
+              (root / 'policy.json').write_text(canonical(policy))
+              (root / 'study.json').write_text(canonical({
+                  'schema_version': 1, 'study_id': declaration['study_id'],
+                  'evidence_store': str(root), 'cohort_file': str(root / 'cohort.json'),
+                  'corpus_id': corpus['id'], 'run_terminal_ids': [first['id'], second['id']],
+              }))
+              child = subprocess.run([
+                  sys.executable, '-m', 'epiphysics.improvement', '--store', str(root / 'improvement'),
+                  'dispatch', '--policy', str(root / 'policy.json'),
+                  '--suite', str(Path('engine/examples/improvement/entities.json').resolve()),
+                  '--candidate', 'reference', '--run-key', 'actual-study-smoke', '--after-step', 'initial',
+                  '--retrieval-study', str(root / 'study.json'), '--timeout-seconds', '60',
+                  '--completed-work', 'Validated two actual searches on owned synthetic source bytes',
+              ], check=True, capture_output=True, text=True, timeout=75)
+              assessment = json.loads(child.stdout)['assessment']
+              actual = assessment['report']['actual_retrieval']
+              assert actual['reproducibility']['value'] == 1
+              assert len(actual['quality']['runs']) == 2
+              assert actual['quality']['runs'][0]['metrics'] == report['metrics']
+              assert assessment['report']['metrics']['retrieval_baseline_reproducibility'] == 1
+              assert assessment['next_step']['action'] == 'prepare_retrieval_coverage_evaluation'
+              assert assessment['next_step']['target'] is None
+              readonly = Ledger.open_readonly(root)
+              try:
+                  assert readonly.events()[-1]['id'] == second['id']
+                  assert readonly.verify()['valid']
+              finally:
+                  readonly.close()
+          print('Fresh retrieval, separate scoring and real controller handoff passed on owned synthetic evidence.')
           PYTHON
       - name: Run synthetic ledger demo
         run: python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo

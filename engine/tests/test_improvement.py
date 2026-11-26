@@ -172,7 +172,7 @@ class ImprovementTests(unittest.TestCase):
             result = self.run_assessment()
         self.assertEqual("failed", result["result"])
         self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
-        self.assertEqual(16, len(self.ledger.events("observation")))
+        self.assertEqual(3 + len(improvement._IMPLEMENTATIONS), len(self.ledger.events("observation")))
         self.assertEqual([], improvement.status(self.ledger)["unfinished_runs"])
         self.assertEqual(result, self.run_assessment())
 
@@ -394,7 +394,9 @@ def alter(module):
                'manifests':'register_manifest','manifest_checks':'run_manifest_checks',
                'transforms':'execute_graph_transform','transformation_checks':'run_transformation_checks',
                'graph_views':'execute_graph_views','graph_view_checks':'run_graph_view_checks',
-               'materialization':'materialize_graph_outputs','materialization_checks':'run_materialization_checks'}
+               'materialization':'materialize_graph_outputs','materialization_checks':'run_materialization_checks',
+               'retrieval':'run_lexical_retrieval','retrieval_evaluation':'evaluate_retrieval',
+               'retrieval_assessment':'assess_prepared_retrieval_study'}
     function=functions.get(module.__name__.rsplit('.',1)[-1])
     change=(("\ndef "+function+"(*args, **kwargs):\n    raise ValueError('Changed implementation on disk')\n").encode()
             if function else b"\n# Unreviewed source edit after import\n")
@@ -493,13 +495,54 @@ finally:
         return json.loads(result.stdout)
 
     def test_preassessment_disk_drift_is_refused_without_claiming_queue(self):
-        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks", "materialization", "materialization_checks"):
+        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks", "materialization", "materialization_checks", "retrieval", "retrieval_evaluation", "retrieval_assessment"):
             with self.subTest(module=module):
                 outcome = self._isolated_drift_check("before_assessment", module)
                 self.assertEqual("refused", outcome["result"])
                 self.assertIn("changed since import", outcome["message"])
                 self.assertEqual([], outcome["events"])
                 self.assertNotEqual(outcome["captured_sha256"], outcome["disk_sha256"])
+
+    def test_all_pinned_source_reads_are_bounded_and_oversize_refuses_before_open(self):
+        pinned = improvement._IMPLEMENTATIONS
+        expected_lengths = {path: len(source) + 1 for _, path, source, _, _ in pinned.values()}
+        original_open, original_read = Path.open, Path.read_bytes
+        reads = {}
+        class LimitedReader:
+            def __init__(self, path, stream):
+                self.path, self.stream = path, stream
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return self.stream.__exit__(*args)
+            def read(self, size=-1):
+                if size != expected_lengths[self.path]:
+                    raise AssertionError("Pinned source read must be bounded by retained size")
+                reads[self.path] = size
+                return self.stream.read(size)
+        def bounded_open(path, *args, **kwargs):
+            stream = original_open(path, *args, **kwargs)
+            return LimitedReader(path, stream) if path in expected_lengths else stream
+        with patch.object(Path, "open", bounded_open):
+            self.assertEqual(set(pinned), set(improvement._implementation_inputs()))
+        self.assertEqual(expected_lengths, reads)
+        oversized = self.root / "changed-module.py"
+        with oversized.open("wb") as stream:
+            stream.truncate(32_000_000)
+        def guarded_open(path, *args, **kwargs):
+            if path == oversized:
+                raise AssertionError("Oversized source must not be opened")
+            return original_open(path, *args, **kwargs)
+        def guarded_read(path):
+            if path == oversized:
+                raise AssertionError("Oversized source must not be read")
+            return original_read(path)
+        for name, (module, _, source, code, dependencies) in pinned.items():
+            changed = {**pinned, name: (module, oversized, source, code, dependencies)}
+            with self.subTest(module=name), patch.object(improvement, "_IMPLEMENTATIONS", changed):
+                with patch.object(Path, "open", guarded_open), patch.object(Path, "read_bytes", guarded_read):
+                    with self.assertRaisesRegex(ValueError, "source changed since import: " + name):
+                        improvement._implementation_inputs()
 
     def test_dependency_imported_before_controller_retains_its_original_source_identity(self):
         outcome = self._isolated_drift_check("dependency_before_controller")

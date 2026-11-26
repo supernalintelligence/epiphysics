@@ -234,7 +234,7 @@ The [development inputs](examples/retrieval/README.md) refer to an existing four
 
 Source eligibility is distinct from experiment timing. Newly built retrieval code and curated questions may run against an earlier source snapshot as a retrospective development experiment. Their later execution artifacts must never be indexed or backdated into the source corpus. This is not a forecast by a predictor proven to exist at that earlier cutoff.
 
-C1 provides a standalone baseline and evaluator. C2 must validate real retrieval receipts and add them to the improvement controller before its queued `build_retrieval_baseline` action closes. A synthetic capability fraction is not a measured retrieval-quality result. The [metric contracts](../docs/experiments/representation-metrics.md) define full-span coverage, source recall, reciprocal rank, unsupported-query retrieval, empty results and their denominators.
+C1 provides a standalone baseline and evaluator. C2 adds an optional `--retrieval-study FILE` to improvement `assess` and `dispatch`, with a declared contract under policy `retrieval_study`. It validates and rescores actual retained executions before the queued `build_retrieval_baseline` action can close. See [the study examples](examples/retrieval/README.md) and [C2 run record](../docs/planning/runs/2026-11-25-retrieval-controller.md). A synthetic capability fraction is not a measured retrieval-quality result. The [metric contracts](../docs/experiments/representation-metrics.md) define full-span coverage, source recall, reciprocal rank, unsupported-query retrieval, empty results and their denominators.
 
 ## Assurance limits
 

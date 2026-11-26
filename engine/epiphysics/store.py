@@ -46,6 +46,7 @@ class Ledger:
     """
 
     def __init__(self, root: str | Path, clock: Callable[[], str] = utc_now):
+        self._read_only = False
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "blobs").mkdir(exist_ok=True)
@@ -71,6 +72,40 @@ class Ledger:
             CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events
             BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
         """)
+
+    @classmethod
+    def open_readonly(cls, root: str | Path) -> Ledger:
+        """Open an existing store without initializing or changing ledger data.
+
+        SQLite may use WAL coordination sidecars; they are not event or blob
+        writes. This connection follows the live WAL, rather than declaring the
+        database immutable. Mutation methods refuse even exact historical retries.
+        """
+        if cls is not Ledger:
+            raise ValueError("Read-only connections require the exact Ledger class")
+        root = Path(root).resolve()
+        database = root / "ledger.sqlite"
+        if not database.is_file():
+            raise ValueError("Read-only ledger requires an existing database file")
+        ledger = cls.__new__(cls)
+        ledger.root = root
+        ledger.clock = utc_now
+        ledger._read_only = True
+        ledger._atomic_time = None
+        ledger._atomic_failed = False
+        ledger._append_active = False
+        ledger.db = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=10)
+        try:
+            ledger.db.row_factory = sqlite3.Row
+            ledger.db.execute("PRAGMA query_only=ON")
+        except BaseException:
+            ledger.db.close()
+            raise
+        return ledger
+
+    def _require_writable(self):
+        if self._read_only:
+            raise ValueError("Read-only ledger cannot be mutated")
 
     def close(self):
         self.db.close()
@@ -101,6 +136,7 @@ class Ledger:
         questions and forecasts require live time outside the group; capture is
         refused before writing blobs. Forecast derived manifests after commit.
         """
+        self._require_writable()
         if self._atomic_time is not None:
             self._atomic_failed = True
             raise ValueError("Nested atomic writes are not supported")
@@ -143,6 +179,7 @@ class Ledger:
         constraints. Exclusive claims instead reject any existing event with that ID.
         Inside atomic_write, the event stays provisional until the whole group commits.
         """
+        self._require_writable()
         grouped = self._atomic_time is not None
         if self._append_active:
             if grouped:
@@ -204,6 +241,7 @@ class Ledger:
     def capture(self, source: str, content: bytes, *, published_at: str | None = None,
                 event_at: str | None = None, media_type: str = "text/plain", revision_of: str | None = None,
                 event_id: str | None = None) -> dict:
+        self._require_writable()
         self._check_atomic_kind("observation")
         if not source.strip():
             raise ValueError("Source is required")
@@ -232,6 +270,7 @@ class Ledger:
             "timing_basis": "collector clock; source times are claims"}, event_id)
 
     def snapshot(self, cutoff: str | None = None, event_id: str | None = None) -> dict:
+        self._require_writable()
         # A grouped snapshot cannot know a later state than its shared event time.
         grouped_time = self._atomic_time
         cutoff = cutoff or (grouped_time if grouped_time is not None else self.clock())
@@ -246,6 +285,7 @@ class Ledger:
 
     def representation(self, snapshot_id: str, model: dict, *, observer: str, method: str,
                        parent: str | None = None, event_id: str | None = None) -> dict:
+        self._require_writable()
         snapshot = self.get(snapshot_id, "snapshot")
         allowed = {r["id"] for r in snapshot["body"]["observations"]}
         if parent:
@@ -277,6 +317,7 @@ class Ledger:
 
     def question(self, text: str, deadline: str, resolve_after: str, resolution_rule: str,
                  family: str, event_id: str | None = None) -> dict:
+        self._require_writable()
         self._check_atomic_kind("question")
         if not all(s.strip() for s in (text, resolution_rule, family)):
             raise ValueError("Question, resolution rule, and question family are required")
@@ -295,6 +336,7 @@ class Ledger:
         The callback receives the exact recorded_at after core forecast checks.
         Identical retries return the original event without rerunning validation.
         """
+        self._require_writable()
         self._check_atomic_kind("forecast")
         if validate is not None and not callable(validate):
             raise ValueError("Forecast validate must be callable or None")
@@ -331,6 +373,7 @@ class Ledger:
 
     def resolve(self, question_id: str, outcome: int, evidence_ids: list[str], *,
                 explanation: str, supersedes: str | None = None, event_id: str | None = None) -> dict:
+        self._require_writable()
         q = self.get(question_id, "question")["body"]
         if type(outcome) is not int or outcome not in (0, 1) or not evidence_ids or not explanation:
             raise ValueError("A binary outcome, explanation, and evidence are required")

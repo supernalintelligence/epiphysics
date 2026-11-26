@@ -478,6 +478,28 @@
       "statement": "B2c review found that a shared transaction timestamp could make new observations or late forecasts appear earlier. The retained fix restricts grouped writes to derived records over existing evidence and requires fresh observations/questions/forecasts outside the group. Synthetic regressions verify this boundary; local collection time remains without independent witness.",
       "status": "implementation_finding",
       "basis": "observed"
+    },
+    {
+      "id": "doc_retrieval_baseline_run",
+      "kind": "document",
+      "title": "Measured frozen retrieval baseline",
+      "repo_path": "docs/planning/runs/2026-11-25-retrieval-baseline.md"
+    },
+    {
+      "id": "claim_retrieval_reproduction",
+      "kind": "claim",
+      "title": "Local retrieval reproduced across fresh processes",
+      "statement": "The C1 run record reports two fresh lexical retrieval processes over four retained sources and twelve development queries with identical ordered result hashes. Source recall at one was 8/8, while full gold-span recall at five was 7/8. This is local retrospective development evidence, not sealed-cohort generalization, forecasting or independently witnessed execution.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_retrieval_support_gap",
+      "kind": "claim",
+      "title": "Source selection does not establish evidence support",
+      "statement": "The C1 record reports five of eight supported questions missing full gold support at rank one, one still missing at rank five, and all four unsupported questions returning related passages. No answers were generated. A post-hoc HTML text-node comparator is proposed; markup as a cause has not been experimentally established.",
+      "status": "implementation_finding",
+      "basis": "observed"
     }
   ],
   "edges": [
@@ -1044,6 +1066,21 @@
     {
       "source": "claim_grouped_time_boundary",
       "target": "exp_forecast",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_retrieval_reproduction",
+      "target": "doc_retrieval_baseline_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_retrieval_support_gap",
+      "target": "doc_retrieval_baseline_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_retrieval_support_gap",
+      "target": "exp_retrieval",
       "type": "motivates"
     }
   ]

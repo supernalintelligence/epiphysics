@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "offline-contracts-materialization-v6",
+  "version": "offline-contracts-retrieval-v7",
   "stage": "offline_fixture",
   "allow_scale_change": false,
   "max_assessment_seconds": 30,

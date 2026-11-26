@@ -208,8 +208,12 @@ def _implementation_identity():
     path, source, code = _PINNED_SELF
     if _MODULE.IMPLEMENTATION_CODE is not code or _MODULE.IMPLEMENTATION_SOURCE != source:
         raise ValueError("Evaluator reloaded after import; use a fresh reviewed process")
-    if path.read_bytes() != source:
+    if (len(source) > MAX_SOURCE_BYTES or path.is_symlink() or not path.is_file()
+            or path.stat().st_size != len(source)):
         raise ValueError("Evaluator source changed after import; restart before evaluating")
+    with path.open("rb") as stream:
+        if stream.read(len(source) + 1) != source:
+            raise ValueError("Evaluator source changed after import; restart before evaluating")
     if compile(source, str(path), "exec", dont_inherit=True, optimize=sys.flags.optimize) != code:
         raise ValueError("Executing evaluator code does not match retained source; discard stale bytecode")
     for module, dependency_code in _PINNED_DEPENDENCIES:
