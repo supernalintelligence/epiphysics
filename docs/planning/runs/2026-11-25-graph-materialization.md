@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 B2c completes the consumer bridge for the fixed graph operations. Separate builders implemented transaction ownership, materialization, and capability checks; two independent reviewers inspected the result. Work continued on **25 November 2026, America/Los_Angeles**. The engine performs local, fixed operations; it does not learn a representation or establish predictive advantage.

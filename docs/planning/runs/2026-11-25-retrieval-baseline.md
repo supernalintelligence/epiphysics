@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 C1 replaces the copied-answer oracle with an actual lexical retrieval experiment. The fixed candidate searched four retained source documents; a separate evaluator scored its returned byte spans against twelve curated development questions. Two independent fresh processes produced identical results. This is development retrieval, not forecasting or a sealed generalization benchmark.

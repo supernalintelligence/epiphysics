@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 On **25 November 2026, America/Los_Angeles**, scoped builders implemented source-backed assertions and two independent reviewers checked them. A real assessment subprocess then consumed `bootstrap-20261126-positive:next` and recorded `source-assertions-20261126:next`, action `build_representation_manifests`.

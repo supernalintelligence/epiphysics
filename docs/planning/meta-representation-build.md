@@ -2,7 +2,7 @@
 title: "Building a system that can revise its representations"
 description: "Components, ownership, dependencies, and acceptance gates for the next Epiphysics research layer."
 date: 2026-11-25
-draft: false
+draft: true
 tts:
   enabled: true
   provider: openai

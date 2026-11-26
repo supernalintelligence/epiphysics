@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 B2b follows the reviewed identity/projection operations with executable graph partition and merge. The supervisor assigned separate workers to the API, capability checks, and documentation/CI, followed by two independent reviews. Work continued during the same active session on **25 November 2026, America/Los_Angeles**.

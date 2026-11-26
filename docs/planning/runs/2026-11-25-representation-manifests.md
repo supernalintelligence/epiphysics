@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 On **25 November 2026, America/Los_Angeles**, B1 followed the completed assertion packet during the same active supervisor session. Three scoped builders implemented the API, executable capability checks, and docs/CI. Two independent reviewers checked the result and verified the fixes below.

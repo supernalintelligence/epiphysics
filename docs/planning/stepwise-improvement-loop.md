@@ -2,7 +2,7 @@
 title: "A measured, stepwise improvement loop"
 description: "How the supervisor turns measured failures into bounded work, records outcomes, and dispatches the next step."
 date: 2026-11-25
-draft: false
+draft: true
 tts:
   enabled: true
   provider: openai

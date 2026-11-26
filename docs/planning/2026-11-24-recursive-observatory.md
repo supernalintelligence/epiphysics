@@ -2,7 +2,7 @@
 title: "Build plan: the recursive observatory"
 description: "Temporal evidence, competing representations, prospective evaluation, and distributed control and exchange research."
 date: 2026-11-24T00:00:00.000Z
-draft: false
+draft: true
 author:
   name: "Epiphysics"
 contentType: article
