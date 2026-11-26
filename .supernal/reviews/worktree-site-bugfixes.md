@@ -1,7 +1,28 @@
+---
+task: site-bugfixes
+branch: worktree-site-bugfixes
+reviewed_patch_id: 26fba614d7177da3f9bfcfd1cd454fea71ebe581
+reviewer_model: "claude-sonnet-5-5"
+reviewer_agent_id: a6da4fbfe235e1b10
+reviewer_output_sha256: 1c2b0b3430219275eae197c3eb8ffdd181a1aa41b396497cee52533a2bf89d88
+author_session_id: ""
+verdict: pass
+findings: { critical: 0, high: 1, medium: 0, low: 4 }
+resolved: { fixed: 1, skipped: 0 }
+skip_class: ""
+skip_reason: ""
+size: { files: 4, lines: 167 }
+---
 # Adversarial review: worktree-site-bugfixes
 
 - Commit: d638198 (base d43aa3a). `next.config.js`, deleted `next.config.mjs`, `scripts/preprocess-content-simple.js`, `public/content-data.json`.
 - Verdict: **PASS**. No build, runtime or visible regression found in the commit. Finding 1 concerns the current `ian-dev` tip, not this commit, and needs action before that tip deploys.
+
+## Conclusion
+Ready to land: yes
+This covers d638198. Finding 1 was fixed on `ian-dev` by ebe2701 after the report below was written.
+
+## Reviewer report
 
 ## What was run
 
@@ -45,3 +66,10 @@ Head and base were exported with `git archive` into the session scratchpad, with
 - The site's dark theme toggle (emulating `prefers-color-scheme` left pages light), Safari and Firefox.
 - Text-to-speech, analytics and other external services (requests blocked), deploy environment variables, POST API routes, chat interaction, Mermaid diagrams specifically.
 - Embedding of the site by outside pages.
+
+## Findings
+- [high] [fixed] Report finding 1: deploy-time regeneration on `ian-dev` at b2d1852 dropped `theory/self_application_and_lawvere`. Fixed on `ian-dev` by ebe2701, not by this branch. Rechecked by regenerating the merged tree of ebe2701 and this branch: no committed entry dropped, 30 image sources resolve.
+- [low] [open] Report finding 2 (info): the security headers take effect, blocking outside framing. `next.config.js:12-25`.
+- [low] [open] Report finding 3 (info): the `fs`/`path` fallback changes nothing in the build. `next.config.js:137-143`.
+- [low] [open] Report finding 4 (info): `Toast` rules moved within the merged stylesheet, no style difference seen. `next.config.js:165-172`.
+- [low] [open] Report finding 5 (info, predates the commit): regenerated HTML differs from the committed HTML for 27 entries. `package.json:15`.
