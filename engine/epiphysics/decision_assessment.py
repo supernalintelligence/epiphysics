@@ -27,11 +27,13 @@ from . import decision_views as views
 from . import decision_diagnosis as diagnosis
 from . import dated_delivery
 from . import public_map_assessment
+from . import navigation_assessment
 
 IMPLEMENTATION_DEPENDENCIES = ((views.__name__, views.IMPLEMENTATION_CODE),
                                (diagnosis.__name__, diagnosis.IMPLEMENTATION_CODE),
                                (dated_delivery.__name__, dated_delivery.IMPLEMENTATION_CODE),
-                               (public_map_assessment.__name__, public_map_assessment.IMPLEMENTATION_CODE))
+                               (public_map_assessment.__name__, public_map_assessment.IMPLEMENTATION_CODE),
+                               (navigation_assessment.__name__, navigation_assessment.IMPLEMENTATION_CODE))
 SOURCE_NAMES = ("decision_views.py", "decision_policy.py", "decision_evaluation.py", "decision_pilot.py")
 ARMS = (("flat-recency-v1", 2048), ("task-proximity-v1", 2048),
         ("flat-recency-v1", 32768), ("task-proximity-v1", 32768))
@@ -589,6 +591,8 @@ def prepare_decision_study(path):
         return dated_delivery.prepare_dated_delivery(path)
     if type(routing) is dict and routing.get("phase") == public_map_assessment.PHASE:
         return public_map_assessment.prepare_public_map(path)
+    if type(routing) is dict and routing.get("phase") in navigation_assessment.PHASES:
+        return navigation_assessment.prepare_navigation(path)
     artifacts = {}
     try:
         path = Path(path)
@@ -626,6 +630,8 @@ def check_prepared_decision_study(prepared):
         return dated_delivery.check_prepared_dated_delivery(prepared)
     if type(request) is dict and request.get("phase") == public_map_assessment.PHASE:
         return public_map_assessment.check_prepared_public_map(prepared)
+    if type(request) is dict and request.get("phase") in navigation_assessment.PHASES:
+        return navigation_assessment.check_prepared_navigation(prepared)
     _check_artifacts(prepared)
     _equal(prepared["report"], _validate(prepared["artifacts"]), "Prepared checked report")
 
@@ -639,6 +645,8 @@ def assess_prepared_decision_study(prepared):
         return dated_delivery.assess_prepared_dated_delivery(prepared)
     if type(request) is dict and request.get("phase") == public_map_assessment.PHASE:
         return public_map_assessment.assess_prepared_public_map(prepared)
+    if type(request) is dict and request.get("phase") in navigation_assessment.PHASES:
+        return navigation_assessment.assess_prepared_navigation(prepared)
     check_prepared_decision_study(prepared)
     report = deepcopy(prepared["report"])
     artifacts = dict(prepared["artifacts"])

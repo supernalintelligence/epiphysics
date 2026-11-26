@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "contract_id": "textual-evidence-navigation-v1",
+  "families": [
+    "source",
+    "qualification",
+    "proposal"
+  ],
+  "operators": {
+    "cite_sources": "source",
+    "cite_documents": "source",
+    "outgoing_qualification": "qualification",
+    "inline_scope": "qualification",
+    "motivated_followups": "proposal"
+  },
+  "operator_counts": {
+    "cite_sources": 1,
+    "cite_documents": 1,
+    "outgoing_qualification": 1,
+    "inline_scope": 1,
+    "motivated_followups": 2
+  },
+  "requested_fields": [
+    "references",
+    "relationships",
+    "claim_labels",
+    "target_labels",
+    "interpretations"
+  ],
+  "interpretations": [
+    "bibliographic_reference_only",
+    "document_metadata_only",
+    "qualification_not_refutation",
+    "explicit_scope_not_generalization",
+    "proposed_not_completed",
+    "insufficient_support"
+  ],
+  "denominators": {
+    "strict_completion": 6,
+    "references": 6,
+    "direction": 5,
+    "claim_labels": 6,
+    "source_interpretation": 2,
+    "qualification_interpretation": 2,
+    "proposal_interpretation": 2
+  },
+  "cases": 6,
+  "attempts_per_case": 1,
+  "arms": 1,
+  "limits": {
+    "map_bytes": 262144,
+    "tasks_bytes": 65536,
+    "key_bytes": 65536,
+    "source_receipt_report_bytes": 65536,
+    "candidate_input_bytes": 327680,
+    "stream_bytes": 16384,
+    "bundle_bytes": 4194304,
+    "total_seconds": 900,
+    "attempt_seconds": 120,
+    "preparation_seconds": 30,
+    "evaluation_seconds": 60,
+    "closing_seconds": 90
+  },
+  "scope": "One deterministic textual baseline on six selected tasks; no model calls, browser, human-use or comparative benefit claim",
+  "retry": "No second attempt on any case; malformed and failed first attempts remain evidence",
+  "phases": {
+    "evidence_navigation_preparation": "prospective_textual_navigation",
+    "evidence_navigation_check": "retained_textual_navigation_check"
+  },
+  "successors": {
+    "evidence_navigation_preparation": [
+      "repair_evidence_navigation_protocol",
+      "run_textual_evidence_navigation_baseline"
+    ],
+    "evidence_navigation_check": [
+      "diagnose_textual_navigation_failure",
+      "prepare_independent_evidence_navigation_comparison",
+      "repair_navigation_execution_contract"
+    ]
+  },
+  "prospective_registration_required": true,
+  "author_checks": [
+    "generic_candidate_reviewed",
+    "no_key_to_candidate",
+    "independent_key_reviewed",
+    "tasks_answerable_from_map"
+  ],
+  "controller_envelope_limits": {
+    "prefix_bytes": 8388608,
+    "prefix_events": 4096,
+    "bundle_bytes": 16777216,
+    "retained_check_seconds": 10
+  },
+  "closing_acceptance": {
+    "total_seconds_from_execution_start": 900,
+    "seconds_after_evaluator_end": 90,
+    "boundaries": [
+      "evaluation_capture",
+      "locked_final_completion"
+    ],
+    "late_result": "Preserve first attempts and descriptive scores; refuse within-budget success and comparison successor"
+  },
+  "evaluator_completion": "Independent supervising caller outcome required: exact report/stdout, registered runtime/source/key identities, fixed argv, ordered captures, observed elapsed <=60 seconds, exited zero without cleanup errors; evaluator-written bytes alone are provisional",
+  "assurance": "Trusted local process/capture and authorship attribution; no malicious-host or independent witness proof"
+}

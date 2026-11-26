@@ -1,27 +1,27 @@
 {
-  "recordDate": "2026-11-25",
-  "heading": "A real delivery, checked against its source.",
-  "scope": "One program produced a link inventory. A separately implemented checker and independent review assessed its original submission against the frozen document.",
+  "recordDate": "2026-11-26",
+  "heading": "The first reader test needs revision.",
+  "scope": "Six questions ran once. The retained answers exposed an ambiguous reference rule; the final acceptance process also failed.",
   "evidence": [
     {
       "id": "coverage",
-      "href": "/experiments/results/2026-11-26-first-dated-delivery",
+      "href": "/experiments/results/2026-11-26-first-evidence-reader",
       "requiredText": [
-        "The first registered inventory accounted for all 20 supported links and 28 excluded constructs in one committed theory document."
+        "Five answers included the required evidence and one valid title reference excluded by the scoring key."
       ]
     },
     {
       "id": "diagnosis",
-      "href": "/experiments/results/2026-11-26-first-dated-delivery",
+      "href": "/experiments/results/2026-11-26-first-evidence-reader",
       "requiredText": [
-        "Its original submission passed the separate checker and independent review."
+        "the supervisor closed that claim as a recorded failure without repeating any study stage."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/results/2026-11-26-first-dated-delivery",
+      "href": "/experiments/results/2026-11-26-first-evidence-reader",
       "requiredText": [
-        "The completed delivery selected preparation of the public research map as its next step."
+        "The proposed next comparison uses a new independently authored cohort and explicit public reference-selection rules."
       ]
     }
   ],
@@ -29,29 +29,29 @@
     {
       "id": "coverage",
       "status": "completed",
-      "label": "Coverage of the source",
-      "value": "20 links",
-      "measure": "supported local links accounted for",
-      "summary": "The inventory also identified 28 excluded constructs. All 20 local targets exist in the retained repository tree; rendered links and headings remain untested.",
-      "linkLabel": "Inspect the scope and evidence"
+      "label": "The retained answers",
+      "value": "5 answers",
+      "measure": "included the required evidence and an excluded title reference",
+      "summary": "One further answer abstained despite citing an explicit scope limit. The provisional exact-rule score was 0/6; it is not an accepted accuracy result.",
+      "linkLabel": "Read what the answers showed"
     },
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "The first submission",
-      "value": "1 artifact",
-      "measure": "passed the separate check and independent review",
-      "summary": "The original bytes and producer claim were preserved before checking. This is one scoped result, not an estimate of general reliability.",
-      "linkLabel": "Read the first-delivery result"
+      "label": "The interrupted check",
+      "value": "1 failure",
+      "measure": "recorded without repeating the trial",
+      "summary": "A process-inventory timeout interrupted acceptance. Independent review and a verified backup supported closing the original claim as failure.",
+      "linkLabel": "Inspect the failure and recovery"
     }
   ],
-  "limits": "One document, one artifact, limited Markdown syntax. Quality, authority and time assurance are separate: verifier and adjudicator authority remain unmeasured, and no independent timestamp witness was recorded.",
+  "limits": "Six selected cases; no accepted score, general-accuracy estimate, human study or graph-versus-text comparison. Valid extra references are not fabricated citations.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "What supports each research claim?",
-    "description": "Build a public map that connects claims to their sources, results, qualifications and open questions. Make every displayed relationship readable without using the graph.",
-    "budget": "Start with reviewed public records, accurate links and keyboard access. Measure useful evidence exploration before optimizing reach.",
-    "linkLabel": "See why this comes next"
+    "question": "Can clearer reference rules make the test more useful?",
+    "description": "Use new independently authored cases to test explicit reference-selection rules, while retaining checks for false evidence and appropriate abstention.",
+    "budget": "First complete the automatic failure handoff. Preserve this run; do not tune its scoring key after seeing the answers.",
+    "linkLabel": "Read the proposed next comparison"
   }
 }
