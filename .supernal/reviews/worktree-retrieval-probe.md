@@ -1,10 +1,10 @@
 ---
 task: retrieval-probe
 branch: worktree-retrieval-probe
-reviewed_patch_id: cd1fe7bdf991c878820e5a8c0954de1f7e94a778
+reviewed_patch_id: 2143a83745a7981ded5ad19b3a6f70955495d659
 reviewer_model: "Inherited session model; identifier not exposed"
 reviewer_agent_id: /root/c5_critic
-reviewer_output_sha256: 55d986623011979da010f916428cab94d9a863efffc521a3ee577c87bffd8f4b
+reviewer_output_sha256: d9ffebf8a53f07ccd3d5d55b476c8e93919a3ef7a85370196b5870b3ae48d9ac
 author_session_id: ""
 verdict: fixed
 findings: { critical: 0, high: 0, medium: 3, low: 0 }
@@ -312,15 +312,23 @@ The merge retains both sides. C6's homepage component/data, protocol and executi
 
 Independently checked `/tmp/epiphysics-c6-merged-content-data.json`: 55 entries versus the prior build's 68; all thirteen removed entries are now intentionally marked draft. C4/C5/C6 records and the new protocol remain present. Artifact SHA-256: `cd62569b194da8deee19721014fbbd045723f604419051e4eacf4cd529b66a63`. The tracked generated artifact was restored by the parent after archiving; its older contents are not the merged-build evidence.
 
-Parent reports the merged site build exited zero, graph compilation produced 123 nodes / 146 edges / 24 documents / 32 sources, and the managed workflow's reviewed patch ID remains `cd1fe7bdf991c878820e5a8c0954de1f7e94a778`. No experiment review was repeated. Integration review remains clear; no deployment or rendered-browser claim is made.
+Parent reports the merged site build exited zero, graph compilation produced 123 nodes / 146 edges / 24 documents / 32 sources, and the managed workflow's reviewed patch ID remains `2143a83745a7981ded5ad19b3a6f70955495d659`. No experiment review was repeated. Integration review remains clear; no deployment or rendered-browser claim is made.
+
+## Final public-result path — cleared
+
+After SCI's publication-boundary clarification, the C6 result now lives at `docs/experiments/results/2026-11-26-retrieval-probe.md`, served as `/experiments/results/2026-11-26-retrieval-probe`. The prior planning-path source is removed; parent confirms it was never deployed. This path supersedes the historical path references in the earlier review sections.
+
+Independently compared the moved file to the previously reviewed committed content: the only changes are its two relative Markdown link targets, both resolving to existing public documents. Scientific prose, numbers, limitations, acceptance details and hashes are byte-for-byte unchanged. TODO, the internal meta-plan, registry document path and homepage evidence URL all use the new location; no current reference to the old C6 path remains in the inspected source/docs/registry set. The new result retains `draft: false`, and homepage required evidence text still matches. `git diff --check` passed.
+
+No actionable finding. The parent is rebuilding the site for this final path change; the prior successful build/artifact does not substitute for that rebuild. This check changed only this review note and did not rerun research, modify production or claim deployment.
 
 ## Checks run
 - Pre-execution full engine suite:607 tests passed in951.108seconds under pinned Python3.14.8/SQLite3.53.4. This suite predates the adapter transport repair; it is not a full-suite claim for repaired source.
 - Post-repair:7 affected assessment tests passed in52.247seconds and4 historical controls passed in11.673seconds. Exact retained old adapter reproduced the real failure on an owned history fixture; repaired positive passed. Six independent mocked preparation controls passed. All production files except the one reviewed adapter change match the pre-execution gate.
 - Actual two retrieval processes executed once each. Direct unchanged-helper core before repair equals repaired captured core.82 input artifacts/2,343,807bytes;83 including report/2,376,567bytes.198-event working store and152-event archive unchanged during acceptance.
 - Actual single acceptance:516 verified controller events,13 completions,no unfinished claim; support-probe-20261126:next selects prepare_control_exchange_decision_pilot. Separate independent audit verifies source/input hashes, full report equality, process receipts and original evidence.
-- Production site build passed before and after merging current ian-dev release preparation. Final build-time evidence guard passed; generated55 public documents includeC4/C5/C6,13 intentionally hidden draft entries were removed from prior68. Exact merged artifact archived at/tmp/epiphysics-c6-merged-content-data.json and tracked generated file restored.
-- Knowledge graph compiled atce6955d:123nodes146edges24 exact committed documents32 bibliographic sources; payloadae9cb30fb1a25bf3ed6ae51f5baf064f488e313afd52469bb87e1ea456569ea4. This is a curated map, not empirical validation or timestamp evidence.
+- Production site build passed before and after merging current ian-dev release preparation. Final build-time evidence guard passed; generated55 public documents includeC4/C5/C6,13 intentionally hidden draft entries were removed from prior68. Final public-result relocation build also passed; homepage and graph use experiments/results. Final55-entry artifact archived at/tmp/epiphysics-c6-public-result-content-data.json and tracked generated file restored.
+- Knowledge graph compiled at46dec53:123nodes146edges24 exact committed documents32 bibliographic sources; payloadc057f030a9244f986c76ade591489bc933f7771a5224594286960e1aec1d0238. This is a curated map, not empirical validation or timestamp evidence.
 - git diff --check passed; explicit-path feature commit53ab092 passed managed hooks. Final owned reviewed patch ID comes from sc git worktree finish dry-run, not a whole-parent merge diff.
 
 ## Not verified
