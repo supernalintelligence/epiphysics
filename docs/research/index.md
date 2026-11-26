@@ -76,7 +76,7 @@ Key documents:
 
 ## Brainstorms & Handoffs
 
-Exploratory thinking preserved in [brainstorms/](./brainstorms/README.md):
+Exploratory thinking is also preserved in brainstorms and handoff notes:
 - Handoff documents from intensive sessions
 - Fan-out ideas and wild hypotheses  
 - Tangents removed from main docs

@@ -252,27 +252,32 @@ The same analysis applies at every scale. Each level has its own loops, its own 
 flowchart TD
   subgraph Civilization
     direction TB
+    CivilizationLoops["Civilization loops"]
     subgraph Nation["Nation-State"]
       direction TB
+      NationLoops["Nation-state loops"]
       subgraph Economy["Economic Loop"]
         direction TB
+        EconomyLoops["Economic loops"]
         subgraph Firm["Firm"]
           direction TB
+          FirmLoops["Firm loops"]
           subgraph Human["Human"]
             direction TB
-            Cell["🔬 Cell\n(ATP loop)"]
+            HumanLoops["Human loops"]
+            Cell["🔬 Cell<br/>(ATP loop)"]
           end
-          Human -->|"labor"| Firm
+          HumanLoops -->|"labor"| FirmLoops
         end
-        Firm -->|"goods/revenue"| Economy
+        FirmLoops -->|"goods/revenue"| EconomyLoops
       end
-      Economy -->|"tax/services"| Nation
+      EconomyLoops -->|"tax/services"| NationLoops
     end
-    Nation -->|"trade/diplomacy"| Civilization
+    NationLoops -->|"trade/diplomacy"| CivilizationLoops
   end
 
-  External["🌍 External\nEntities"] -.->|"imports"| Nation
-  Nation -.->|"exports"| External
+  External["🌍 External<br/>Entities"] -.->|"imports"| NationLoops
+  NationLoops -.->|"exports"| External
 ```
 
 Each nested level:
