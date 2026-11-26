@@ -31,7 +31,7 @@ The initial exporter suite passed 14 controls. Independent review then found tha
 
 The repaired exporter suite passed 17 controls in 12.687 seconds, 12.731 seconds for its enclosing process, with unchanged source bytes. Receipt SHA-256: `bdd0b5d4e2ca5eb3a9b7fb42216a67a561faf1743a66ec20f78ac525c2ff2e70`. Independent repair review, including eight additional writer controls, cleared these defects. Review SHA-256: `2cccc070edd286c6a424e303981d8c00d6fd1ae8176189e03407b22d6fb75c38`.
 
-The initial page checks passed 10 pure model tests and scoped lint. An initial isolated typecheck failed with three missing CSS-module declaration errors because the fresh worktree had no generated Next declaration file. This remains a failed initial check. The replacement helper checks the real page and dataset using the installed Next CSS declaration, whose digest is reported; its final invocation is pending.
+The initial page checks passed 10 pure model tests and scoped lint. An initial isolated typecheck failed with three missing CSS-module declaration errors because the fresh worktree had no generated Next declaration file. This remains a failed initial check. The replacement helper checks the real page and dataset using the installed Next CSS declaration, whose digest is reported; its later actual invocation passed as recorded below.
 
 Independent component inspection also found that following a related claim removed the focused link without restoring focus. The repair moves focus to the selected heading for related-claim navigation and unknown-link recovery, while preserving the browse-list button's focus for list selection. Three actual React/jsdom component tests passed in 1.3 seconds, 4.016 seconds for the enclosing process, with four pinned files unchanged. These are simulated component interactions, not a real-browser accessibility or visual inspection.
 
@@ -45,11 +45,11 @@ The enclosing receipt correctly sampled sequence inputs before and after executi
 
 An independent audit passed 31 checks without rerunning the export or verifier. It recomputed the exact projection and payload/catalog hashes, checked all 12 committed/current document byte bindings, approved fields and URLs, input/runtime/output identities, and the receipt correction. Audit JSON SHA-256: `83d3645bba9ba7273cfd9acb3b85cd8e196c4cb6725d9deba703c17712205830`; report SHA-256: `507a0e8a83b0c1cd9636e24c13d57e2c5b3f0a4fa8500611803e96c15f9eaebb`.
 
-## Acceptance work in progress
+## Acceptance implementation and validation
 
 The second acceptance-plan version, SHA-256 `ff7c35a0f0aa0a61a28ebb188c132d108c2717d74e4417cbeb44f7adf6aebd43`, corrects a failure-path mistake: a real failed verifier may emit no success JSON. Its retained nonzero outcome must remain negative evidence. Malformed datasets under valid captures are artifact failures; malformed or unbound study requests are refused before claim. A reported success contradicted by retained bytes must fail the relevant criterion.
 
-The adapter will inspect retained output from six fixed validation categories: exporter controls, page controls, typecheck, lint, production build and final public-data verification. The build precedes the final verifier. Generated public content is an output with a retained identity, not an immutable prebuild input. Raw process outcomes are persisted before later postprocessing. The caller has fixed commands, source/runtime identities, limits and an exclusive run claim; it is trusted local execution evidence, not proof against a malicious host.
+The adapter inspects retained output from six fixed validation categories: exporter controls, page controls, typecheck, lint, production build and final public-data verification. The build precedes the final verifier. Generated public content is an output with a retained identity, not an immutable prebuild input. Raw process outcomes are persisted before later postprocessing. The caller has fixed commands, source/runtime identities, limits and an exclusive run claim; it is trusted local execution evidence, not proof against a malicious host.
 
 Initial owned adapter controls passed 13 tests. The initial controller run exposed two incorrect test assertions, which were fixed without changing production behavior; the failed run remains retained. The corrected controller module passed 53 tests, including eight real lifecycle controls, in 48.511 seconds, 48.777 seconds for the outer process.
 
