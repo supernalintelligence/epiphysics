@@ -23,7 +23,7 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, decision_assessment, decision_diagnosis, decision_views, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, retrieval_probe, source_span_checks, store, transformation_checks, transforms
+from . import assertions, decision_assessment, decision_diagnosis, decision_views, dated_delivery, dated_delivery_verifier, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, retrieval_probe, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
@@ -34,7 +34,7 @@ from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, decision_assessment, decision_diagnosis, decision_views, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis, retrieval_probe)
+    for module in (assertions, decision_assessment, decision_diagnosis, decision_views, dated_delivery, dated_delivery_verifier, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis, retrieval_probe)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -55,6 +55,8 @@ _IMPLEMENTATIONS = {
                          "retrieval_probe": retrieval_probe,
                          "decision_assessment": decision_assessment,
                          "decision_diagnosis": decision_diagnosis,
+                         "dated_delivery": dated_delivery,
+                         "dated_delivery_verifier": dated_delivery_verifier,
                          "decision_views": decision_views,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
@@ -101,7 +103,8 @@ def _prepare_decision(study_path):
         return {"prepared": decision_assessment.prepare_decision_study(study_path), "error": None}
     except (ValueError, OSError, TypeError, KeyError, RuntimeError, sqlite3.Error) as error:
         failed = _failed_retrieval_preparation(study_path, error)
-        if isinstance(error, (decision_assessment.DecisionStudyPreparationError, decision_diagnosis.PreparationError)):
+        if isinstance(error, (decision_assessment.DecisionStudyPreparationError, decision_diagnosis.PreparationError,
+                              dated_delivery.PreparationError)):
             artifacts = failed["prepared"]["artifacts"]
             artifacts.update({"invalid-captured:" + role: raw for role, raw in error.artifacts.items()})
             failed["prepared"]["manifest"] = {role: digest(raw) for role, raw in artifacts.items()}
@@ -127,12 +130,13 @@ def _information_context(preparation, events):
     if current is not None and (current["body"]["next_step"]["action"] in {
             "investigate_decision_information_limits", "repair_decision_information_diagnosis",
             "review_unresolved_decision_evidence", "prepare_dated_evidence_quality_protocol"}
+            | dated_delivery.SEMANTIC_ACTIONS | {"prepare_public_research_map_view"}
             or _failed_decision_parent(current)):
         return True
     if preparation is None:
         return False
     if preparation["error"] is None:
-        return preparation["prepared"]["report"].get("phase") == decision_diagnosis.PHASE
+        return preparation["prepared"]["report"].get("phase") in {decision_diagnosis.PHASE, *dated_delivery.PHASES}
     # A failed explicit diagnosis still has diagnosis preclaim semantics even
     # when aimed at an unrelated queued step. Use only captured bounded bytes;
     # a file name or an incomplete/ambiguous JSON prefix cannot declare a phase.
@@ -145,7 +149,7 @@ def _information_context(preparation, events):
             request = decision_assessment._json(raw)
         except (ValueError, TypeError, RecursionError):
             continue
-        if type(request) is dict and request.get("phase") == decision_diagnosis.PHASE:
+        if type(request) is dict and request.get("phase") in {decision_diagnosis.PHASE, *dated_delivery.PHASES}:
             return True
     return False
 
@@ -158,7 +162,8 @@ def _check_decision_origin(preparation, events, after_step):
                 "prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison",
                 "prepare_prospective_decision_shadow", "investigate_decision_information_limits",
                 "repair_decision_information_diagnosis", "review_unresolved_decision_evidence",
-                "prepare_dated_evidence_quality_protocol"}):
+                "prepare_dated_evidence_quality_protocol"}
+                | dated_delivery.SEMANTIC_ACTIONS | {"prepare_public_research_map_view"}):
             raise ValueError("This queued decision step requires its decision evidence; a generic assessment cannot complete it")
         if transitions and _failed_decision_parent(transitions[-1]):
             raise ValueError("A failed decision assessment requires its retained decision evidence; a generic assessment cannot complete it")
@@ -173,6 +178,9 @@ def _check_decision_origin(preparation, events, after_step):
         raise ValueError("Decision study must bind the currently queued decision-pilot step")
     if report.get("phase") == decision_diagnosis.PHASE:
         decision_diagnosis.validate_lineage(preparation["prepared"], events, after_step)
+        return
+    if report.get("phase") in dated_delivery.PHASES:
+        dated_delivery.validate_lineage(preparation["prepared"], events, after_step)
         return
     if report.get("phase") == "development":
         if previous["action"] not in {"prepare_control_exchange_decision_pilot", "repair_decision_pilot"}:
@@ -376,6 +384,8 @@ def select_next(report, run_key):
                   decision_diagnosis.PHASE: (decision_diagnosis.STAGE, {
                       "repair_decision_information_diagnosis", "review_unresolved_decision_evidence",
                       "prepare_dated_evidence_quality_protocol"})}
+        phases.update({phase: (stage, dated_delivery.PHASE_NEXT_ACTIONS[phase])
+                       for phase, stage in dated_delivery.PHASES.items()})
         expected = phases.get(pilot.get("phase"))
         if (pilot.get("schema_version") != 1 or pilot.get("status") != "checked" or expected is None
                 or pilot.get("stage") != expected[0] or pilot.get("next_step", {}).get("action") not in expected[1]):
@@ -383,6 +393,9 @@ def select_next(report, run_key):
         if (pilot["phase"] == decision_diagnosis.PHASE
                 and pilot.get("contract_id") != decision_diagnosis.CONTRACT_ID):
             raise ValueError("Decision diagnosis must use its checked diagnostic contract")
+        if (pilot["phase"] in dated_delivery.PHASES
+                and pilot.get("contract_id") != dated_delivery.CONTRACT_ID):
+            raise ValueError("Dated delivery must use its checked protocol contract")
     ready = report.get("coverage_preparation")
     if ready is not None and (ready.get("schema_version") != 3 or ready.get("phase") != "preparation" or ready.get("status") != "ready"):
         raise ValueError("Coverage readiness must be validated before choosing a successor")
@@ -435,6 +448,16 @@ def select_next(report, run_key):
          "The retained diagnostic is structurally valid but leaves an evidence attribution unresolved. Review the gap before preparing a new protocol."),
         ("prepare_dated_evidence_quality_protocol", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_dated_evidence_quality_protocol",
          "The retained diagnosis identifies the next evidence-quality question. Prepare a dated, independently checkable, nonacting artifact-delivery protocol; no new capture, experiment, spending or authority follows from this step."),
+        ("repair_dated_evidence_quality_protocol", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_dated_evidence_quality_protocol",
+         "The dated delivery preparation failed a declared check. Repair the protocol while preserving its accepted origin; no substitute delivery or live authority."),
+        ("bind_dated_artifact_delivery", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "bind_dated_artifact_delivery",
+         "The protocol is checked. Register one eligible backlog delivery before producing its first artifact; quality and outcomes remain unmeasured."),
+        ("check_dated_artifact_delivery", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "check_dated_artifact_delivery",
+         "One future delivery is registered. Preserve its first bytes and claim, then check retained evidence or close honestly at the declared deadline."),
+        ("review_dated_delivery_evidence", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "review_dated_delivery_evidence",
+         "Review the exact unresolved delivery evidence once; preserve missing or failed outcomes and never replace the first submission."),
+        ("prepare_public_research_map_view", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_public_research_map_view",
+         "The first delivery has a checked closure, including negative or missing outcomes. Prepare a public view of the curated research graph; do not infer predictive gain."),
         ("execute_fresh_coverage_baseline", None, None, "increase", ready is not None,
          "Reviewed fresh coverage inputs are frozen. Execute the two declared raw-baseline runs; retrieval quality remains unmeasured."),
         ("prepare_focused_support_followup", None, None, "increase", followup,
@@ -480,7 +503,7 @@ def select_next(report, run_key):
                "estimated_success_probability": None, "estimated_cost": None}
               for a, metric, target, direction, eligible, reason in choices]
     chosen = next(c for c in ranked if c["eligible"])
-    if (pilot is not None and pilot["phase"] == decision_diagnosis.PHASE
+    if (pilot is not None and pilot["phase"] in {decision_diagnosis.PHASE, *dated_delivery.PHASES}
             and chosen["action"] != pilot["next_step"]["action"]):
         # Preserve the semantic task when an enclosing fixture/probe fails.
         # assess retains the actual request/claim and queues operational
@@ -527,6 +550,12 @@ def select_next(report, run_key):
         if pilot["phase"] == decision_diagnosis.PHASE:
             decision["evidence"].update(evidence_origin=pilot["evidence_origin"],
                                         queue_parent=pilot["queue_parent"], ancestry=pilot["ancestry"])
+    if pilot is not None and pilot["phase"] in dated_delivery.PHASES:
+        decision["evidence"] = {"study_id": pilot["study_id"], "origin": pilot["origin"],
+            "assessment_identity": pilot["assessment_identity"], "checks": pilot["checks"],
+            "phase": pilot["phase"], "evidence_origin": pilot["evidence_origin"],
+            "queue_parent": pilot["queue_parent"], "ancestry": pilot["ancestry"],
+            "scope": "Versioned local delivery preparation, registration or retained check; no predictive lift, external witness or live authority"}
     if actual is not None and chosen["metric"] is not None and chosen["metric"].startswith("retrieval_"):
         decision["measurement_contract_hash"] = actual["measurement_contract_identity"]["hash"]
         decision["candidate_hash"] = actual["candidate_identity"]["hash"]
@@ -730,6 +759,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         actual = None
         decision_actual = None
         decision_diagnostic_seconds = None
+        delivery_verification_seconds = None
         if origin_error is not None:
             raise ValueError(origin_error)
         expected_request_hash = os.environ.get("EPIPHYSICS_EXPECTED_REQUEST_SHA256")
@@ -750,6 +780,13 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                         or not math.isfinite(decision_diagnostic_seconds)
                         or not 0 <= decision_diagnostic_seconds <= decision_diagnosis.MAX_SECONDS):
                     raise ValueError("Invalid diagnostic elapsed-time receipt")
+            if decision_actual.get("phase") in dated_delivery.PHASES:
+                delivery_verification_seconds = decision_measured.get("actual_resources", {}).get("first_verification_elapsed_seconds")
+                if delivery_verification_seconds is not None and (
+                        type(delivery_verification_seconds) not in (int, float)
+                        or not math.isfinite(delivery_verification_seconds)
+                        or not 0 <= delivery_verification_seconds <= dated_delivery.MAX_SECONDS):
+                    raise ValueError("Invalid delivery verification elapsed-time receipt")
             for role, raw in decision_measured["artifacts"].items():
                 if role in decision_preparation["prepared"]["artifacts"]:
                     if raw != decision_preparation["prepared"]["artifacts"][role]:
@@ -816,12 +853,16 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
             raise ValueError("Assessment exceeded its elapsed-time acceptance budget")
         if decision_diagnostic_seconds is not None and decision_diagnostic_seconds > elapsed:
             raise ValueError("Diagnostic elapsed time exceeds its enclosing assessment duration")
+        if delivery_verification_seconds is not None and delivery_verification_seconds > elapsed:
+            raise ValueError("Delivery verification elapsed time exceeds its enclosing assessment duration")
         result = {"run_key": run_key, "request": request, "input_observations": captures,
                   "stage": "offline_fixture", "result": "assessed", "report": report,
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": ("Synthetic conformance checks plus checked diagnosis of the 96 retained decision attempts; no new candidate execution, predictive improvement or live control claim. "
+                  "scope": ("Synthetic conformance checks plus a checked dated artifact-delivery phase; preparation and registration have no delivery-quality result, and retained checks imply no general predictive gain or live control. "
+                            if decision_actual is not None and decision_actual.get("phase") in dated_delivery.PHASES else
+                            "Synthetic conformance checks plus checked diagnosis of the 96 retained decision attempts; no new candidate execution, predictive improvement or live control claim. "
                             if decision_actual is not None and decision_actual.get("phase") == decision_diagnosis.PHASE else
                             "Synthetic conformance checks plus one validated fixed24-case fresh exploratory comparison; no automatic repeat, representative capability or live control claim. "
                             if decision_actual is not None and decision_actual.get("phase") == "fresh_comparison" else
@@ -839,6 +880,10 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
             result["actual_resources"].update(
                 first_diagnostic_elapsed_seconds=decision_diagnostic_seconds,
                 diagnostic_timing_scope="First checked diagnosis only, nested within assessment elapsed time; completion revalidation excluded")
+        if decision_actual is not None and decision_actual.get("phase") in dated_delivery.PHASES:
+            result["actual_resources"].update(
+                first_verification_elapsed_seconds=delivery_verification_seconds,
+                verification_timing_scope="First retained-inventory verification only, nested in assessment; completion revalidation excluded; null when no verifier ran")
         if actual is not None:
             identity = {"input_manifest": dict(manifest),
                         "retrieval_assessment_hash": actual["assessment_identity"]["hash"]}

@@ -25,9 +25,11 @@ IMPLEMENTATION_CODE = sys._getframe().f_code
 from . import decision_evaluation as evaluation
 from . import decision_views as views
 from . import decision_diagnosis as diagnosis
+from . import dated_delivery
 
 IMPLEMENTATION_DEPENDENCIES = ((views.__name__, views.IMPLEMENTATION_CODE),
-                               (diagnosis.__name__, diagnosis.IMPLEMENTATION_CODE))
+                               (diagnosis.__name__, diagnosis.IMPLEMENTATION_CODE),
+                               (dated_delivery.__name__, dated_delivery.IMPLEMENTATION_CODE))
 SOURCE_NAMES = ("decision_views.py", "decision_policy.py", "decision_evaluation.py", "decision_pilot.py")
 ARMS = (("flat-recency-v1", 2048), ("task-proximity-v1", 2048),
         ("flat-recency-v1", 32768), ("task-proximity-v1", 32768))
@@ -581,6 +583,8 @@ def prepare_decision_study(path):
         routing = None
     if type(routing) is dict and routing.get("phase") == diagnosis.PHASE:
         return diagnosis.prepare_diagnosis(path)
+    if type(routing) is dict and routing.get("phase") in dated_delivery.PHASES:
+        return dated_delivery.prepare_dated_delivery(path)
     artifacts = {}
     try:
         path = Path(path)
@@ -614,6 +618,8 @@ def check_prepared_decision_study(prepared):
     request = _json(prepared["artifacts"]["request"])
     if type(request) is dict and request.get("phase") == diagnosis.PHASE:
         return diagnosis.check_prepared_diagnosis(prepared)
+    if type(request) is dict and request.get("phase") in dated_delivery.PHASES:
+        return dated_delivery.check_prepared_dated_delivery(prepared)
     _check_artifacts(prepared)
     _equal(prepared["report"], _validate(prepared["artifacts"]), "Prepared checked report")
 
@@ -623,6 +629,8 @@ def assess_prepared_decision_study(prepared):
     request = _json(prepared["artifacts"]["request"])
     if type(request) is dict and request.get("phase") == diagnosis.PHASE:
         return diagnosis.assess_prepared_diagnosis(prepared)
+    if type(request) is dict and request.get("phase") in dated_delivery.PHASES:
+        return dated_delivery.assess_prepared_dated_delivery(prepared)
     check_prepared_decision_study(prepared)
     report = deepcopy(prepared["report"])
     artifacts = dict(prepared["artifacts"])

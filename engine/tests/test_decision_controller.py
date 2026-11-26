@@ -562,5 +562,346 @@ class DecisionDiagnosisIntegrationTests(unittest.TestCase):
         self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
 
 
+class DatedDeliveryControllerTests(unittest.TestCase):
+    """Queue/timing wiring only; actual historical capture is tested separately."""
+
+    def setUp(self):
+        DecisionControllerTests.setUp(self)
+        self.parent = self.ledger.append("improvement_completed", {
+            "run_key": "owned-information", "request": {"manifest": {}},
+            "next_step": {"id": self.origin, "state": "queued",
+                          "action": "prepare_dated_evidence_quality_protocol"}}, "owned-information-complete")
+        self.compact.update(phase="dated_evidence_quality_preparation", stage="protocol_preparation",
+            contract_id=improvement.dated_delivery.CONTRACT_ID,
+            evidence_origin={"event_id": self.parent["id"], "event_hash": self.parent["hash"]},
+            queue_parent={"event_id": self.parent["id"], "event_hash": self.parent["hash"]},
+            ancestry={"scope": "owned wiring fixture only"},
+            next_step={"action": "bind_dated_artifact_delivery"})
+        self.prepared["artifacts"]["queue_parent"] = canonical(self.parent).encode()
+        self.seconds = None
+        self.measured.side_effect = lambda prepared: {
+            "report": deepcopy(prepared["report"]),
+            "artifacts": {**prepared["artifacts"], "assessment_report": canonical(prepared["report"]).encode()},
+            "actual_resources": {"first_verification_elapsed_seconds": self.seconds}}
+
+        def lineage(prepared, events, after_step):
+            current = [e for e in events if e["kind"] in improvement.TRANSITIONS][-1]
+            if (canonical(current).encode() != prepared["artifacts"]["queue_parent"]
+                    or current["body"]["next_step"]["id"] != after_step):
+                raise ValueError("Owned delivery lineage rejects a changed parent")
+        self.lineage = self.patches.enter_context(patch.object(
+            improvement.dated_delivery, "validate_lineage", side_effect=lineage))
+
+    tearDown = DecisionControllerTests.tearDown
+    run_assessment = DecisionControllerTests.run_assessment
+
+    def selector_report(self):
+        suite = improvement._load(self.suite)[0]
+        report = improvement.evaluate(suite, improvement.reference_candidate(suite))
+        report["metrics"].update({name: 1 for name in (
+            "source_span_resolution", "assertion_history_preservation", "representation_manifest_preservation",
+            "transformation_preservation", "split_merge_preservation", "output_manifest_materialization")})
+        report["decision_pilot"] = deepcopy(self.compact)
+        return report
+
+    def test_preparation_completion_and_successor_are_atomic_and_replay_is_readonly(self):
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
+        self.assertEqual(result["next_step"]["action"], "bind_dated_artifact_delivery")
+        self.assertIsNone(result["next_step"]["metric"])
+        self.assertIsNone(result["actual_resources"]["first_verification_elapsed_seconds"])
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+        self.assertEqual(result["next_step"]["evidence"]["evidence_origin"], self.compact["evidence_origin"])
+        self.assertGreaterEqual(self.lineage.call_count, 4)
+        self.assertIn("dated artifact-delivery phase", result["scope"])
+        self.assertNotIn("decision-development comparison", result["scope"])
+        count = len(self.ledger.events())
+        self.measured.reset_mock()
+        self.assertEqual(self.run_assessment(), result)
+        self.measured.assert_not_called()
+        self.assertEqual(len(self.ledger.events()), count)
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+
+    def test_phase_specific_successors_and_no_invented_quality(self):
+        for phase, stage in improvement.dated_delivery.PHASES.items():
+            for action in improvement.dated_delivery.PHASE_NEXT_ACTIONS[phase]:
+                with self.subTest(phase=phase, action=action):
+                    report = self.selector_report()
+                    report["decision_pilot"].update(phase=phase, stage=stage, next_step={"action": action})
+                    chosen = improvement.select_next(report, "owned")
+                    self.assertEqual(chosen["action"], action)
+                    self.assertIsNone(chosen["metric"])
+                    self.assertIsNone(chosen["observed"])
+                    self.assertIsNone(chosen["estimated_success_probability"])
+        for changes in ({"stage": "exposed_development"}, {"contract_id": "unreviewed"},
+                        {"next_step": {"action": "prepare_public_research_map_view"}}):
+            report = self.selector_report()
+            report["decision_pilot"].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                improvement.select_next(report, "owned-invalid")
+
+    def test_no_generic_assessment_can_consume_any_delivery_successor(self):
+        for action in improvement.dated_delivery.SEMANTIC_ACTIONS | {"prepare_public_research_map_view"}:
+            self.ledger.append("improvement_completed", {"run_key": "owned-" + action, "request": {"manifest": {}},
+                "next_step": {"id": self.origin, "state": "queued", "action": action}}, "owned-" + action)
+            count = len(self.ledger.events())
+            with self.subTest(action=action), patch.object(improvement, "_prepare_decision", side_effect=REAL_PREPARE):
+                with self.assertRaisesRegex(ValueError, "generic assessment"):
+                    improvement.assess(self.ledger, self.policy, self.suite, "reference", "missing-" + action,
+                        after_step=self.origin, completed_work="Owned missing delivery evidence; not research")
+            self.assertEqual(len(self.ledger.events()), count)
+
+    def test_malformed_explicit_delivery_cannot_consume_an_unrelated_queue(self):
+        self.ledger.append("improvement_completed", {"run_key": "owned-generic", "request": {"manifest": {}},
+            "next_step": {"id": self.origin, "state": "queued", "action": "repair_time_eligibility"}}, "owned-generic")
+        for phase in improvement.dated_delivery.PHASES:
+            failed = {"prepared": {"artifacts": {"invalid-request-prefix": canonical({"phase": phase}).encode()}},
+                      "error": {"message": "Owned missing delivery protocol"}}
+            count = len(self.ledger.events())
+            with self.subTest(phase=phase), patch.object(improvement, "_prepare_decision", return_value=failed):
+                with self.assertRaisesRegex(ValueError, "missing delivery protocol"):
+                    self.run_assessment()
+            self.assertEqual(len(self.ledger.events()), count)
+        self.measured.assert_not_called()
+
+    def test_bad_origin_refuses_before_claim(self):
+        self.compact["origin"]["step_id"] = "unrelated"
+        count = len(self.ledger.events())
+        with self.assertRaisesRegex(ValueError, "currently queued"):
+            self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), count)
+        self.measured.assert_not_called()
+
+    def use_owned_delivery_check(self):
+        parent = self.ledger.append("improvement_completed", {
+            "run_key": "owned-registration", "request": {"manifest": {}},
+            "next_step": {"id": self.origin, "state": "queued", "action": "check_dated_artifact_delivery"}},
+            "owned-registration-complete")
+        self.compact.update(phase="dated_artifact_delivery_check", stage="retained_delivery_check",
+            queue_parent={"event_id": parent["id"], "event_hash": parent["hash"]},
+            next_step={"action": "prepare_public_research_map_view"})
+        self.prepared["artifacts"]["queue_parent"] = canonical(parent).encode()
+
+    def test_first_verification_timing_is_retained_separately(self):
+        self.use_owned_delivery_check()
+        self.seconds = 0.001
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
+        self.assertEqual(result["actual_resources"]["first_verification_elapsed_seconds"], 0.001)
+        self.assertGreaterEqual(result["actual_resources"]["elapsed_seconds"], 0.001)
+        self.assertIn("completion revalidation excluded", result["actual_resources"]["verification_timing_scope"])
+
+    def test_invalid_verification_timing_is_a_durable_failure(self):
+        self.use_owned_delivery_check()
+        self.seconds = True
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertIn("Invalid delivery verification elapsed-time", result["message"])
+        self.assertEqual(result["next_step"]["action"], "diagnose_failed_assessment")
+
+    def test_nested_verification_cannot_exceed_assessment_time(self):
+        self.use_owned_delivery_check()
+        self.seconds = 1
+        with patch.object(improvement.time, "monotonic", return_value=1):
+            result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertIn("exceeds its enclosing assessment", result["message"])
+
+    def test_failed_enclosing_probe_preserves_semantic_task_as_failure(self):
+        with patch.object(improvement, "run_source_span_checks", return_value={"metrics": {
+                "source_span_resolution": 0, "assertion_history_preservation": 1}}):
+            result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertEqual(result["next_step"]["action"], "diagnose_failed_assessment")
+        self.assertIn("enclosing conformance check", result["message"])
+        self.assertIn("decision-input:owned-input", result["request"]["manifest"])
+
+
+class DatedDeliveryIntegrationTests(unittest.TestCase):
+    """Real delivery phase/ledger/controller paths over owned synthetic receipts."""
+
+    def setUp(self):
+        from test_dated_delivery import make_study
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.study = make_study(Path(self.temporary.name))
+        self.ledger = self.study["ledger"]
+        self.addCleanup(self.ledger.close)
+        self.patches = ExitStack()
+        self.addCleanup(self.patches.close)
+        for name, metrics in (
+            ("run_source_span_checks", ("source_span_resolution", "assertion_history_preservation")),
+            ("run_manifest_checks", ("representation_manifest_preservation",)),
+            ("run_transformation_checks", ("transformation_preservation",)),
+            ("run_graph_view_checks", ("split_merge_preservation",)),
+            ("run_materialization_checks", ("output_manifest_materialization",)),
+        ):
+            self.patches.enter_context(patch.object(improvement, name,
+                return_value={"metrics": {metric: 1 for metric in metrics}, "scope": "owned legacy probe stub"}))
+
+    def assess(self, key):
+        return improvement.assess(self.ledger, EXAMPLES / "policy.json", EXAMPLES / "entities.json", "reference", key,
+            after_step=self.study["request"]["origin"]["step_id"],
+            completed_work="Owned real delivery lifecycle control; not an actual backlog task",
+            decision_study_path=self.study["request_path"])
+
+    def assert_completed(self, result, successor):
+        self.assertEqual(result["result"], "assessed", result.get("message"))
+        self.assertEqual(result["next_step"]["action"], successor)
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+        self.assertTrue(self.ledger.verify()["valid"])
+
+    def test_real_preparation_registration_delivery_and_zero_verification_replay(self):
+        from test_dated_delivery import register_study, deliver
+        from test_decision_diagnosis import calls_named, FORBIDDEN_CALLS
+        with calls_named(FORBIDDEN_CALLS | {"_diagnose", "verify_inventory"}) as called:
+            prepared = self.assess("owned-delivery-protocol")
+        self.assertEqual(called, [])
+        self.assert_completed(prepared, "bind_dated_artifact_delivery")
+        self.assertIsNone(prepared["actual_resources"]["first_verification_elapsed_seconds"])
+        count = len(self.ledger.events())
+        with calls_named({"_diagnose", "verify_inventory"}) as called:
+            self.assertEqual(self.assess("owned-delivery-protocol"), prepared)
+        self.assertEqual(called, [])
+        self.assertEqual(len(self.ledger.events()), count)
+        protocol = self.ledger.get("improvement:owned-delivery-protocol:complete")
+        register_study(self.study, protocol_event=protocol, accept_registration=False)
+        registered = self.assess("owned-delivery-registration")
+        self.assert_completed(registered, "check_dated_artifact_delivery")
+        self.study["registration_event"] = self.ledger.get("improvement:owned-delivery-registration:complete")
+        first = deliver(self.study)
+        checked = self.assess("owned-delivery-check")
+        self.assert_completed(checked, "prepare_public_research_map_view")
+        outcome = checked["report"]["decision_pilot"]["outcome"]
+        self.assertTrue(outcome["artifact_quality"])
+        self.assertEqual(outcome["first_submission"]["observation_id"], first["id"])
+        self.assertIsNotNone(checked["actual_resources"]["first_verification_elapsed_seconds"])
+        self.ledger.capture("improvement-input:owned-unrelated", b"later unrelated bytes", event_id="owned:unrelated")
+        count = len(self.ledger.events())
+        with calls_named(FORBIDDEN_CALLS | {"_diagnose", "verify_inventory"}) as called:
+            self.assertEqual(self.assess("owned-delivery-check"), checked)
+        self.assertEqual(called, [])
+        self.assertEqual(len(self.ledger.events()), count)
+        self.assertEqual([event["body"]["run_key"] for event in self.ledger.events()
+                          if event["kind"] == "improvement_completed"][-3:],
+                         ["owned-delivery-protocol", "owned-delivery-registration", "owned-delivery-check"])
+
+    def test_real_failed_preparation_continues_with_actual_claim_proof(self):
+        from test_dated_delivery import write_request
+        delivery = improvement.dated_delivery
+        with patch.object(improvement.decision_assessment, "assess_prepared_decision_study",
+                          side_effect=ValueError("Owned interruption after claim")):
+            failed = self.assess("owned-delivery-failed")
+        self.assertEqual(failed["result"], "failed")
+        self.assertEqual(failed["next_step"]["action"], "diagnose_failed_assessment")
+        failure = self.ledger.get("improvement:owned-delivery-failed:failed")
+        write_request(self.study, delivery.PREPARATION, failure, self.study["packet"], checkpoint_event=failure)
+        completed = self.assess("owned-delivery-corrected")
+        self.assert_completed(completed, "bind_dated_artifact_delivery")
+        self.assertEqual(completed["report"]["decision_pilot"]["ancestry"]["mode"], "failed_attempt_continuation")
+        self.assertEqual(completed["report"]["decision_pilot"]["evidence_origin"]["event_hash"], self.study["origin"]["hash"])
+        count = len(self.ledger.events())
+        self.assertEqual(self.assess("owned-delivery-corrected"), completed)
+        self.assertEqual(len(self.ledger.events()), count)
+
+    def test_real_malformed_first_delivery_remains_negative_after_correction(self):
+        from test_dated_delivery import register_study, deliver, capture, inventory_bytes, write_request
+        delivery = improvement.dated_delivery
+        register_study(self.study)
+        first = deliver(self.study, b'{"schema_version":1,"schema_version":1}')
+        capture(self.study, "inventory", inventory_bytes(self.study), "later-correction")
+        write_request(self.study, delivery.CHECK, self.study["registration_event"], self.study["packet"])
+        result = self.assess("owned-malformed-first")
+        self.assert_completed(result, "prepare_public_research_map_view")
+        outcome = result["report"]["decision_pilot"]["outcome"]
+        self.assertFalse(outcome["artifact_quality"])
+        self.assertEqual(outcome["first_submission"]["observation_id"], first["id"])
+        self.assertEqual(outcome["claim_agreement"], {"numerator": 0, "denominator": 1, "value": 0.0})
+
+    def test_real_unresolved_check_and_one_review_have_finite_closure(self):
+        from datetime import datetime, timedelta
+        from test_dated_delivery import register_study, capture, inventory_bytes, write_request, identity
+        delivery = improvement.dated_delivery
+        register_study(self.study)
+        registration = self.study["registration_event"]
+        capture(self.study, "inventory", inventory_bytes(self.study))
+        at = datetime.fromisoformat(registration["recorded_at"]) + timedelta(hours=48)
+        closure_value = {"schema_version": 1, "task_id": "owned-links", "registration_id": "owned-registration",
+            "actor": "reviewer", "state": "unresolved", "missing": ["verification", "adjudication"]}
+        closure = capture(self.study, "closure", closure_value, at=at)
+        packet = {"schema_version": 1, "phase": delivery.CHECK,
+            "registration_event": identity(registration), "closure_observation": closure["id"]}
+        write_request(self.study, delivery.CHECK, registration, packet)
+        with patch.object(self.ledger, "clock", return_value=(at + timedelta(seconds=1)).isoformat()):
+            result = self.assess("owned-delivery-unresolved")
+        self.assert_completed(result, "review_dated_delivery_evidence")
+        parent = self.ledger.get("improvement:owned-delivery-unresolved:complete")
+        closure_value["review_of"] = identity(parent)
+        review = capture(self.study, "closure", closure_value, "review-closure", at + timedelta(seconds=2))
+        packet.update(phase=delivery.REVIEW, closure_observation=review["id"])
+        write_request(self.study, delivery.REVIEW, parent, packet)
+        with patch.object(self.ledger, "clock", return_value=(at + timedelta(seconds=3)).isoformat()):
+            result = self.assess("owned-delivery-closed")
+        self.assert_completed(result, "prepare_public_research_map_view")
+        outcome = result["report"]["decision_pilot"]["outcome"]
+        self.assertEqual(outcome["status"], "terminal_unresolved")
+        self.assertIsNone(outcome["artifact_quality"])
+        self.assertEqual(outcome["claim_agreement"]["denominator"], 0)
+        count = len(self.ledger.events())
+        with self.assertRaisesRegex(ValueError, "Stale predecessor"):
+            self.assess("owned-second-review")
+        self.assertEqual(len(self.ledger.events()), count)
+
+    def assert_pending_check_preserves_queue(self, key):
+        from test_decision_diagnosis import calls_named
+        before_events = self.ledger.events()
+        before_status = improvement.status(self.ledger)
+        with calls_named({"verify_inventory", "_diagnose"}) as called:
+            with self.assertRaises(ValueError):
+                self.assess(key)
+        self.assertEqual(called, [])
+        self.assertEqual(self.ledger.events(), before_events)
+        self.assertEqual(improvement.status(self.ledger), before_status)
+        self.assertEqual(before_status["next_step"]["action"], "check_dated_artifact_delivery")
+        self.assertEqual(before_status["unfinished_runs"], [])
+
+    def test_real_missing_delivery_waits_without_claim_or_verification(self):
+        from test_dated_delivery import register_study, write_request, identity
+        delivery = improvement.dated_delivery
+        register_study(self.study)
+        registration = self.study["registration_event"]
+        packet = {"schema_version": 1, "phase": delivery.CHECK,
+            "registration_event": identity(registration), "closure_observation": None}
+        write_request(self.study, delivery.CHECK, registration, packet)
+        self.assert_pending_check_preserves_queue("owned-pending-delivery")
+
+    def test_real_incomplete_delivery_waits_without_claim_or_verification(self):
+        from test_dated_delivery import register_study, capture, inventory_bytes, write_request, identity
+        delivery = improvement.dated_delivery
+        register_study(self.study)
+        registration = self.study["registration_event"]
+        capture(self.study, "inventory", inventory_bytes(self.study))
+        packet = {"schema_version": 1, "phase": delivery.CHECK,
+            "registration_event": identity(registration), "closure_observation": None}
+        write_request(self.study, delivery.CHECK, registration, packet)
+        self.assert_pending_check_preserves_queue("owned-pending-evidence")
+
+    def test_real_premature_closure_preserves_pending_check(self):
+        from datetime import datetime, timedelta
+        from test_dated_delivery import register_study, capture, write_request, identity
+        delivery = improvement.dated_delivery
+        register_study(self.study)
+        registration = self.study["registration_event"]
+        at = datetime.fromisoformat(registration["recorded_at"]) + timedelta(hours=23)
+        closure = capture(self.study, "closure", {
+            "schema_version": 1, "task_id": "owned-links", "registration_id": "owned-registration",
+            "actor": "reviewer", "state": "no_delivery", "missing": ["artifact"]}, at=at)
+        packet = {"schema_version": 1, "phase": delivery.CHECK,
+            "registration_event": identity(registration), "closure_observation": closure["id"]}
+        write_request(self.study, delivery.CHECK, registration, packet)
+        self.assert_pending_check_preserves_queue("owned-premature-closure")
+
+
 if __name__ == "__main__":
     unittest.main()
