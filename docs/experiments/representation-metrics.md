@@ -11,7 +11,7 @@ feedback:
   enabled: true
 ---
 
-A representation is useful for a specified task, observer, scale, and horizon. It is not reality, and a score on one task is not a universal measure of its value. This protocol supplies the measurement rules for the [stepwise improvement loop](../planning/stepwise-improvement-loop.md) and the [representation comparison experiments](representation-comparison.md).
+A representation is useful for a specified task, observer, scale, and horizon. It is not reality, and a score on one task is not a universal measure of its value. This protocol supplies the measurement rules for the stepwise improvement loop and the [representation comparison experiments](representation-comparison.md).
 
 ## A contract before a score
 
@@ -158,7 +158,7 @@ The separate `actual_retrieval` report retains both complete evaluations. Synthe
 
 Candidate identity describes the historical retriever, dependency content, indexing/search configuration and runtime. Measurement identity describes sources, questions/gold, span rules, scorer and validation dependencies/runtime. Assessment identity binds the adapter, controller, policy and captured inputs. Execution IDs and times remain separate. The present retriever couples candidate search with corpus/receipt validation; changing those coupled code or configuration inputs remains incomparable. C3 must establish a reviewed boundary before interpreting a representation-change delta. A newer validator can recompute the same C1 values without pretending its dependency identity is the original one.
 
-See the [C2 execution record](../planning/runs/2026-11-25-retrieval-controller.md) for test/review status, the persistent handoff and remaining limitations. The example policy permits no higher spending or workload scope.
+See the C2 execution record for test/review status, the persistent handoff and remaining limitations. The example policy permits no higher spending or workload scope.
 
 ## Fixed representation comparison: C3
 
@@ -223,4 +223,4 @@ The current selector stores observed metrics, candidate actions, directional tar
 
 Separate assessment completion from delivery success: an output-cap failure can return `assessment_completed_delivery_failed` after an authoritative completion was recorded. Count the completed assessment once, record the delivery failure separately, and use the retained transition/current queue rather than rerunning it. To learn a selector later, predeclare an outcome window, action success criterion, cost measurement and baseline policy; preserve rejected and failed actions.
 
-Promote a candidate only when the registered practical margin, per-family floors, integrity and side-effect gates all pass with the required uncertainty treatment. Keep development feedback separate from protected final evaluation. Shadow trials, canaries and larger workloads require the additional gates in the [stepwise loop](../planning/stepwise-improvement-loop.md); fixture success alone grants none of them.
+Promote a candidate only when the registered practical margin, per-family floors, integrity and side-effect gates all pass with the required uncertainty treatment. Keep development feedback separate from protected final evaluation. Shadow trials, canaries and larger workloads require the additional gates in the stepwise loop; fixture success alone grants none of them.

@@ -120,4 +120,4 @@ A result bundle needs its registration, eligible evidence where redistribution p
 
 A separate operator should reconstruct snapshots/scores and verify declared witness status. Public summaries distinguish **synthetic**, **locally recorded**, **independently witnessed**, **unresolved**, and **corrected** where applicable. A mock display is not a live ledger.
 
-The [implementation plan](/planning/2026-11-24-recursive-observatory) assigns the next gates. [The research program](/research/recursive-research-program) explains the purpose without requiring the reader to adopt the theory.
+The implementation plan assigns the next gates. [The research program](/research/recursive-research-program) explains the purpose without requiring the reader to adopt the theory.

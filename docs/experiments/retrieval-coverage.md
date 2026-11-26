@@ -9,7 +9,7 @@ feedback:
   enabled: true
 ---
 
-Finding the right document is not enough. In the [completed retrieval comparison](../planning/runs/2026-11-26-retrieval-comparison.md), the original search found all eight relevant documents first, but only three questions had their required evidence in that first result. Four questions unsupported by the selected sources also returned passages. Those matches establish neither a supported answer nor an incorrect generated answer: this system has not generated answers.
+Finding the right document is not enough. In the completed retrieval comparison, the original search found all eight relevant documents first, but only three questions had their required evidence in that first result. Four questions unsupported by the selected sources also returned passages. Those matches establish neither a supported answer nor an incorrect generated answer: this system has not generated answers.
 
 The next experiment asks whether search retrieves **all the evidence needed to answer a question**. It uses twelve fresh questions arranged in six matched pairs over the same four retained sources. Each pair keeps a similar topic but changes one requirement: one question has sufficient support in the sources; the other does not. The existing raw-text search remains fixed. This protocol defines preparation and evaluation separately; implementation tests or a prepared question set do not count as completed retrieval results.
 

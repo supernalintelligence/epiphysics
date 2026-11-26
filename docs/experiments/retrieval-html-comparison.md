@@ -13,7 +13,7 @@ The first retrieval baseline found the right document for all eight supported qu
 
 The comparison changes only the text indexed for HTML sources. It keeps the four source documents, 82 raw source windows, twelve questions, gold byte spans, query compiler, tokenizer, ranking and five-result budget fixed. Three Markdown sources remain verbatim. The raw reference remains the operational baseline after this experiment; a favorable descriptive result alone does not authorize adoption or a broader advantage claim.
 
-The machine-readable protocol at `engine/examples/retrieval/html-comparison-protocol.json` fixes input identities, order, limits and reporting before execution. A separately retained execution freeze binds the final reviewed code and runtime. The later declaration of actual terminal and projection hashes is an output binding, not a claim that those outputs were known beforehand. Completed results belong in the [execution record](../planning/runs/2026-11-26-retrieval-comparison.md).
+The machine-readable protocol at `engine/examples/retrieval/html-comparison-protocol.json` fixes input identities, order, limits and reporting before execution. A separately retained execution freeze binds the final reviewed code and runtime. The later declaration of actual terminal and projection hashes is an output binding, not a claim that those outputs were known beforehand. Completed results belong in the execution record.
 
 ## What remains fixed
 

@@ -2,7 +2,7 @@
 title: "Epiphysics: the elevator pitch"
 description: "Preserve evidence, compare representations, and learn from predictions made before the outcome."
 date: 2026-11-24T00:00:00.000Z
-draft: false
+draft: true
 author:
   name: "Epiphysics"
 contentType: article

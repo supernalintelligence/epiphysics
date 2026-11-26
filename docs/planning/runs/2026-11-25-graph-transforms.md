@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 B2a followed B1 during the same active supervisor session on **25 November 2026, America/Los_Angeles**. Scoped builders implemented fixed graph operations, an independent capability probe, docs/CI and an evidence-backed catalog update. Two reviewers verified the final changes.

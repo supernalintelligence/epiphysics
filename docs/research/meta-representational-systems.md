@@ -16,7 +16,7 @@ feedback:
 
 Epiphysics should build a system that can **compare and revise the way it describes a problem while retaining the evidence needed to judge the revision**. A larger knowledge graph is useful only if its distinctions help answer questions, explain failures, or make better decisions. The main research object is therefore a family of competing representations, together with explicit transformations and evaluations.
 
-This assessment combines a repository audit with primary-source research reviewed on **25 November 2026, America/Los_Angeles**. It is a research synthesis and engineering proposal, not a systematic literature review or a demonstration of predictive advantage. External benchmark results are author-reported. The companion [build plan](../planning/meta-representation-build.md) identifies implemented and proposed components; the [experiment protocols](../experiments/representation-comparison.md) specify how to test the proposal. Machine-readable references and a first curated research map live in `research/meta-representation/`.
+This assessment combines a repository audit with primary-source research reviewed on **25 November 2026, America/Los_Angeles**. It is a research synthesis and engineering proposal, not a systematic literature review or a demonstration of predictive advantage. External benchmark results are author-reported. The companion build plan identifies implemented and proposed components; the [experiment protocols](../experiments/representation-comparison.md) specify how to test the proposal. Machine-readable references and a first curated research map live in `research/meta-representation/`.
 
 ## What the project already has
 

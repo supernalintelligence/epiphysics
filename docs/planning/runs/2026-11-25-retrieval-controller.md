@@ -2,7 +2,7 @@
 title: "Connecting real retrieval evidence to the next build"
 description: "A bounded bridge from retained retrieval executions to measured work selection."
 date: 2026-11-25
-draft: false
+draft: true
 tts:
   enabled: false
 feedback:

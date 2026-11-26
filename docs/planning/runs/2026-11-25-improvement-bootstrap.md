@@ -6,6 +6,7 @@ tts:
   enabled: false
 feedback:
   enabled: true
+draft: true
 ---
 
 The first two real assessment workers ran on **25 November 2026, America/Los_Angeles**, with ledger completions at **26 November 2026 03:27:13 UTC**. This is an execution record of synthetic controls, not a predictive experiment or evidence of learned improvement.

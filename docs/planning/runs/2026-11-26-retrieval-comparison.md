@@ -2,7 +2,7 @@
 title: "HTML extraction changed ranking, but did not improve support"
 description: "A reviewed four-run representation comparison, its regressions, and the measured handoff to fresh coverage."
 date: 2026-11-25
-draft: false
+draft: true
 tts:
   enabled: false
 feedback:

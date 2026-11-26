@@ -117,6 +117,10 @@ git_hooks:
   pre_push:
     enabled: true
     checks:
+      # Owner decision: a push fails on high or critical advisories only.
+      security_audit:
+        enabled: true
+        command: "npm audit --audit-level=high"
       requirement_validation:
         enabled: true
         allow_bypass: true
