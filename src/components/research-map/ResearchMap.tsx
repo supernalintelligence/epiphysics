@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Neighborhood from './Neighborhood';
 import { BASIS_LABELS, EDGE_LABELS, GROUPS, STATUS_LABELS, claimsIn, edgeKey, filterClaims,
@@ -34,6 +34,8 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<ClaimStatus | 'all'>('all');
   const [showGraph, setShowGraph] = useState(false);
+  const selectedHeading = useRef<HTMLHeadingElement>(null);
+  const focusDetailAfterSelection = useRef(false);
   const diagramId = useId();
   const selected = resolveClaim(claims, parameter);
   const visible = filterClaims(claims, query, status);
@@ -49,10 +51,18 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
     return () => window.removeEventListener('popstate', sync);
   }, []);
 
-  function selectClaim(id: string) {
+  useEffect(() => {
+    if (focusDetailAfterSelection.current) {
+      selectedHeading.current?.focus();
+      focusDetailAfterSelection.current = false;
+    }
+  }, [parameter]);
+
+  function selectClaim(id: string, moveFocusToDetail = false) {
     if (new URL(window.location.href).searchParams.get('claim') !== id) {
       window.history.pushState(null, '', selectionUrl(window.location.href, id));
     }
+    focusDetailAfterSelection.current = moveFocusToDetail;
     setParameter(id);
   }
   function clearFilters() { setQuery(''); setStatus('all'); }
@@ -60,7 +70,7 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
     const node = byId.get(id);
     if (!node) return <span>Unlisted node ({id})</span>;
     if (node.id === selected?.id) return <strong>{node.title}</strong>;
-    if (node.kind === 'claim') return <button className={s.textButton} onClick={() => selectClaim(node.id)}>{node.title}</button>;
+    if (node.kind === 'claim') return <button className={s.textButton} onClick={() => selectClaim(node.id, true)}>{node.title}</button>;
     if (node.kind === 'document' || node.kind === 'source') return <Link href={node.href}>{node.title}</Link>;
     return <span>{node.title}</span>;
   }
@@ -96,7 +106,7 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
           {selected ? <>
             {!visible.some(claim => claim.id === selected.id) && <p className={s.filterNotice}>This selected claim is outside the current filters. <button className={s.textButton} onClick={clearFilters}>Show all claims</button></p>}
             <div className={s.detailTop}><span className={s.eyebrow}>Selected claim</span><Link href={`/research-map?claim=${encodeURIComponent(selected.id)}`} className={s.permalink}>Permanent link</Link></div>
-            <h2 id="selected-heading" aria-live="polite">{selected.title}</h2>
+            <h2 id="selected-heading" ref={selectedHeading} tabIndex={-1} aria-live="polite">{selected.title}</h2>
             <div className={s.badges}><span className={s.badge}>{STATUS_LABELS[selected.status]}</span><span>Basis: {BASIS_LABELS[selected.basis]}</span></div>
             <p className={s.statement}>{selected.statement}</p>
             <p className={s.statusMeaning}>{statusMeaning[selected.status]}</p>
@@ -117,7 +127,7 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
                 })}</ul> : <p className={s.noRelationships}>None recorded in this public map.</p>}
               </section>;
             })}
-          </> : <div className={s.empty}><h2 id="selected-heading">{parameter !== null ? 'Claim not found' : 'No claims are available'}</h2><p>{parameter !== null ? 'This link does not identify a claim in the current public map. Select a claim from the list.' : 'The public claim catalog is empty.'}</p>{claims[0] && <button className={s.diagramButton} onClick={() => selectClaim(claims[0].id)}>Open the first claim</button>}</div>}
+          </> : <div className={s.empty}><h2 id="selected-heading">{parameter !== null ? 'Claim not found' : 'No claims are available'}</h2><p>{parameter !== null ? 'This link does not identify a claim in the current public map. Select a claim from the list.' : 'The public claim catalog is empty.'}</p>{claims[0] && <button className={s.diagramButton} onClick={() => selectClaim(claims[0].id, true)}>Open the first claim</button>}</div>}
         </section>
       </div>
       <footer className={s.provenance}>

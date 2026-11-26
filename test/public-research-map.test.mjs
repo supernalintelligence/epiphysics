@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
-import { canonical, createPublicMap, POLICY_PATH, sha256, SNAPSHOT_PATH, verifyPublicMap, verifyPublicMapReport } from '../scripts/public-research-map.mjs';
+import { canonical, createPublicMap, MAX_PUBLIC_BYTES, POLICY_PATH, serializePublicMap, sha256, SNAPSHOT_PATH, verifyPublicMap, verifyPublicMapReport, writePublicMap } from '../scripts/public-research-map.mjs';
 
 const catalogFiles = ['registry.json', 'sources-control.json', 'sources-representation.json', 'sources-retrieval.json'];
 function fixture(t) {
@@ -180,4 +180,56 @@ test('a missing promisor object cannot execute a configured remote helper', t =>
   f.policy.sourceCommit = '1'.repeat(40); f.putJSON(POLICY_PATH, f.policy);
   assert.throws(() => createPublicMap(f.root));
   assert.equal(existsSync(marker), false);
+});
+
+test('complete serialized artifact size is checked before any write, including hash and pretty formatting', t => {
+  const f = fixture(t);
+  f.registry.nodes = f.registry.nodes.filter(node => node.kind === 'document' && node.id === 'doc_public');
+  const claims = Array.from({ length: 61 }, (_, i) => ({ id: `c${String(i).padStart(2, '0')}`, kind: 'claim', title: `Owned claim ${i}`,
+    statement: 'x'.repeat(4096), status: 'hypothesis', basis: 'inferred' }));
+  f.registry.nodes.push(...claims);
+  f.registry.edges = claims.map(node => ({ source: node.id, target: 'doc_public', type: 'cites' }));
+  f.policy.nodeIds = f.registry.nodes.map(node => node.id); f.commit();
+  assert.throws(() => createPublicMap(f.root), /Complete serialized public map exceeds byte budget/);
+  assert.equal(existsSync(join(f.root, SNAPSHOT_PATH)), false);
+  // The serializer accepts exactly the cap and rejects the first extra byte.
+  const overhead = serializePublicMap({ value: '' }).length;
+  assert.equal(serializePublicMap({ value: 'x'.repeat(MAX_PUBLIC_BYTES - overhead) }).length, MAX_PUBLIC_BYTES);
+  assert.throws(() => writePublicMap(f.root, { value: 'x'.repeat(MAX_PUBLIC_BYTES - overhead + 1) }), /exceeds byte budget/);
+  assert.equal(existsSync(join(f.root, SNAPSHOT_PATH)), false);
+  f.registry.nodes = f.registry.nodes.filter(node => !['c59', 'c60'].includes(node.id));
+  f.registry.edges = f.registry.edges.filter(edge => !['c59', 'c60'].includes(edge.source));
+  f.policy.nodeIds = f.registry.nodes.map(node => node.id); f.commit();
+  const smaller = createPublicMap(f.root);
+  const raw = writePublicMap(f.root, smaller);
+  assert.ok(raw.length <= MAX_PUBLIC_BYTES);
+  assert.deepEqual(verifyPublicMap(f.root), smaller);
+});
+
+test('export refuses leaf and parent symlinks without changing their targets', t => {
+  const f = fixture(t), snapshot = createPublicMap(f.root);
+  f.put('owned-target.json', 'owned previous bytes');
+  mkdirSync(join(f.root, 'src/data'), { recursive: true });
+  symlinkSync(join(f.root, 'owned-target.json'), join(f.root, SNAPSHOT_PATH));
+  assert.throws(() => writePublicMap(f.root, snapshot), /non-symlink/);
+  assert.equal(readFileSync(join(f.root, 'owned-target.json'), 'utf8'), 'owned previous bytes');
+  rmSync(join(f.root, 'src/data'), { recursive: true, force: true });
+  mkdirSync(join(f.root, 'owned-other'));
+  symlinkSync(join(f.root, 'owned-other'), join(f.root, 'src/data'));
+  assert.throws(() => writePublicMap(f.root, snapshot), /non-symlink/);
+  assert.equal(existsSync(join(f.root, 'owned-other/public-research-map.json')), false);
+});
+
+test('export is exclusive unless an exact previous raw digest authorizes reviewed replacement', t => {
+  const f = fixture(t), snapshot = createPublicMap(f.root);
+  const first = writePublicMap(f.root, snapshot);
+  assert.throws(() => writePublicMap(f.root, snapshot), /already exists/);
+  assert.throws(() => writePublicMap(f.root, snapshot, { replaceHash: '0'.repeat(64) }), /differs from reviewed/);
+  assert.deepEqual(readFileSync(join(f.root, SNAPSHOT_PATH)), first);
+  f.registry.nodes[0].statement = 'A reviewed replacement hypothesis.'; f.commit();
+  const next = createPublicMap(f.root), raw = writePublicMap(f.root, next, { replaceHash: sha256(first) });
+  assert.notDeepEqual(raw, first);
+  assert.deepEqual(verifyPublicMap(f.root), next);
+  unlinkSync(join(f.root, SNAPSHOT_PATH));
+  assert.throws(() => writePublicMap(f.root, next, { replaceHash: sha256(raw) }), /missing export/);
 });

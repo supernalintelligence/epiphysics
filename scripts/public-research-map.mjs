@@ -1,14 +1,15 @@
 // Publication is an explicit projection of reviewed, committed catalog inputs.
 // This module never opens the evidence ledger or retrieves external sources.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { constants, closeSync, fstatSync, lstatSync, openSync, readSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { constants, closeSync, fstatSync, fsyncSync, linkSync, lstatSync, mkdirSync, openSync, readSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import matter from 'gray-matter';
 
 export const POLICY_PATH = 'research/meta-representation/public-map-policy.json';
 export const SNAPSHOT_PATH = 'src/data/public-research-map.json';
+export const MAX_PUBLIC_BYTES = 262144;
 const CATALOG_FILES = ['registry.json', 'sources-control.json', 'sources-representation.json', 'sources-retrieval.json'];
 const KINDS = ['claim', 'source', 'document', 'representation', 'transformation', 'experiment'];
 const CLAIM_STATUSES = ['definition', 'hypothesis', 'reported_result', 'implementation_finding', 'contested'];
@@ -226,8 +227,62 @@ export function createPublicMap(root, { publishedSlugs } = {}) {
   }
   const payload = { schemaVersion: 1, sourceCommit: commit,
     catalogHash: sha256(canonical({ policy, files: files.map(({ name, hash }) => ({ name, hash })) })), nodes, edges, limits: LIMITS };
-  assert.ok(Buffer.byteLength(canonical(payload)) <= 262144, 'Public map exceeds byte budget');
-  return { ...payload, payloadHash: sha256(canonical(payload)) };
+  const snapshot = { ...payload, payloadHash: sha256(canonical(payload)) };
+  serializePublicMap(snapshot); // Bound the complete exported artifact, including its hash and formatting.
+  return snapshot;
+}
+
+export function serializePublicMap(snapshot) {
+  const raw = Buffer.from(`${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
+  assert.ok(raw.length <= MAX_PUBLIC_BYTES, 'Complete serialized public map exceeds byte budget');
+  return raw;
+}
+
+function outputDirectory(root) {
+  let path = resolve(root);
+  const rootInfo = lstatSync(path);
+  assert.ok(rootInfo.isDirectory() && !rootInfo.isSymbolicLink(), 'Export root must be a regular directory');
+  for (const part of dirname(SNAPSHOT_PATH).split('/')) {
+    path = join(path, part);
+    try { mkdirSync(path); } catch (error) { if (error.code !== 'EEXIST') throw error; }
+    const info = lstatSync(path);
+    assert.ok(info.isDirectory() && !info.isSymbolicLink(), 'Export parent must be a non-symlink directory');
+  }
+  return path;
+}
+
+// An initial export is exclusive. Replacing a reviewed version requires its exact raw-byte hash.
+// Temporary bytes are fully written before an atomic name change; existing hardlink targets are not edited.
+export function writePublicMap(root, snapshot, { replaceHash } = {}) {
+  const raw = serializePublicMap(snapshot); // No output path is created on an oversized result.
+  if (replaceHash !== undefined) assert.match(replaceHash, /^[a-f0-9]{64}$/, 'Replacement needs the previous raw snapshot SHA-256');
+  const directory = outputDirectory(root), path = join(resolve(root), SNAPSHOT_PATH);
+  let original;
+  try { original = lstatSync(path); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (original) {
+    assert.ok(original.isFile() && !original.isSymbolicLink(), 'Existing export must be a regular non-symlink file');
+    assert.ok(replaceHash, 'Export already exists; reviewed replacement requires --replace=<previous-raw-sha256>');
+    assert.equal(sha256(readRegular(root, SNAPSHOT_PATH, MAX_PUBLIC_BYTES)), replaceHash, 'Existing export differs from reviewed replacement hash');
+  } else assert.equal(replaceHash, undefined, 'Cannot replace a missing export');
+  const temporary = join(directory, `.public-map-${randomUUID()}.tmp`);
+  const fd = openSync(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW || 0), 0o644);
+  try {
+    try { writeFileSync(fd, raw); fsyncSync(fd); } finally { closeSync(fd); }
+    outputDirectory(root); // Recheck that parents remain non-symlink directories before publication.
+    if (original) {
+      const current = lstatSync(path);
+      assert.ok(current.isFile() && !current.isSymbolicLink() && current.dev === original.dev && current.ino === original.ino,
+        'Export identity changed during replacement');
+      assert.equal(sha256(readRegular(root, SNAPSHOT_PATH, MAX_PUBLIC_BYTES)), replaceHash, 'Export bytes changed during replacement');
+      renameSync(temporary, path);
+    } else {
+      linkSync(temporary, path); // Exclusive final-name creation; a competing file/symlink is never overwritten.
+      unlinkSync(temporary);
+    }
+    return raw;
+  } finally {
+    try { unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
 }
 
 export function readPublishedSlugs(root) {
@@ -237,7 +292,7 @@ export function readPublishedSlugs(root) {
 }
 
 export function verifyPublicMap(root) {
-  const snapshot = json(readRegular(root, SNAPSHOT_PATH, 262144));
+  const snapshot = json(readRegular(root, SNAPSHOT_PATH, MAX_PUBLIC_BYTES));
   const expected = createPublicMap(root, { publishedSlugs: readPublishedSlugs(root) });
   assert.deepEqual(snapshot, expected, 'Public snapshot differs from approved inputs; review and explicitly export it. Verification never regenerates publication data');
   return expected;
