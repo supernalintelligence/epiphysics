@@ -42,6 +42,8 @@ Use `capture FILE --source LABEL [--published-at TIME] [--revision-of ID]`, then
 | `forecast` | `question_id`, `snapshot_id`, `method`, `probability`, `model` | `representation_id`, `status`, `reason`, `cost`, `event_id` |
 | `resolution` | `question_id`, `outcome`, `evidence_ids`, `explanation` | `supersedes`, `event_id` |
 | `assertion` | `snapshot_id`, `subject`, `predicate`, `object`, `observer`, `method`, `spans`, `basis` | `valid_from`, `valid_to`, `supersedes`, `contradicts`, `event_id` |
+| `manifest` | `representation_id`, `encoding`, `schema_id`, `artifacts`, `task`, `horizon_seconds`, `units`, `evidence_ids`, `construction_cost` | `event_id` |
+| `manifest-forecast` | `manifest_id`, `question_id`, `probability` | `status`, `reason`, `inference_cost`, `event_id` |
 
 Times must include a timezone. Questions require now < deadline < resolution time. Each method gets one forecast attempt per question. Forecast model metadata must contain `identifier`; record the prompt hash, model version, input manifest, seed, and budget where relevant. A failed or abstained attempt uses `probability: null` and a reason. Costs are recorded metadata, not enforced budgets.
 
@@ -84,6 +86,45 @@ PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store
 Substitute real existing snapshot/observation IDs, byte offsets/digests, an observer, and eligible times. These commands use an evidence store, not the dedicated improvement-assessment store.
 
 `epiphysics.source_span_checks.run_source_span_checks()` exercises the actual assertion API on fresh temporary synthetic ledgers. Contract `source-span-probes-v1` has 14 checks: eight for `source_span_resolution` and six for `assertion_history_preservation`. Each metric is passed checks divided by its declared count. Positive controls, rejected malformed/altered/late spans, preserved corrections/conflicts, lineage constraints and half-open world time are checked; exceptions produce failed rows with diagnostics. These are implementation conformance fractions, not extraction accuracy or source truth. The improvement report embeds the rows under `source_span_checks` and adds both metrics alongside the original 30 representation checks; the denominators stay separate.
+
+## B1: source-bound representation manifests
+
+`epiphysics.manifests` records manifest metadata and binds supplied forecasts to it. It never executes a retained artifact or calls a predictor:
+
+```python
+method_identity(descriptor) -> str
+register_manifest(
+    ledger, representation_id, *, encoding, schema_id, artifacts, task,
+    horizon_seconds, units, evidence_ids, construction_cost, event_id=None,
+) -> dict
+forecast_manifest(
+    ledger, manifest_id, question_id, probability, *, status="predicted",
+    reason=None, inference_cost=None, event_id=None,
+) -> dict
+```
+
+`artifacts` maps exactly four roles—`construction`, `config`, `ontology`, `predictor`—to retained observation IDs. All artifact bytes and representation evidence must belong to the representation's snapshot and pass hash/cutoff checks. `evidence_ids` must exactly match the union of evidence references in the representation model. The task is `{"id":"...","family":"...","outcome_type":"binary"}`; `horizon_seconds` is a positive integer; `units` maps field names to unit labels without conversion.
+
+The resulting `representation_manifest` event has a stable `method_id` plus the specific representation/snapshot IDs and hashes, model hash, cutoff, artifact/evidence references and construction-cost claim. The method ID hashes encoding, schema, construction-method label, the four artifact content hashes, observer, task, horizon and units. It excludes instance IDs, snapshot times, evidence/model payload and actual cost. Recapturing identical artifacts for another snapshot therefore preserves method identity; changing an encoding or artifact changes it. This distinguishes a method from a representation instance and prevents a new instance alone from bypassing the one-method/one-question forecast rule.
+
+Construction and inference costs use this exact shape; null or omitted inference cost becomes the unknown form:
+
+```json
+{"basis":"unknown","elapsed_seconds":null,"model_calls":null,"external_spend":null,"currency":null,"receipt_ids":[]}
+```
+
+`basis: "reported"` requires at least one quantity: nonnegative finite elapsed time/spend or a nonnegative integer model-call count. Spend requires a currency label; unknown spend requires null currency. Unknown cost retains null quantities and no receipts, rather than becoming zero. Receipt observation IDs retain hashes and must exist before the record; they may follow the evidence cutoff because they are cost documentation, not predictive evidence. Receipt bytes and reported amounts are neither independently verified expenses nor proof of execution. The forecast references construction cost by manifest and records inference cost separately, avoiding automatic duplication of the construction claim.
+
+`forecast_manifest` rechecks manifest/artifact bindings, requires the question family and binary outcome type to match, and requires `resolve_after − snapshot cutoff == horizon_seconds`. It records the supplied probability through the existing deadline/status/duplicate-attempt safeguards, with the stable method ID, exact representation/snapshot, manifest ID/hash and predictor content hash. This is forecast binding, not model inference or a verified executable reproduction. New forecasts revalidate artifact, evidence and receipt bindings under the existing append lock. Preparation builds comparable metadata without requiring mutable blobs, so an identical retry can return the original event after blob loss. That replay does not certify current blob availability; ledger verification reports missing or corrupt content.
+
+The CLI exposes both operations with bounded JSON objects of at most 1 MB; duplicate keys and nonfinite numbers are rejected:
+
+```sh
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store record manifest manifest.json
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store record manifest-forecast forecast.json
+```
+
+Use the required/optional fields in the table above and existing ledger IDs. The generated manifest schema version and hashes are not caller-supplied fields. `epiphysics.manifest_checks.run_manifest_checks()` runs 22 actual-API checks on temporary synthetic ledgers under `representation-manifest-probes-v2`. `representation_manifest_preservation` is passed checks / 22; rows and counts appear in `report.manifest_checks`. They cover stable/distinct identity, retained inputs/cost claims, rejected late/corrupt/missing evidence, forecast binding and duplicate prevention. B2 transformations, declared loss and split/merge preservation remain separate work. Verified artifact execution and its receipts are also outside B1; this metric does not measure them.
 
 ## Assurance limits
 
@@ -163,15 +204,15 @@ PYTHONPATH=engine python3 -m epiphysics.improvement --store engine/.data/improve
 
 `--candidate` also accepts a local JSON answer file. The Python entry points are `assess(ledger, policy_path, suite_path, candidate, run_key, after_step="initial", completed_work="...")` with the last two arguments keyword-only, and `status(ledger)`. A completed-work description records the operator's claim; an assessment is not proof that a queued implementation task was performed. Switching from the degraded control to the oracle is not a demonstrated improvement in a learned system.
 
-Assessment records preserve the input bytes, evaluator, assertion implementation, source-span probes, store and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
+Assessment records preserve input bytes, evaluator, assertion/manifest implementations, both capability probes, store and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
 
 Each implementation module retains its source bytes and executing code object when imported. The controller pins those identities, checks the retained internal dependency bindings, and compares the loaded code with a fresh compilation of the retained source, without executing it. Assessments refuse module reloads, mismatched cached bytecode, and on-disk source drift before claiming work and before recording a passing completion. Use a fresh process after reviewed changes; discard a stale bytecode cache when the diagnostic identifies one. These checks detect accidental identity changes, not deliberate tampering by an operator who controls the process.
 
-The action selector is a transparent priority rule: repair temporal eligibility, evidence mapping, missing coverage, or the weakest family, then repair a failing source-span or assertion-history probe. Only passing all representation gates and both actual-API metrics advances to `build_representation_manifests` (Packet B). Failures select `repair_source_span_assertions` with the affected metric and diagnostics. `representation_manifest_preservation` remains unmeasured; a Packet B queue entry does not certify its implementation. Success probabilities and costs remain unestimated.
+The action selector is a transparent priority rule: repair temporal eligibility, evidence mapping, missing coverage, or the weakest family, then failing assertion or manifest probes. Assertion failures select `repair_source_span_assertions`; manifest failures select `repair_representation_manifests`. Only passing the 30 representation checks, both assertion metrics and `representation_manifest_preservation` advances to `build_representation_transformations` (Packet B2). `transformation_preservation` remains unmeasured; a B2 queue entry does not certify transformations or complete all of Packet B. Success probabilities and costs remain unestimated.
 
-Previous targets are compared descriptively only when the suite, evaluator, policy, assertion implementation, source-span probe and store hashes match (`suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, `store`). Changed contracts, including the first transition from the earlier probe-free controller, produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`. Candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
+Previous targets are compared descriptively only when all eight measurement-contract hashes match: `suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, `store`, `manifests`, and `manifest_probe`. Changed contracts, including a transition from a run without the newly required module hashes, produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`. Candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
 
-The supplied policy `offline-contracts-source-spans-v2` permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
+The supplied policy `offline-contracts-manifests-v3` permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
 
 The supervisor checks progress every 30 minutes or three core steps, then continues ready authorized work while its session is active. These checkpoints are review boundaries, not session stop rules. The 15-minute heartbeat checks for an existing active job before dispatching; it must not duplicate that work. Worker time/output limits and zero external spend remain unchanged. Neither schedule configuration nor a durable queue promises an always-online agent.
 

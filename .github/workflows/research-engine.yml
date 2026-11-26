@@ -52,6 +52,18 @@ jobs:
           assert report['metrics']['assertion_history_preservation'] == 1
           print('Actual assertion API passed all 14 synthetic capability contracts.')
           PY
+      - name: Verify representation manifest capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.manifest_checks import run_manifest_checks
+
+          report = run_manifest_checks()
+          assert report['version'] == 'representation-manifest-probes-v2'
+          assert len(report['checks']) == 22 and report['all_passed'] is True
+          assert report['counts']['representation_manifest_preservation'] == {'passed': 22, 'checks': 22}
+          assert report['metrics']['representation_manifest_preservation'] == 1
+          print('Actual manifest API passed all 22 synthetic metadata and forecast-binding contracts.')
+          PY
       - name: Dispatch and inspect a real offline worker
         run: |
           python - <<'PY'
@@ -83,7 +95,11 @@ jobs:
               assert capability['version'] == 'source-span-probes-v1' and capability['all_passed'] is True
               assert capability['counts']['source_span_resolution'] == {'passed': 8, 'checks': 8}
               assert capability['counts']['assertion_history_preservation'] == {'passed': 6, 'checks': 6}
-              assert {'assertions', 'source_span_probe', 'store'} <= result['assessment']['request']['manifest'].keys()
+              manifests = result['assessment']['report']['manifest_checks']
+              assert manifests['version'] == 'representation-manifest-probes-v2' and manifests['all_passed'] is True
+              assert manifests['counts']['representation_manifest_preservation'] == {'passed': 22, 'checks': 22}
+              assert result['assessment']['report']['metrics']['representation_manifest_preservation'] == 1
+              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe'} <= result['assessment']['request']['manifest'].keys()
               receipts = Path(receipt['receipt_directory'])
               assert receipts.parent == store / 'dispatches'
               assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
@@ -91,7 +107,9 @@ jobs:
               status = json.loads(inspected.stdout)
               assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
               assert status['next_step']['id'] == 'smoke:next'
-              assert status['next_step']['action'] == 'build_representation_manifests'
+              assert status['next_step']['action'] == 'build_representation_transformations'
+              assert status['next_step']['metric'] == 'transformation_preservation'
+              assert status['next_step']['observed'] is None
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')
           PY

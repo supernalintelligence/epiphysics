@@ -201,7 +201,15 @@ class Ledger:
 
     def forecast(self, question_id: str, snapshot_id: str, method: str, probability: float | None,
                  *, model: dict, representation_id: str | None = None, status: str = "predicted",
-                 reason: str | None = None, cost: dict | None = None, event_id: str | None = None) -> dict:
+                 reason: str | None = None, cost: dict | None = None, event_id: str | None = None,
+                 validate: Callable[[str], None] | None = None) -> dict:
+        """Record an attempt, optionally adding trusted validation under the write lock.
+
+        The callback receives the exact recorded_at after core forecast checks.
+        Identical retries return the original event without rerunning validation.
+        """
+        if validate is not None and not callable(validate):
+            raise ValueError("Forecast validate must be callable or None")
         q = self.get(question_id, "question")["body"]
         snapshot = self.get(snapshot_id, "snapshot")
         if status not in {"predicted", "failed", "abstained"}:
@@ -217,7 +225,7 @@ class Ledger:
             r = self.get(representation_id, "representation")["body"]
             if r["snapshot_id"] != snapshot_id:
                 raise ValueError("Representation and forecast must use the same snapshot")
-        def validate(now):
+        def validate_forecast(now):
             if instant(now) >= instant(q["deadline"]):
                 raise ValueError("Forecast deadline has passed")
             if instant(snapshot["recorded_at"]) > instant(now):
@@ -226,10 +234,12 @@ class Ledger:
             for f in self.events("forecast"):
                 if f["body"]["question_id"] == question_id and f["body"]["method"] == method:
                     raise ValueError("This method already attempted this question")
+            if validate is not None:
+                validate(now)
         return self.append("forecast", {"question_id": question_id, "snapshot_id": snapshot_id,
             "representation_id": representation_id, "method": method, "probability": probability,
             "status": status, "reason": reason, "model": model, "cost": cost or {},
-            "commitment": "local hash chain only; independently unwitnessed"}, event_id, validate=validate)
+            "commitment": "local hash chain only; independently unwitnessed"}, event_id, validate=validate_forecast)
 
     def resolve(self, question_id: str, outcome: int, evidence_ids: list[str], *,
                 explanation: str, supersedes: str | None = None, event_id: str | None = None) -> dict:

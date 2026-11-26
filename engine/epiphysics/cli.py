@@ -11,6 +11,26 @@ from .store import Ledger, canonical, utc_now
 from .cycle import run_cycle
 from .public_status import project_status, status_destination
 from .assertions import record_assertion, assertions_as_of
+from .manifests import register_manifest, forecast_manifest
+
+
+def _record_input(path):
+    with Path(path).open("rb") as stream:
+        raw = stream.read(1_000_001)
+    if len(raw) > 1_000_000:
+        raise ValueError("Record input exceeds 1 MB")
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError(f"Duplicate JSON field: {key}")
+            result[key] = value
+        return result
+    value = json.loads(raw, object_pairs_hook=pairs)
+    if not isinstance(value, dict):
+        raise ValueError("Record input must be a JSON object")
+    canonical(value)
+    return value
 
 
 def demo(root):
@@ -55,7 +75,7 @@ def main():
     snapshot = sub.add_parser("snapshot")
     snapshot.add_argument("--cutoff")
     record = sub.add_parser("record", help="Validated JSON input; see examples")
-    record.add_argument("kind", choices=["question", "representation", "forecast", "resolution", "assertion"])
+    record.add_argument("kind", choices=["question", "representation", "forecast", "resolution", "assertion", "manifest", "manifest-forecast"])
     record.add_argument("file")
     assertions = sub.add_parser("assertions", help="Query unsuperseded assertions at a recorded knowledge time")
     assertions.add_argument("--known-at", required=True)
@@ -89,9 +109,13 @@ def main():
             elif args.command == "snapshot":
                 result = ledger.snapshot(args.cutoff)
             elif args.command == "record":
-                data = json.loads(Path(args.file).read_text())
+                data = _record_input(args.file)
                 if args.kind == "assertion":
                     result = record_assertion(ledger, **data)
+                elif args.kind == "manifest":
+                    result = register_manifest(ledger, **data)
+                elif args.kind == "manifest-forecast":
+                    result = forecast_manifest(ledger, **data)
                 else:
                     method = "resolve" if args.kind == "resolution" else args.kind
                     result = getattr(ledger, method)(**data)

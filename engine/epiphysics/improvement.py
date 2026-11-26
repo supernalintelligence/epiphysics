@@ -21,14 +21,15 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, representation_checks, source_span_checks, store
+from . import assertions, manifest_checks, manifests, representation_checks, source_span_checks, store
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
+from .manifest_checks import run_manifest_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, representation_checks, source_span_checks, store)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -37,6 +38,7 @@ _IMPLEMENTATIONS = {
     name: (module, Path(module.__file__), module.IMPLEMENTATION_SOURCE,
            module.IMPLEMENTATION_CODE, module.IMPLEMENTATION_DEPENDENCIES)
     for name, module in {"evaluator": representation_checks, "assertions": assertions,
+                         "manifests": manifests, "manifest_probe": manifest_checks,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -122,8 +124,10 @@ def select_next(report, run_key):
          "The actual assertion implementation failed or lacks a required source-span probe; inspect source_span_checks diagnostics."),
         ("repair_source_span_assertions", "assertion_history_preservation", 1, "increase", m.get("assertion_history_preservation") != 1,
          "The actual assertion implementation failed or lacks a required history/conflict probe; inspect source_span_checks diagnostics."),
-        ("build_representation_manifests", "representation_manifest_preservation", 1, "increase", True,
-         "Representation contracts and actual source-span/history probes pass. Implement and test versioned representation manifests (Packet B)."),
+        ("repair_representation_manifests", "representation_manifest_preservation", 1, "increase", m.get("representation_manifest_preservation") != 1,
+         "The actual manifest implementation failed or lacks a required identity, artifact, or forecast-binding probe; inspect manifest_checks diagnostics."),
+        ("build_representation_transformations", "transformation_preservation", 1, "increase", True,
+         "Representation contracts and actual assertion and manifest probes pass. Implement and test representation transformations (Packet B2); transformation preservation remains unmeasured."),
     ]
     ranked = [{"action": a, "metric": metric, "observed": m.get(metric), "target": target,
                "direction": direction, "eligible": eligible, "reason": reason,
@@ -132,7 +136,7 @@ def select_next(report, run_key):
     chosen = next(c for c in ranked if c["eligible"])
     return {"id": f"{run_key}:next", "state": "queued", **chosen,
             "family": worst if chosen["action"] == "repair_weakest_entity_family" else None,
-            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion probes, then missing capability",
+            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion and manifest probes, then missing capability",
             "forecast_kind": "target and directional hypothesis; probability and cost unestimated",
             "candidate_actions": ranked, "scale_change_allowed": False}
 
@@ -140,7 +144,7 @@ def select_next(report, run_key):
 def _forecast_result(previous, report, previous_manifest, current_manifest):
     metric = previous.get("metric")
     if previous_manifest is not None:
-        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store")
+        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe")
                    if previous_manifest.get(name) != current_manifest.get(name)]
         if changed:
             return {"status": "incomparable_contract_change", "changed_inputs": changed,
@@ -246,6 +250,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         probe = run_source_span_checks()
         report["source_span_checks"] = probe
         report["metrics"].update(probe["metrics"])
+        manifest_probe = run_manifest_checks()
+        report["manifest_checks"] = manifest_probe
+        report["metrics"].update(manifest_probe["metrics"])
         _implementation_inputs()
         elapsed = time.monotonic() - started
         if elapsed > policy["max_assessment_seconds"]:

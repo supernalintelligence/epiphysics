@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from epiphysics import assertions, improvement
+from epiphysics import assertions, improvement, manifests
 from epiphysics.store import Ledger
 
 
@@ -41,10 +41,19 @@ class ImprovementTests(unittest.TestCase):
         events = self.ledger.events()
         self.assertEqual("improvement_completed", events[-1]["kind"])
         self.assertEqual(result["next_step"], events[-1]["body"]["next_step"])
-        self.assertEqual("build_representation_manifests", result["next_step"]["action"])
+        self.assertEqual("build_representation_transformations", result["next_step"]["action"])
         self.assertEqual(1, result["report"]["metrics"]["source_span_resolution"])
         self.assertEqual(1, result["report"]["metrics"]["assertion_history_preservation"])
-        self.assertTrue({"assertions", "source_span_probe", "store"} <= result["request"]["manifest"].keys())
+        self.assertEqual(1, result["report"]["metrics"]["representation_manifest_preservation"])
+        self.assertEqual({"source_span_resolution": {"passed": 8, "checks": 8},
+                          "assertion_history_preservation": {"passed": 6, "checks": 6}},
+                         result["report"]["source_span_checks"]["counts"])
+        self.assertEqual("representation-manifest-probes-v2", result["report"]["manifest_checks"]["version"])
+        self.assertEqual({"representation_manifest_preservation": {"passed": 22, "checks": 22}},
+                         result["report"]["manifest_checks"]["counts"])
+        self.assertNotIn("transformation_preservation", result["report"]["metrics"])
+        self.assertIsNone(result["next_step"]["observed"])
+        self.assertTrue({"assertions", "source_span_probe", "store", "manifests", "manifest_probe"} <= result["request"]["manifest"].keys())
         self.assertFalse(result["next_step"]["scale_change_allowed"])
         self.assertEqual(0, result["actual_resources"]["external_spend"])
         self.assertEqual(result, self.run_assessment())
@@ -58,7 +67,7 @@ class ImprovementTests(unittest.TestCase):
     def test_measured_failure_selects_repair_and_next_assessment_records_outcome(self):
         first = self.run_assessment("degraded")
         self.assertLess(first["report"]["metrics"]["accuracy"], 1)
-        self.assertNotEqual("build_representation_manifests", first["next_step"]["action"])
+        self.assertNotEqual("build_representation_transformations", first["next_step"]["action"])
         second = self.run_assessment(run_key="second", after="first:next")
         self.assertEqual("measured", second["prior_action_outcome"]["status"])
         self.assertTrue(second["prior_action_outcome"]["target_met"])
@@ -94,8 +103,9 @@ class ImprovementTests(unittest.TestCase):
         previous = {"id": "step", "metric": "accuracy", "observed": 0.5, "target": 1, "direction": "increase"}
         report = {"metrics": {"accuracy": 1}}
         manifest = {"suite": "s", "policy": "p", "evaluator": "e", "candidate": "a", "controller": "c",
-                    "assertions": "a-code", "source_span_probe": "probe-code", "store": "store-code"}
-        for key in ("policy", "evaluator", "assertions", "source_span_probe", "store"):
+                    "assertions": "a-code", "source_span_probe": "probe-code", "store": "store-code",
+                    "manifests": "manifest-code", "manifest_probe": "manifest-probe-code"}
+        for key in ("policy", "evaluator", "assertions", "source_span_probe", "store", "manifests", "manifest_probe"):
             outcome = improvement._forecast_result(previous, report, manifest, {**manifest, key: "changed"})
             self.assertEqual("incomparable_contract_change", outcome["status"])
             self.assertEqual([key], outcome["changed_inputs"])
@@ -109,6 +119,10 @@ class ImprovementTests(unittest.TestCase):
         outcome = improvement._forecast_result(previous, report, legacy, manifest)
         self.assertEqual("incomparable_contract_change", outcome["status"])
         self.assertEqual(["assertions", "source_span_probe", "store"], outcome["changed_inputs"])
+        prior_packet_a = {key: value for key, value in manifest.items() if key not in {"manifests", "manifest_probe"}}
+        outcome = improvement._forecast_result(previous, report, prior_packet_a, manifest)
+        self.assertEqual("incomparable_contract_change", outcome["status"])
+        self.assertEqual(["manifests", "manifest_probe"], outcome["changed_inputs"])
 
     def test_unauthorized_stage_budget_and_dropped_family_are_refused_before_claim(self):
         original = json.loads(self.policy.read_text())
@@ -128,7 +142,7 @@ class ImprovementTests(unittest.TestCase):
             result = self.run_assessment()
         self.assertEqual("failed", result["result"])
         self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
-        self.assertEqual(8, len(self.ledger.events("observation")))
+        self.assertEqual(10, len(self.ledger.events("observation")))
         self.assertEqual([], improvement.status(self.ledger)["unfinished_runs"])
         self.assertEqual(result, self.run_assessment())
 
@@ -220,6 +234,46 @@ class ImprovementTests(unittest.TestCase):
         self.assertEqual("repair_source_span_assertions", result["next_step"]["action"])
         self.assertEqual("assertion_history_preservation", result["next_step"]["metric"])
 
+    def test_actual_manifest_failure_blocks_b2_even_with_perfect_candidate_and_assertion_checks(self):
+        with patch.object(manifests, "forecast_manifest", side_effect=ValueError("Broken forecast binding")):
+            result = self.run_assessment()
+        self.assertEqual("assessed", result["result"])
+        self.assertEqual(1, result["report"]["metrics"]["accuracy"])
+        self.assertEqual(1, result["report"]["metrics"]["source_span_resolution"])
+        self.assertEqual(1, result["report"]["metrics"]["assertion_history_preservation"])
+        self.assertLess(result["report"]["metrics"]["representation_manifest_preservation"], 1)
+        self.assertEqual("repair_representation_manifests", result["next_step"]["action"])
+        failures = [row for row in result["report"]["manifest_checks"]["checks"] if not row["passed"]]
+        self.assertTrue(failures)
+        self.assertTrue(all("diagnostic" in row for row in failures))
+
+    def test_broken_manifest_probe_records_failure_and_never_advances(self):
+        with patch.object(improvement, "run_manifest_checks", side_effect=ValueError("Probe interrupted")):
+            result = self.run_assessment()
+        self.assertEqual("failed", result["result"])
+        self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
+        self.assertIn("Probe interrupted", result["message"])
+        self.assertEqual([], self.ledger.events("improvement_completed"))
+
+    def test_selector_requires_candidate_assertion_and_manifest_metrics_before_b2(self):
+        result = self.run_assessment()
+        report = result["report"]
+        cases = [("temporal_violations", 1, "repair_time_eligibility"),
+                 ("provenance", 0.9, "repair_evidence_mapping"),
+                 ("coverage", 0.9, "cover_missing_answers"),
+                 ("worst_family_accuracy", 0.9, "repair_weakest_entity_family"),
+                 ("source_span_resolution", 0.9, "repair_source_span_assertions"),
+                 ("assertion_history_preservation", 0.9, "repair_source_span_assertions"),
+                 ("representation_manifest_preservation", 0.9, "repair_representation_manifests")]
+        for metric, value, action in cases:
+            with self.subTest(metric=metric):
+                changed = copy.deepcopy(report)
+                changed["metrics"][metric] = value
+                self.assertEqual(action, improvement.select_next(changed, "gate")["action"])
+        missing = copy.deepcopy(report)
+        del missing["metrics"]["representation_manifest_preservation"]
+        self.assertEqual("repair_representation_manifests", improvement.select_next(missing, "legacy")["action"])
+
     def _isolated_drift_check(self, mode, module_name="assertions", dependent_name=""):
         package_root = self.root / f"isolated-{mode}-{module_name}-{dependent_name}"
         shutil.copytree(Path(improvement.__file__).parent, package_root / "epiphysics",
@@ -236,7 +290,8 @@ def alter(module):
         assert target in source
         path.write_bytes(source.replace(target,b'        raise ValueError("Changed snapshot is broken")\n'+target,1))
         return
-    functions={'assertions':'resolve_span','representation_checks':'evaluate','source_span_checks':'run_source_span_checks'}
+    functions={'assertions':'resolve_span','representation_checks':'evaluate','source_span_checks':'run_source_span_checks',
+               'manifests':'register_manifest','manifest_checks':'run_manifest_checks'}
     function=functions.get(module.__name__.rsplit('.',1)[-1])
     change=(("\ndef "+function+"(*args, **kwargs):\n    raise ValueError('Changed implementation on disk')\n").encode()
             if function else b"\n# Unreviewed source edit after import\n")
@@ -250,9 +305,11 @@ if mode == 'dependency_reload_before_controller':
     old_dependency_code=dependency.IMPLEMENTATION_CODE
     alter(dependency)
     importlib.reload(dependency)
-    if dependent_name == 'source_span_checks' and name == 'store':
-        # Refresh the sibling so only the probe retains the stale store edge.
+    if dependent_name in {'source_span_checks','manifests','manifest_checks'} and name == 'store':
+        # Refresh earlier dependencies so the intended dependent retains the first stale edge.
         importlib.reload(importlib.import_module('epiphysics.assertions'))
+        if dependent_name == 'manifest_checks':
+            importlib.reload(importlib.import_module('epiphysics.manifests'))
 from epiphysics import improvement
 from epiphysics.store import Ledger,digest
 module=importlib.import_module('epiphysics.'+name)
@@ -287,7 +344,7 @@ try:
     outcome.update(events=[event['kind'] for event in ledger.events()],
                    captured_sha256=digest(captured),disk_sha256=digest(Path(module.__file__).read_bytes()))
     if mode == 'reload_after_controller':
-        function={'representation_checks':'evaluate','source_span_checks':'run_source_span_checks'}[name]
+        function={'representation_checks':'evaluate','source_span_checks':'run_source_span_checks','manifest_checks':'run_manifest_checks'}[name]
         outcome['alias_is_current']=getattr(improvement,function) is getattr(module,function)
     if mode == 'dependency_reload_before_controller':
         outcome['dependency_code_changed']=old_dependency_code is not dependency.IMPLEMENTATION_CODE
@@ -304,7 +361,7 @@ finally:
         return json.loads(result.stdout)
 
     def test_preassessment_disk_drift_is_refused_without_claiming_queue(self):
-        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement"):
+        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks"):
             with self.subTest(module=module):
                 outcome = self._isolated_drift_check("before_assessment", module)
                 self.assertEqual("refused", outcome["result"])
@@ -342,6 +399,10 @@ finally:
             ("representation_checks", "store", "evaluator"),
             ("source_span_checks", "store", "source_span_probe"),
             ("source_span_checks", "assertions", "source_span_probe"),
+            ("manifests", "store", "manifests"),
+            ("manifests", "assertions", "manifests"),
+            ("manifest_checks", "store", "manifest_probe"),
+            ("manifest_checks", "manifests", "manifest_probe"),
         ):
             with self.subTest(dependent=dependent, dependency=dependency):
                 outcome = self._isolated_drift_check("dependency_reload_before_controller", dependency, dependent)
@@ -352,11 +413,13 @@ finally:
                 self.assertEqual([], outcome["events"])
 
     def test_probe_reload_after_controller_refuses_stale_probe_alias(self):
-        outcome = self._isolated_drift_check("reload_after_controller", "source_span_checks")
-        self.assertFalse(outcome["alias_is_current"])
-        self.assertEqual("refused", outcome["result"])
-        self.assertIn("reloaded since controller import", outcome["message"])
-        self.assertEqual([], outcome["events"])
+        for module in ("source_span_checks", "manifest_checks"):
+            with self.subTest(module=module):
+                outcome = self._isolated_drift_check("reload_after_controller", module)
+                self.assertFalse(outcome["alias_is_current"])
+                self.assertEqual("refused", outcome["result"])
+                self.assertIn("reloaded since controller import", outcome["message"])
+                self.assertEqual([], outcome["events"])
 
     def test_stale_assessment_alias_is_refused_after_controller_reload(self):
         outcome = self._isolated_drift_check("reload_controller_stale_alias", "improvement")
