@@ -18,8 +18,28 @@ import time
 import uuid
 from pathlib import Path
 
+IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
+IMPLEMENTATION_CODE = sys._getframe().f_code
+
+from . import assertions, representation_checks, source_span_checks, store
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
+from .source_span_checks import run_source_span_checks
+
+IMPLEMENTATION_DEPENDENCIES = tuple(
+    (module.__name__, module.IMPLEMENTATION_CODE)
+    for module in (assertions, representation_checks, source_span_checks, store)
+)
+
+# Pin dependency identities after imports. Reloading a module can otherwise pair
+# its new source snapshot with our old from-import callable aliases.
+_IMPLEMENTATIONS = {
+    name: (module, Path(module.__file__), module.IMPLEMENTATION_SOURCE,
+           module.IMPLEMENTATION_CODE, module.IMPLEMENTATION_DEPENDENCIES)
+    for name, module in {"evaluator": representation_checks, "assertions": assertions,
+                         "source_span_probe": source_span_checks, "store": store,
+                         "controller": sys.modules[__name__]}.items()
+}
 
 MAX_BYTES = 1_000_000
 TRANSITIONS = {"improvement_completed", "improvement_failed"}
@@ -98,8 +118,12 @@ def select_next(report, run_key):
          "Missing answers remain in the denominator and require explicit treatment."),
         ("repair_weakest_entity_family", "worst_family_accuracy", 1, "increase", m["worst_family_accuracy"] < 1,
          f"The weakest family is {worst}; inspect its failed contracts before aggregate optimization."),
-        ("build_source_span_assertions", "source_span_resolution", 1, "increase", True,
-         "Fixture contracts pass, but captured-source span resolution is not measured by this evaluator. Implement and test Packet A."),
+        ("repair_source_span_assertions", "source_span_resolution", 1, "increase", m.get("source_span_resolution") != 1,
+         "The actual assertion implementation failed or lacks a required source-span probe; inspect source_span_checks diagnostics."),
+        ("repair_source_span_assertions", "assertion_history_preservation", 1, "increase", m.get("assertion_history_preservation") != 1,
+         "The actual assertion implementation failed or lacks a required history/conflict probe; inspect source_span_checks diagnostics."),
+        ("build_representation_manifests", "representation_manifest_preservation", 1, "increase", True,
+         "Representation contracts and actual source-span/history probes pass. Implement and test versioned representation manifests (Packet B)."),
     ]
     ranked = [{"action": a, "metric": metric, "observed": m.get(metric), "target": target,
                "direction": direction, "eligible": eligible, "reason": reason,
@@ -108,7 +132,7 @@ def select_next(report, run_key):
     chosen = next(c for c in ranked if c["eligible"])
     return {"id": f"{run_key}:next", "state": "queued", **chosen,
             "family": worst if chosen["action"] == "repair_weakest_entity_family" else None,
-            "selection_rule": "integrity, evidence, coverage, weakest family, then missing capability",
+            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion probes, then missing capability",
             "forecast_kind": "target and directional hypothesis; probability and cost unestimated",
             "candidate_actions": ranked, "scale_change_allowed": False}
 
@@ -116,7 +140,7 @@ def select_next(report, run_key):
 def _forecast_result(previous, report, previous_manifest, current_manifest):
     metric = previous.get("metric")
     if previous_manifest is not None:
-        changed = [name for name in ("suite", "evaluator", "policy")
+        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store")
                    if previous_manifest.get(name) != current_manifest.get(name)]
         if changed:
             return {"status": "incomparable_contract_change", "changed_inputs": changed,
@@ -132,7 +156,29 @@ def _forecast_result(previous, report, previous_manifest, current_manifest):
             "interpretation": "Descriptive change; no causal attribution to the queued action"}
 
 
+def _implementation_inputs():
+    pinned_codes = {module.__name__: code for module, _, _, code, _ in _IMPLEMENTATIONS.values()}
+    for name, (module, path, captured, executing_code, dependencies) in _IMPLEMENTATIONS.items():
+        if module.IMPLEMENTATION_CODE is not executing_code or module.IMPLEMENTATION_SOURCE != captured:
+            raise ValueError(f"Implementation reloaded since controller import: {name}; use a fresh process after review")
+        if path.read_bytes() != captured:
+            raise ValueError(f"Implementation source changed since import: {name}; use a fresh process after review")
+        try:
+            compiled_code = compile(captured, str(path), "exec", dont_inherit=True, optimize=sys.flags.optimize)
+        except (SyntaxError, ValueError) as error:
+            raise ValueError(f"Captured implementation cannot be compiled: {name}; use a fresh reviewed process") from error
+        if executing_code != compiled_code:
+            raise ValueError(f"Executing implementation does not match source: {name}; discard stale bytecode and use a fresh process")
+        # A dependency may have reloaded before the controller was imported,
+        # leaving this module's older from-import bindings in use.
+        for dependency_name, dependency_code in dependencies:
+            if pinned_codes.get(dependency_name) is not dependency_code:
+                raise ValueError(f"Implementation dependency reloaded: {name} -> {dependency_name}; use a fresh process")
+    return {name: captured for name, (_, _, captured, _, _) in _IMPLEMENTATIONS.items()}
+
+
 def _assessment_inputs(policy_path, suite_path, candidate):
+    implementation = _implementation_inputs()
     policy, policy_bytes = _load(policy_path)
     suite, suite_bytes = _load(suite_path)
     validate_policy(policy)
@@ -144,13 +190,15 @@ def _assessment_inputs(policy_path, suite_path, candidate):
         candidate_bytes = canonical(output).encode()
     else:
         output, candidate_bytes = _load(candidate)
-    inputs = {"policy": policy_bytes, "suite": suite_bytes, "candidate": candidate_bytes,
-              "evaluator": Path(__file__).with_name("representation_checks.py").read_bytes(),
-              "controller": Path(__file__).read_bytes()}
+    inputs = {"policy": policy_bytes, "suite": suite_bytes, "candidate": candidate_bytes, **implementation}
     return policy, suite, output, inputs
 
 
 def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="initial", completed_work=""):
+    if sys._getframe().f_code is not assess.__code__:
+        raise ValueError("Stale assessment callable after reload; use a fresh process")
+    if type(ledger) is not Ledger or Ledger is not store.Ledger:
+        raise ValueError("Stale or unsupported ledger class; use a fresh process")
     if not isinstance(run_key, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", run_key):
         raise ValueError("Use a 1–100 character alphanumeric run key with . _ or -")
     if not isinstance(completed_work, str) or not completed_work.strip() or len(completed_work) > 8000:
@@ -173,6 +221,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
     previous_manifest = (ledger.get(current["last_transition"])["body"]["request"]["manifest"]
                          if current["last_transition"] else None)
     def validate_claim(_):
+        _implementation_inputs()
         locked_events = ledger.events()
         if any(e["kind"] in TRANSITIONS | {"improvement_started"} and e["body"].get("run_key") == run_key
                for e in locked_events):
@@ -194,6 +243,10 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                                    event_id=f"improvement:{run_key}:input:{name}")
             captures[name] = event["id"]
         report = evaluate(suite, output)
+        probe = run_source_span_checks()
+        report["source_span_checks"] = probe
+        report["metrics"].update(probe["metrics"])
+        _implementation_inputs()
         elapsed = time.monotonic() - started
         if elapsed > policy["max_assessment_seconds"]:
             raise ValueError("Assessment exceeded its elapsed-time acceptance budget")

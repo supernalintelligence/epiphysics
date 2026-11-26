@@ -38,6 +38,20 @@ jobs:
           assert degraded['provenance_correct'] == 23 and degraded['worst_family_accuracy'] == 0.5
           print('Synthetic oracle and degraded controls matched their declared results.')
           PY
+      - name: Verify source-span and assertion-history capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.source_span_checks import run_source_span_checks
+
+          report = run_source_span_checks()
+          assert report['version'] == 'source-span-probes-v1'
+          assert len(report['checks']) == 14 and report['all_passed'] is True
+          assert report['counts']['source_span_resolution'] == {'passed': 8, 'checks': 8}
+          assert report['counts']['assertion_history_preservation'] == {'passed': 6, 'checks': 6}
+          assert report['metrics']['source_span_resolution'] == 1
+          assert report['metrics']['assertion_history_preservation'] == 1
+          print('Actual assertion API passed all 14 synthetic capability contracts.')
+          PY
       - name: Dispatch and inspect a real offline worker
         run: |
           python - <<'PY'
@@ -65,6 +79,11 @@ jobs:
               assert receipt['returncode'] == 0 and receipt['termination'] is None
               assert receipt['model_calls'] == receipt['external_spend'] == 0
               assert result['assessment']['report']['metrics']['correct'] == 30
+              capability = result['assessment']['report']['source_span_checks']
+              assert capability['version'] == 'source-span-probes-v1' and capability['all_passed'] is True
+              assert capability['counts']['source_span_resolution'] == {'passed': 8, 'checks': 8}
+              assert capability['counts']['assertion_history_preservation'] == {'passed': 6, 'checks': 6}
+              assert {'assertions', 'source_span_probe', 'store'} <= result['assessment']['request']['manifest'].keys()
               receipts = Path(receipt['receipt_directory'])
               assert receipts.parent == store / 'dispatches'
               assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
@@ -72,7 +91,7 @@ jobs:
               status = json.loads(inspected.stdout)
               assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
               assert status['next_step']['id'] == 'smoke:next'
-              assert status['next_step']['action'] == 'build_source_span_assertions'
+              assert status['next_step']['action'] == 'build_representation_manifests'
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')
           PY

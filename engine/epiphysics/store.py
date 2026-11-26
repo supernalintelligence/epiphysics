@@ -6,10 +6,15 @@ import hashlib
 import json
 import math
 import sqlite3
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
+
+IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
+IMPLEMENTATION_CODE = sys._getframe().f_code
+IMPLEMENTATION_DEPENDENCIES = ()
 
 
 def canonical(value: object) -> str:

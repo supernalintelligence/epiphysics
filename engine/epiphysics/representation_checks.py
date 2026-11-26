@@ -7,8 +7,16 @@ extract knowledge, predict outcomes, or require the same internal ontology.
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
+import sys
 
+IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
+IMPLEMENTATION_CODE = sys._getframe().f_code
+
+from . import store
 from .store import canonical, instant
+
+IMPLEMENTATION_DEPENDENCIES = ((store.__name__, store.IMPLEMENTATION_CODE),)
 
 
 DIMENSIONS = {"identity", "relation_direction", "relation_type", "time", "units",

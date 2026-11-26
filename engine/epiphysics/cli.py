@@ -10,6 +10,7 @@ from pathlib import Path
 from .store import Ledger, canonical, utc_now
 from .cycle import run_cycle
 from .public_status import project_status, status_destination
+from .assertions import record_assertion, assertions_as_of
 
 
 def demo(root):
@@ -54,8 +55,12 @@ def main():
     snapshot = sub.add_parser("snapshot")
     snapshot.add_argument("--cutoff")
     record = sub.add_parser("record", help="Validated JSON input; see examples")
-    record.add_argument("kind", choices=["question", "representation", "forecast", "resolution"])
+    record.add_argument("kind", choices=["question", "representation", "forecast", "resolution", "assertion"])
     record.add_argument("file")
+    assertions = sub.add_parser("assertions", help="Query unsuperseded assertions at a recorded knowledge time")
+    assertions.add_argument("--known-at", required=True)
+    assertions.add_argument("--valid-at")
+    assertions.add_argument("--observer")
     sub.add_parser("score")
     compare = sub.add_parser("compare")
     compare.add_argument("left")
@@ -84,8 +89,14 @@ def main():
             elif args.command == "snapshot":
                 result = ledger.snapshot(args.cutoff)
             elif args.command == "record":
-                method = "resolve" if args.kind == "resolution" else args.kind
-                result = getattr(ledger, method)(**json.loads(Path(args.file).read_text()))
+                data = json.loads(Path(args.file).read_text())
+                if args.kind == "assertion":
+                    result = record_assertion(ledger, **data)
+                else:
+                    method = "resolve" if args.kind == "resolution" else args.kind
+                    result = getattr(ledger, method)(**data)
+            elif args.command == "assertions":
+                result = assertions_as_of(ledger, args.known_at, valid_at=args.valid_at, observer=args.observer)
             elif args.command == "score":
                 result = ledger.scores()
             elif args.command == "compare":

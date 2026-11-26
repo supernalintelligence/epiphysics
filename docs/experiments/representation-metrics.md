@@ -61,7 +61,18 @@ For fixture acceptance, the target is all declared checks correct, full coverage
 
 Keep these families through each candidate comparison; do not silently drop a difficult family. These seven are a diversity requirement for this suite, not an exhaustive ontology of entities. Later cohorts should vary domains and case difficulty within each family, report macro and worst-group outcomes, and account for related cases sharing a source or entity. Small groups need counts and uncertainty, not an apparently precise ranking.
 
-`source_span_resolution` is currently **unmeasured**. Packet A must add a contract for resolving declared spans against captured blobs, with byte bounds, hashes and extraction identity. Proposed denominator: every required span in the registered cases; malformed, missing or altered spans fail. Require exact replay of earlier views after late corrections and retention of unresolved conflicts. A source-span check proves that cited bytes were preserved, not that the claim is true. Update the suite/metric version and selector together so completion of Packet A can lead to the next packet.
+## Executed source-span and history contracts
+
+`engine/epiphysics/source_span_checks.py` now runs contract `source-span-probes-v1` against the actual assertion API using fresh temporary synthetic ledgers. Its fourteen checks are separate from the thirty representation-answer checks:
+
+| Metric | Denominator and passing obligations | Decision rule |
+| --- | --- | --- |
+| `source_span_resolution` | Eight executable checks: exact multibyte content, typed assertion recording, negative/out-of-range/empty offset rejection, wrong span digest rejection, whole-blob corruption rejection, and exclusion of late evidence despite an old publication claim | Passed checks / 8; higher. Require 1 before advancing. |
+| `assertion_history_preservation` | Six executable checks: historical view, current revision without erasure, coexisting conflicting reports, no revision fork, observer lineage, and separate half-open world validity | Passed checks / 6; higher. Require 1 before advancing. |
+
+Each check is a positive or negative API contract, not a sampled source span or a real-world recall estimate. Exceptions and false results fail the check and retain a diagnostic. `report.source_span_checks` records the version, rows, counts, metrics and `all_passed`; the two fractions also appear in the assessment's metrics. Require all fourteen contracts without dropping failed rows. These deterministic counts have no sampling confidence interval and establish neither semantic extraction quality nor population generalization.
+
+The implementation resolves byte bounds/digests against captured sources, records method identity and typed values/units, and keeps corrections and contradictions as immutable assertion events. Matching source bytes does not prove that a claim is true. After the representation gates and both API metrics pass, the selector recommends Packet B; a failed capability check routes to `repair_source_span_assertions`. `representation_manifest_preservation` is still unmeasured and must receive its own reviewed contract before Packet B can count as complete. Earlier bootstrap records accurately describe the earlier unmeasured source-span stage.
 
 ## Prediction, calibration and coverage
 
@@ -92,7 +103,7 @@ Do not collapse these layers into a universal value number. Any weighted objecti
 
 ## Action forecasts and promotion
 
-The current selector stores observed metrics, candidate actions, directional targets and reasons; estimated cost and success probability are null. A descriptive before/after comparison requires identical suite, evaluator and policy hashes. Otherwise `prior_action_outcome` is `incomparable_contract_change`, names changed inputs, and omits both delta and `target_met`. Candidate or controller changes alone remain comparable; missing prior measurements are `unmeasured`. Contract equality enables a comparison, not causal attribution.
+The current selector stores observed metrics, candidate actions, directional targets and reasons; estimated cost and success probability are null. A descriptive before/after comparison requires identical suite, evaluator, policy, assertion implementation, source-span probe and store hashes. The manifest keys are `suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, and `store`. Otherwise `prior_action_outcome` is `incomparable_contract_change`, names changed inputs, and omits both delta and `target_met`. The first comparison with an earlier probe-free run is therefore incomparable. Candidate or controller changes alone remain comparable; missing prior measurements are `unmeasured`. Contract equality enables a comparison, not causal attribution.
 
 Separate assessment completion from delivery success: an output-cap failure can return `assessment_completed_delivery_failed` after an authoritative completion was recorded. Count the completed assessment once, record the delivery failure separately, and use the retained transition/current queue rather than rerunning it. To learn a selector later, predeclare an outcome window, action success criterion, cost measurement and baseline policy; preserve rejected and failed actions.
 

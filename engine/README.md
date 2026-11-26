@@ -41,6 +41,7 @@ Use `capture FILE --source LABEL [--published-at TIME] [--revision-of ID]`, then
 | `representation` | `snapshot_id`, `model`, `observer`, `method` | `parent`, `event_id` |
 | `forecast` | `question_id`, `snapshot_id`, `method`, `probability`, `model` | `representation_id`, `status`, `reason`, `cost`, `event_id` |
 | `resolution` | `question_id`, `outcome`, `evidence_ids`, `explanation` | `supersedes`, `event_id` |
+| `assertion` | `snapshot_id`, `subject`, `predicate`, `object`, `observer`, `method`, `spans`, `basis` | `valid_from`, `valid_to`, `supersedes`, `contradicts`, `event_id` |
 
 Times must include a timezone. Questions require now < deadline < resolution time. Each method gets one forecast attempt per question. Forecast model metadata must contain `identifier`; record the prompt hash, model version, input manifest, seed, and budget where relevant. A failed or abstained attempt uses `probability: null` and a reason. Costs are recorded metadata, not enforced budgets.
 
@@ -49,6 +50,40 @@ Representation models have `entities` and `relations` arrays. Entities need an `
 Outcomes are integer 0 or 1 with evidence and an explanation. A correction must explicitly supersede the latest resolution. Scores retain the resolution ID used. `compare METHOD_A METHOD_B` matches the same question and snapshot and reports Brier(B)−Brier(A). It does not certify matched model budgets or statistical significance. `score` also reports pending and expired outcomes, failures, abstentions, and coverage.
 
 `export --output NEW_FILE.json` writes metadata and event hashes; raw blobs remain in the store. `verify` checks every chain link and stored source blob, returning a nonzero status on detected corruption. No command deletes evidence.
+
+## Source-backed assertions
+
+`epiphysics.assertions` adds three Python functions over the existing `Ledger`:
+
+```python
+resolve_span(ledger, snapshot_id, span) -> bytes
+record_assertion(
+    ledger, snapshot_id, *, subject, predicate, object, observer, method,
+    spans, basis, valid_from=None, valid_to=None,
+    supersedes=None, contradicts=None, event_id=None,
+) -> dict
+assertions_as_of(ledger, known_at, valid_at=None, observer=None) -> list[dict]
+```
+
+An assertion's typed object is either `{"kind":"entity","id":"..."}` or `{"kind":"value","value":SCALAR,"unit":STRING_OR_NULL}`. Scalars must be finite JSON values. Units are preserved labels, not automatic conversions or validated physical dimensions. `basis` is `observed`, `reported`, or `inferred`; `method` identifies the extraction or recording method.
+
+Each assertion requires 1–100 distinct spans shaped as `{"observation_id":"...","start":0,"end":12,"sha256":"..."}`. Offsets address bytes, not characters; the end is exclusive and the range must be nonempty. Resolution verifies snapshot membership and cutoff eligibility, observation/manifest hashes, the complete blob hash and size, bounds, and the selected bytes' SHA-256. Missing, altered or symlinked blobs are refused. A span hash proves preserved bytes, not that they support a true interpretation.
+
+Corrections are new `assertion` events with `schema_version: 1` and `supersedes` naming the prior event; there is no separate revision event kind. A correction preserves its observer, cannot regress the evidence cutoff, and must extend the latest revision rather than fork it. `contradicts` retains explicit links to other assertions without deleting or choosing between them. Identical event-ID requests replay; a changed request cannot reuse that ID.
+
+`assertions_as_of` returns visible, unsuperseded assertion events at local knowledge time `known_at`, then optionally filters by observer and a claimed world-valid interval `[valid_from, valid_to)`. Null interval endpoints are unbounded. Knowledge time cannot be in the future. Later corrections leave earlier knowledge-time queries unchanged; a retired assertion does not revive merely because its correction is outside a requested world interval. Returned objects are claims with provenance, not a resolved truth table. Full ledger/blob verification remains a separate integrity check.
+
+The CLI accepts an assertion JSON file with the fields above (without the generated `schema_version` field), and queries the resulting history:
+
+```sh
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store record assertion assertion.json
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store assertions \
+  --known-at 2026-11-25T18:00:00-08:00 --valid-at 2026-11-25T00:00:00-08:00 --observer observer-id
+```
+
+Substitute real existing snapshot/observation IDs, byte offsets/digests, an observer, and eligible times. These commands use an evidence store, not the dedicated improvement-assessment store.
+
+`epiphysics.source_span_checks.run_source_span_checks()` exercises the actual assertion API on fresh temporary synthetic ledgers. Contract `source-span-probes-v1` has 14 checks: eight for `source_span_resolution` and six for `assertion_history_preservation`. Each metric is passed checks divided by its declared count. Positive controls, rejected malformed/altered/late spans, preserved corrections/conflicts, lineage constraints and half-open world time are checked; exceptions produce failed rows with diagnostics. These are implementation conformance fractions, not extraction accuracy or source truth. The improvement report embeds the rows under `source_span_checks` and adds both metrics alongside the original 30 representation checks; the denominators stay separate.
 
 ## Assurance limits
 
@@ -60,7 +95,7 @@ See `docs/planning/2026-11-24-recursive-observatory.md` for the component roadma
 
 ## Updating the site's collection record
 
-The site imports `src/components/home/observatory-status.json`. This is a recorded aggregate refreshed by the daily app automation through reviewed commits/deployments, not a browser connection to a private local database. The first real collection was recorded on 25 November 2026; the example forecast remains clearly synthetic.
+The site imports `src/components/home/observatory-status.json`. This is a recorded aggregate refreshed when the daily monitor is due, through reviewed commits/deployments, not a browser connection to a private local database. The active supervisor continues ready work immediately; its 15-minute heartbeat is a recovery backstop and does not change the monitor's daily observation window. The first real collection was recorded on 25 November 2026; the example forecast remains clearly synthetic.
 
 After collecting and verifying the dedicated README monitor, run from the checkout containing the engine:
 
@@ -128,11 +163,17 @@ PYTHONPATH=engine python3 -m epiphysics.improvement --store engine/.data/improve
 
 `--candidate` also accepts a local JSON answer file. The Python entry points are `assess(ledger, policy_path, suite_path, candidate, run_key, after_step="initial", completed_work="...")` with the last two arguments keyword-only, and `status(ledger)`. A completed-work description records the operator's claim; an assessment is not proof that a queued implementation task was performed. Switching from the degraded control to the oracle is not a demonstrated improvement in a learned system.
 
-Assessment records preserve the input bytes, evaluator and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
+Assessment records preserve the input bytes, evaluator, assertion implementation, source-span probes, store and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
 
-The initial action selector is a transparent priority rule: repair temporal eligibility, then evidence mapping, missing coverage, or the weakest family; only passing all seven families advances the recommendation to source-span assertions. It does not estimate success probabilities or costs. Previous targets are compared descriptively only when the suite, evaluator and policy hashes match. Changed contracts produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`; candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
+Each implementation module retains its source bytes and executing code object when imported. The controller pins those identities, checks the retained internal dependency bindings, and compares the loaded code with a fresh compilation of the retained source, without executing it. Assessments refuse module reloads, mismatched cached bytecode, and on-disk source drift before claiming work and before recording a passing completion. Use a fresh process after reviewed changes; discard a stale bytecode cache when the diagnostic identifies one. These checks detect accidental identity changes, not deliberate tampering by an operator who controls the process.
 
-The supplied policy permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
+The action selector is a transparent priority rule: repair temporal eligibility, evidence mapping, missing coverage, or the weakest family, then repair a failing source-span or assertion-history probe. Only passing all representation gates and both actual-API metrics advances to `build_representation_manifests` (Packet B). Failures select `repair_source_span_assertions` with the affected metric and diagnostics. `representation_manifest_preservation` remains unmeasured; a Packet B queue entry does not certify its implementation. Success probabilities and costs remain unestimated.
+
+Previous targets are compared descriptively only when the suite, evaluator, policy, assertion implementation, source-span probe and store hashes match (`suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, `store`). Changed contracts, including the first transition from the earlier probe-free controller, produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`. Candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
+
+The supplied policy `offline-contracts-source-spans-v2` permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
+
+The supervisor checks progress every 30 minutes or three core steps, then continues ready authorized work while its session is active. These checkpoints are review boundaries, not session stop rules. The 15-minute heartbeat checks for an existing active job before dispatching; it must not duplicate that work. Worker time/output limits and zero external spend remain unchanged. Neither schedule configuration nor a durable queue promises an always-online agent.
 
 ## Dispatching a real assessment worker
 

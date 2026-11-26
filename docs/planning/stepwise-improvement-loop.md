@@ -17,18 +17,18 @@ This document defines the working protocol. The [metric contracts](../experiment
 
 ## What runs now
 
-`engine/epiphysics/improvement.py` implements a dedicated local ledger, assessment, next-action selection, and a subprocess dispatcher. The present stage is `offline_fixture`: seven entity families, thirty curated checks, no model calls, zero external spend, and no automatic change of scale. The evaluator tests identity, relation direction and type, time, units, contradictions, hierarchy, boundaries, and workflow obligations. It does not extract assertions from source bytes or establish predictive advantage.
+`engine/epiphysics/improvement.py` implements a dedicated local ledger, assessment, next-action selection, and a subprocess dispatcher. The present stage is `offline_fixture`: seven entity families and thirty curated representation checks, plus fourteen actual assertion-API checks on fresh temporary synthetic ledgers. There are no model calls, external spend, or automatic changes of scale. The representation evaluator tests identity, relation direction and type, time, units, contradictions, hierarchy, boundaries, and workflow obligations. The assertion API records supplied claims and resolves their exact source bytes; it does not automatically extract semantics or establish predictive advantage.
 
-The `reference` candidate copies expected answers and is an oracle control. The deliberately `degraded` candidate tests whether the evaluator detects losses. Neither is a learned representation. The controller hashes and captures its policy, suite, candidate, evaluator, and controller inputs; repeated identical run keys return the earlier result, while changed inputs with the same key are refused.
+The `reference` candidate copies expected answers and is an oracle control. The deliberately `degraded` candidate tests whether the evaluator detects losses. Neither is a learned representation. The controller hashes and captures its policy, suite, candidate, evaluator, assertion implementation, capability probes, store and controller inputs; repeated identical run keys return the earlier result, while changed inputs with the same key are refused. The capability probes call the real assertion API independently of those copied candidate answers.
 
-The hourly heartbeat is the supervisor's recurring wake mechanism. Between wakes, an active supervisor dispatches the next eligible work immediately, up to **30 minutes or three core steps per active cycle**, whichever comes first. Those cycle limits are supervisor instructions, not a scheduler implemented inside the Python module. A queued record is durable intent; it does not run itself or keep an agent alive when the host or session is unavailable. A missed wake resumes from recorded state without invented observations.
+The supervisor dispatches ready, authorized work immediately throughout its active session. Every **30 minutes or three core steps** is a checkpoint: record outcomes and resources, review priorities, and continue. It is not a reason to end active work. A 15-minute heartbeat is a recovery backstop; it checks for an active job and joins or inspects it instead of duplicating it. These are supervisor instructions, not a daemon in the Python module. A queued record does not keep an agent alive when the host or session is unavailable, and a missed wake resumes from recorded state without invented observations.
 
 ## Responsibilities and handoffs
 
 | Role | Work and output | Boundary |
 | --- | --- | --- |
 | Primary supervisor | Reads status and metrics, selects the work packet, delegates file ownership, monitors workers, reviews evidence, and dispatches the successor | Owns the process; may not award itself new permissions, spending, or a passing final evaluation. |
-| Builder subagents | Implement a bounded packet in assigned files; return changes, checks, limitations, and unfinished work | Cannot mark their own scientific claim independently validated. Parallel support work must have separate ownership and fit the same cycle budget. |
+| Builder subagents | Implement a scoped packet in assigned files; return changes, checks, limitations, and unfinished work | Cannot mark their own scientific claim independently validated. Parallel support work has separate ownership and explicit resource limits. |
 | Allowlisted program workers | Execute a fixed local assessment and return process receipts and evaluator output | The current allowlist is only `epiphysics.improvement assess`; no arbitrary shell task, paid model runner, deployment, or settlement. |
 | Independent reviewer/evaluator | Reviews contracts, failures and changes before acceptance; owns prospective final evaluation when that is implemented | Separate review is adopted now. Enforced optimizer/final-cohort isolation and fresh-cohort machinery remain planned. |
 
@@ -37,9 +37,10 @@ flowchart LR
   Q[Read queued action and observed metrics] --> W[Dispatch bounded work packet]
   W --> R[Review change and run fixed evaluator]
   R --> C[Record result and successor together]
-  C --> B{Cycle budget remains?}
-  B -->|Yes| Q
-  B -->|No| H[Next heartbeat resumes]
+  C --> B[Review checkpoint when due]
+  B --> S{Ready work and active session?}
+  S -->|Yes| Q
+  S -->|Blocked or unavailable| H[Preserve handoff for recovery]
   R -->|Claimed assessment fails| D[Record diagnosis as successor]
   D --> B
   R -->|Preclaim refusal| P[Inspect receipt; queue unchanged]
@@ -80,9 +81,9 @@ Output delivery can fail after the assessment has durably completed, for example
 
 ## Predict the next useful action honestly
 
-The version-one selector records all candidate actions, their observed metric, target, direction, eligibility, and reason. It chooses in this order: temporal integrity, evidence mapping, missing answers, the weakest entity family, then the unimplemented source-span capability. `estimated_success_probability` and `estimated_cost` are currently `null`. This is an explicit heuristic with a directional hypothesis, not a calibrated prediction of return on effort.
+The selector records all candidate actions, their observed metric, target, direction, eligibility, and reason. It chooses in this order: temporal integrity, evidence mapping, missing answers, the weakest entity family, source-span/history capability failures, then the unimplemented representation-manifest capability. `estimated_success_probability` and `estimated_cost` are currently `null`. This is an explicit heuristic with a directional hypothesis, not a calibrated prediction of return on effort.
 
-On the next assessment, `prior_action_outcome` records the metric's new value, baseline, change, and whether the target was reached **only when suite, evaluator and policy hashes match**. Changed contracts produce `incomparable_contract_change` and list changed inputs, without a delta or `target_met`. Candidate or controller changes alone do not prevent comparison. A missing prior measurement or metric is `unmeasured`. Comparable before/after changes remain descriptive; the controller cannot infer that the queued action caused them. Record failed attempts and actual resources as well as successes.
+On the next assessment, `prior_action_outcome` records the metric's new value, baseline, change, and whether the target was reached **only when suite, evaluator, policy, assertion implementation, source-span probe and store hashes match**. Changed contracts produce `incomparable_contract_change` and list changed inputs, without a delta or `target_met`; the first transition from an earlier probe-free run is therefore incomparable. Candidate or controller changes alone do not prevent comparison. A missing prior measurement or metric is `unmeasured`. Comparable before/after changes remain descriptive; the controller cannot infer that the queued action caused them. Record failed attempts and actual resources as well as successes.
 
 | Queued action | Work packet dispatched by supervisor | Acceptance before moving on |
 | --- | --- | --- |
@@ -91,15 +92,16 @@ On the next assessment, `prior_action_outcome` records the metric's new value, b
 | `repair_evidence_mapping` | Restore exact evidence ancestry in candidate output or adapter | Provenance reaches 1 on the declared suite; value errors remain visible. |
 | `cover_missing_answers` | Implement missing query obligations or explicitly document unresolved cases | Coverage reaches 1 for fixture acceptance without replacing missing answers with unsupported guesses; accuracy and provenance also pass. |
 | `repair_weakest_entity_family` | Fix the weakest family's failed dimensions | All seven families pass their declared contracts; retain per-case failures and tests. |
-| `build_source_span_assertions` | Packet A: byte-backed assertions, units, world/knowledge time, revisions and conflicts | Resolve spans against captured bytes, reject altered/out-of-range spans, preserve old views and disputes; independently review fixtures and implementation. |
+| `repair_source_span_assertions` | Repair the failing source-span or assertion-history API contract | All eight source-span and six history probes pass; inspect diagnostics and independently review the fix. |
+| `build_representation_manifests` | Packet B: versioned manifests, candidate identities, transformations and declared loss | Add a reviewed preservation metric and reconstruction fixtures before declaring Packet B complete. |
 
-`source_span_resolution` is **not implemented in this evaluator**; its current observed value is absent. Closing Packet A therefore also requires a versioned metric contract, new source-span fixtures, evaluator integration, and a reviewed selector update that recognizes completed capability and chooses Packet B or another measured gap. Until that update exists, the fallback always queues A. Repeating it cannot demonstrate progress.
+Packet A now has executable contract `source-span-probes-v1`: `source_span_resolution` is passed API checks / 8 and `assertion_history_preservation` is passed API checks / 6. These are implementation checks on synthetic ledgers, not rates of extracting true claims. Only after all representation gates and both fractions equal 1 does the selector recommend Packet B. The earlier unconditional Packet A fallback is replaced. `representation_manifest_preservation` remains unmeasured; close Packet B only with implementation, reviewed fixtures, a versioned metric and a selector update that recognizes the completed capability. A queue entry alone never proves completion.
 
 Longer term, a learned selector could forecast the chance and cost of an action improving a registered metric, compare itself with this fixed rule, and learn from all attempted actions. That requires stable action records, explicit uncertainty, outcome delays, protected evaluation, and fresh cohorts. It is planned research, not a feature of the present controller.
 
 ## Increase capability one axis at a time
 
-The adopted controls are local input validation, fixed program dispatch, immutable records, explicit failure handling, zero external spend, disabled scale changes, independent code review, and bounded supervisor cycles. The stages below are **planned gates**, not granted execution authority.
+The adopted controls are local input validation, fixed program dispatch, immutable records, explicit failure handling, zero external spend, disabled scale changes, independent code review, and regular supervisor checkpoints. Per-worker time/output limits remain hard limits; checkpoints do not terminate otherwise authorized active work. The stages below are **planned gates**, not granted execution authority.
 
 | Stage | Candidate next increase | Gate fixed before trying it |
 | --- | --- | --- |

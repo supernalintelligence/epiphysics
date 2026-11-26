@@ -2,13 +2,15 @@ import copy
 import json
 import os
 import subprocess
+import shutil
+import sys
 import tempfile
 import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from epiphysics import improvement
+from epiphysics import assertions, improvement
 from epiphysics.store import Ledger
 
 
@@ -39,7 +41,10 @@ class ImprovementTests(unittest.TestCase):
         events = self.ledger.events()
         self.assertEqual("improvement_completed", events[-1]["kind"])
         self.assertEqual(result["next_step"], events[-1]["body"]["next_step"])
-        self.assertEqual("build_source_span_assertions", result["next_step"]["action"])
+        self.assertEqual("build_representation_manifests", result["next_step"]["action"])
+        self.assertEqual(1, result["report"]["metrics"]["source_span_resolution"])
+        self.assertEqual(1, result["report"]["metrics"]["assertion_history_preservation"])
+        self.assertTrue({"assertions", "source_span_probe", "store"} <= result["request"]["manifest"].keys())
         self.assertFalse(result["next_step"]["scale_change_allowed"])
         self.assertEqual(0, result["actual_resources"]["external_spend"])
         self.assertEqual(result, self.run_assessment())
@@ -53,7 +58,7 @@ class ImprovementTests(unittest.TestCase):
     def test_measured_failure_selects_repair_and_next_assessment_records_outcome(self):
         first = self.run_assessment("degraded")
         self.assertLess(first["report"]["metrics"]["accuracy"], 1)
-        self.assertNotEqual("build_source_span_assertions", first["next_step"]["action"])
+        self.assertNotEqual("build_representation_manifests", first["next_step"]["action"])
         second = self.run_assessment(run_key="second", after="first:next")
         self.assertEqual("measured", second["prior_action_outcome"]["status"])
         self.assertTrue(second["prior_action_outcome"]["target_met"])
@@ -88,8 +93,9 @@ class ImprovementTests(unittest.TestCase):
     def test_comparison_requires_policy_and_evaluator_but_allows_candidate_and_controller_changes(self):
         previous = {"id": "step", "metric": "accuracy", "observed": 0.5, "target": 1, "direction": "increase"}
         report = {"metrics": {"accuracy": 1}}
-        manifest = {"suite": "s", "policy": "p", "evaluator": "e", "candidate": "a", "controller": "c"}
-        for key in ("policy", "evaluator"):
+        manifest = {"suite": "s", "policy": "p", "evaluator": "e", "candidate": "a", "controller": "c",
+                    "assertions": "a-code", "source_span_probe": "probe-code", "store": "store-code"}
+        for key in ("policy", "evaluator", "assertions", "source_span_probe", "store"):
             outcome = improvement._forecast_result(previous, report, manifest, {**manifest, key: "changed"})
             self.assertEqual("incomparable_contract_change", outcome["status"])
             self.assertEqual([key], outcome["changed_inputs"])
@@ -99,6 +105,10 @@ class ImprovementTests(unittest.TestCase):
                                                {**manifest, "candidate": "b", "controller": "new-controller"})
         self.assertEqual("measured", outcome["status"])
         self.assertEqual(0.5, outcome["change"])
+        legacy = {key: value for key, value in manifest.items() if key not in {"assertions", "source_span_probe", "store"}}
+        outcome = improvement._forecast_result(previous, report, legacy, manifest)
+        self.assertEqual("incomparable_contract_change", outcome["status"])
+        self.assertEqual(["assertions", "source_span_probe", "store"], outcome["changed_inputs"])
 
     def test_unauthorized_stage_budget_and_dropped_family_are_refused_before_claim(self):
         original = json.loads(self.policy.read_text())
@@ -118,7 +128,7 @@ class ImprovementTests(unittest.TestCase):
             result = self.run_assessment()
         self.assertEqual("failed", result["result"])
         self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
-        self.assertEqual(5, len(self.ledger.events("observation")))
+        self.assertEqual(8, len(self.ledger.events("observation")))
         self.assertEqual([], improvement.status(self.ledger)["unfinished_runs"])
         self.assertEqual(result, self.run_assessment())
 
@@ -191,6 +201,220 @@ class ImprovementTests(unittest.TestCase):
         self.assertEqual("collective", decision["family"])
         report["metrics"]["temporal_violations"] = 1
         self.assertEqual("repair_time_eligibility", improvement.select_next(report, "case")["action"])
+
+    def test_real_probe_failure_blocks_packet_b_despite_perfect_candidate_answers(self):
+        with patch.object(assertions, "resolve_span", return_value=b"wrong bytes"):
+            result = self.run_assessment()
+        self.assertEqual(1, result["report"]["metrics"]["accuracy"])
+        self.assertLess(result["report"]["metrics"]["source_span_resolution"], 1)
+        self.assertEqual("repair_source_span_assertions", result["next_step"]["action"])
+        failures = [row for row in result["report"]["source_span_checks"]["checks"] if not row["passed"]]
+        self.assertTrue(failures)
+        self.assertTrue(all("diagnostic" in row for row in failures))
+
+    def test_history_probe_failure_blocks_packet_b(self):
+        with patch.object(assertions, "assertions_as_of", return_value=[]):
+            result = self.run_assessment()
+        self.assertEqual(1, result["report"]["metrics"]["source_span_resolution"])
+        self.assertLess(result["report"]["metrics"]["assertion_history_preservation"], 1)
+        self.assertEqual("repair_source_span_assertions", result["next_step"]["action"])
+        self.assertEqual("assertion_history_preservation", result["next_step"]["metric"])
+
+    def _isolated_drift_check(self, mode, module_name="assertions", dependent_name=""):
+        package_root = self.root / f"isolated-{mode}-{module_name}-{dependent_name}"
+        shutil.copytree(Path(improvement.__file__).parent, package_root / "epiphysics",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        code = r'''
+import importlib,json,sys
+from pathlib import Path
+mode,name,dependent_name,policy,suite,store_path=sys.argv[1:]
+def alter(module):
+    path=Path(module.__file__)
+    if module.__name__.endswith('.store'):
+        source=path.read_bytes()
+        target=b'        cutoff = cutoff or self.clock()'
+        assert target in source
+        path.write_bytes(source.replace(target,b'        raise ValueError("Changed snapshot is broken")\n'+target,1))
+        return
+    functions={'assertions':'resolve_span','representation_checks':'evaluate','source_span_checks':'run_source_span_checks'}
+    function=functions.get(module.__name__.rsplit('.',1)[-1])
+    change=(("\ndef "+function+"(*args, **kwargs):\n    raise ValueError('Changed implementation on disk')\n").encode()
+            if function else b"\n# Unreviewed source edit after import\n")
+    path.write_bytes(path.read_bytes()+change)
+if mode == 'dependency_before_controller':
+    dependency=importlib.import_module('epiphysics.'+name)
+    alter(dependency)
+if mode == 'dependency_reload_before_controller':
+    dependent=importlib.import_module('epiphysics.'+dependent_name)
+    dependency=importlib.import_module('epiphysics.'+name)
+    old_dependency_code=dependency.IMPLEMENTATION_CODE
+    alter(dependency)
+    importlib.reload(dependency)
+    if dependent_name == 'source_span_checks' and name == 'store':
+        # Refresh the sibling so only the probe retains the stale store edge.
+        importlib.reload(importlib.import_module('epiphysics.assertions'))
+from epiphysics import improvement
+from epiphysics.store import Ledger,digest
+module=importlib.import_module('epiphysics.'+name)
+captured=module.IMPLEMENTATION_SOURCE
+assessment_callable=improvement.assess
+if mode == 'before_assessment':
+    alter(module)
+if mode == 'during_probe':
+    original=improvement.run_source_span_checks
+    def changing_probe():
+        report=original()
+        alter(module)
+        return report
+    improvement.run_source_span_checks=changing_probe
+if mode == 'reload_after_controller':
+    alter(module)
+    importlib.reload(module)
+if mode == 'reload_controller_stale_alias':
+    importlib.reload(improvement)
+ledger=Ledger(store_path)
+if mode == 'reload_with_stale_ledger':
+    importlib.reload(importlib.import_module('epiphysics.store'))
+    importlib.reload(improvement)
+    assessment_callable=improvement.assess
+try:
+    try:
+        result=assessment_callable(ledger,policy,suite,'reference','drift',completed_work='Isolated drift regression')
+        outcome={'result':result['result'],'message':result.get('message'),
+                 'next_action':result['next_step']['action'],'manifest':result['request']['manifest']}
+    except ValueError as error:
+        outcome={'result':'refused','message':str(error)}
+    outcome.update(events=[event['kind'] for event in ledger.events()],
+                   captured_sha256=digest(captured),disk_sha256=digest(Path(module.__file__).read_bytes()))
+    if mode == 'reload_after_controller':
+        function={'representation_checks':'evaluate','source_span_checks':'run_source_span_checks'}[name]
+        outcome['alias_is_current']=getattr(improvement,function) is getattr(module,function)
+    if mode == 'dependency_reload_before_controller':
+        outcome['dependency_code_changed']=old_dependency_code is not dependency.IMPLEMENTATION_CODE
+        outcome['dependency_source_matches_disk']=dependency.IMPLEMENTATION_SOURCE == Path(dependency.__file__).read_bytes()
+    print(json.dumps(outcome))
+finally:
+    ledger.close()
+'''
+        environment = {**os.environ, "PYTHONPATH": str(package_root), "PYTHONDONTWRITEBYTECODE": "1"}
+        result = subprocess.run([sys.executable, "-s", "-c", code, mode, module_name, dependent_name,
+                                 str(self.policy), str(self.suite), str(package_root / "ledger")],
+                                cwd=package_root, env=environment, capture_output=True, text=True, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_preassessment_disk_drift_is_refused_without_claiming_queue(self):
+        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement"):
+            with self.subTest(module=module):
+                outcome = self._isolated_drift_check("before_assessment", module)
+                self.assertEqual("refused", outcome["result"])
+                self.assertIn("changed since import", outcome["message"])
+                self.assertEqual([], outcome["events"])
+                self.assertNotEqual(outcome["captured_sha256"], outcome["disk_sha256"])
+
+    def test_dependency_imported_before_controller_retains_its_original_source_identity(self):
+        outcome = self._isolated_drift_check("dependency_before_controller")
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("assertions", outcome["message"])
+        self.assertEqual([], outcome["events"])
+
+    def test_source_drift_during_probe_fails_claimed_step_without_promotion(self):
+        outcome = self._isolated_drift_check("during_probe")
+        self.assertEqual("failed", outcome["result"])
+        self.assertEqual("diagnose_failed_assessment", outcome["next_action"])
+        self.assertIn("changed since import", outcome["message"])
+        self.assertEqual(1, outcome["events"].count("improvement_started"))
+        self.assertEqual(1, outcome["events"].count("improvement_failed"))
+        self.assertNotIn("improvement_completed", outcome["events"])
+        self.assertEqual(outcome["captured_sha256"], outcome["manifest"]["assertions"])
+        self.assertNotEqual(outcome["disk_sha256"], outcome["manifest"]["assertions"])
+
+    def test_hot_reload_cannot_pair_new_source_with_old_controller_alias(self):
+        outcome = self._isolated_drift_check("reload_after_controller", "representation_checks")
+        self.assertFalse(outcome["alias_is_current"])
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("reloaded since controller import", outcome["message"])
+        self.assertEqual([], outcome["events"])
+
+    def test_transitive_dependency_reload_before_controller_refuses_stale_import_graph(self):
+        for dependent, dependency, label in (
+            ("assertions", "store", "assertions"),
+            ("representation_checks", "store", "evaluator"),
+            ("source_span_checks", "store", "source_span_probe"),
+            ("source_span_checks", "assertions", "source_span_probe"),
+        ):
+            with self.subTest(dependent=dependent, dependency=dependency):
+                outcome = self._isolated_drift_check("dependency_reload_before_controller", dependency, dependent)
+                self.assertTrue(outcome["dependency_code_changed"])
+                self.assertTrue(outcome["dependency_source_matches_disk"])
+                self.assertEqual("refused", outcome["result"])
+                self.assertIn(f"Implementation dependency reloaded: {label} -> epiphysics.{dependency};", outcome["message"])
+                self.assertEqual([], outcome["events"])
+
+    def test_probe_reload_after_controller_refuses_stale_probe_alias(self):
+        outcome = self._isolated_drift_check("reload_after_controller", "source_span_checks")
+        self.assertFalse(outcome["alias_is_current"])
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("reloaded since controller import", outcome["message"])
+        self.assertEqual([], outcome["events"])
+
+    def test_stale_assessment_alias_is_refused_after_controller_reload(self):
+        outcome = self._isolated_drift_check("reload_controller_stale_alias", "improvement")
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("Stale assessment callable", outcome["message"])
+        self.assertEqual([], outcome["events"])
+
+    def test_old_ledger_instance_is_refused_after_store_and_controller_reload(self):
+        outcome = self._isolated_drift_check("reload_with_stale_ledger", "improvement")
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("Stale or unsupported ledger class", outcome["message"])
+        self.assertEqual([], outcome["events"])
+
+    def test_timestamp_valid_stale_bytecode_is_rejected(self):
+        package_root = self.root / "isolated-stale-bytecode"
+        shutil.copytree(Path(improvement.__file__).parent, package_root / "epiphysics",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        code = r'''
+import json,os,py_compile,sys
+from pathlib import Path
+policy,suite,store_path=sys.argv[1:]
+path=Path('epiphysics/assertions.py').resolve()
+stat=path.stat()
+original=path.read_bytes()
+assert b'MAX_SPANS = 100' in original
+py_compile.compile(str(path),doraise=True,invalidation_mode=py_compile.PycInvalidationMode.TIMESTAMP)
+changed=original.replace(b'MAX_SPANS = 100',b'MAX_SPANS = 101',1)
+assert len(changed)==len(original)
+path.write_bytes(changed)
+os.utime(path,ns=(stat.st_atime_ns,stat.st_mtime_ns))
+from epiphysics import improvement,assertions
+from epiphysics.store import Ledger
+ledger=Ledger(store_path)
+try:
+    try:
+        improvement.assess(ledger,policy,suite,'reference','stale-cache',completed_work='Test cached bytecode identity')
+        outcome={'result':'unexpected_success'}
+    except ValueError as error:
+        outcome={'result':'refused','message':str(error)}
+    outcome.update(loaded_limit=assertions.MAX_SPANS,captured_is_disk=assertions.IMPLEMENTATION_SOURCE==changed,
+                   size_unchanged=path.stat().st_size==stat.st_size,mtime_unchanged=path.stat().st_mtime_ns==stat.st_mtime_ns,
+                   events=[event['kind'] for event in ledger.events()])
+    print(json.dumps(outcome))
+finally:
+    ledger.close()
+'''
+        environment = {**os.environ, "PYTHONPATH": str(package_root), "PYTHONDONTWRITEBYTECODE": "1"}
+        result = subprocess.run([sys.executable, "-s", "-c", code, str(self.policy), str(self.suite), str(package_root / "ledger")],
+                                cwd=package_root, env=environment, capture_output=True, text=True, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        outcome = json.loads(result.stdout)
+        self.assertEqual(100, outcome["loaded_limit"])
+        self.assertTrue(outcome["captured_is_disk"])
+        self.assertTrue(outcome["size_unchanged"])
+        self.assertTrue(outcome["mtime_unchanged"])
+        self.assertEqual("refused", outcome["result"])
+        self.assertIn("does not match source: assertions", outcome["message"])
+        self.assertEqual([], outcome["events"])
 
     def test_real_dispatch_executes_fixed_program_and_preserves_receipts(self):
         result = improvement.dispatch(self.store, self.policy, self.suite, "reference", "spawned",
