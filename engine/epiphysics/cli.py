@@ -13,6 +13,7 @@ from .public_status import project_status, status_destination
 from .assertions import record_assertion, assertions_as_of
 from .manifests import register_manifest, forecast_manifest
 from .transforms import execute_graph_transform
+from .graph_views import execute_graph_views
 
 
 def _record_input(path):
@@ -80,6 +81,8 @@ def main():
     record.add_argument("file")
     transform = sub.add_parser("graph-transform", help="Execute a retained recipe for a fixed identity or induced-subgraph operation")
     transform.add_argument("file", help="Bounded JSON with parent_manifest_id, recipe_observation_id, and run_key")
+    graph_views = sub.add_parser("graph-views", help="Execute retained graph partition or strict merge recipes")
+    graph_views.add_argument("file", help="Bounded JSON with parent_manifest_ids, recipe_observation_id, and run_key")
     assertions = sub.add_parser("assertions", help="Query unsuperseded assertions at a recorded knowledge time")
     assertions.add_argument("--known-at", required=True)
     assertions.add_argument("--valid-at")
@@ -126,6 +129,8 @@ def main():
                 result = assertions_as_of(ledger, args.known_at, valid_at=args.valid_at, observer=args.observer)
             elif args.command == "graph-transform":
                 result = execute_graph_transform(ledger, **_record_input(args.file))
+            elif args.command == "graph-views":
+                result = execute_graph_views(ledger, **_record_input(args.file))
             elif args.command == "score":
                 result = ledger.scores()
             elif args.command == "compare":
@@ -162,6 +167,8 @@ def main():
         else:
             print(rendered)
         if args.command == "graph-transform" and result["kind"] == "graph_transform_rejected":
+            return 2
+        if args.command == "graph-views" and result["kind"] == "graph_views_rejected":
             return 2
         return 1 if args.command == "verify" and not result["valid"] else 0
     except (ValueError, OSError, TypeError, KeyError) as error:

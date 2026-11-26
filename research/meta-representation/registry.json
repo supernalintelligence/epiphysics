@@ -68,6 +68,28 @@
       "repo_path": "docs/planning/runs/2026-11-25-representation-manifests.md"
     },
     {
+      "id": "doc_graph_transforms_run",
+      "kind": "document",
+      "title": "Reviewed fixed graph-operation execution record",
+      "repo_path": "docs/planning/runs/2026-11-25-graph-transforms.md"
+    },
+    {
+      "id": "claim_fixed_graph_conformance",
+      "kind": "claim",
+      "title": "Recorded fixed graph-operation conformance",
+      "statement": "The committed B2a run record documents local independent review and 26/26 synthetic API checks under graph-transformation-probes-v2. The fixed identity/projection implementation computes outputs and losses and rejects altered completion inputs. This is bounded local conformance, not arbitrary artifact execution, semantic equivalence, external witnessing or predictive advantage.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_graph_output_scope",
+      "kind": "claim",
+      "title": "Embedded outputs and assessment costs have limited scope",
+      "statement": "The B2a run record embeds generated graphs in completion events without materializing new representation or forecast manifests. Its elapsed time and zero program model calls/external spend cover assessment, not the full builder and reviewer effort. The retained record does not close either the output-consumer or whole-step cost gap.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
       "id": "claim_source_assertions_conformance",
       "kind": "claim",
       "title": "Recorded assertion API conformance",
@@ -395,6 +417,16 @@
     }
   ],
   "edges": [
+    {
+      "source": "claim_fixed_graph_conformance",
+      "target": "doc_graph_transforms_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_output_scope",
+      "target": "doc_graph_transforms_run",
+      "type": "cites"
+    },
     {
       "source": "claim_source_assertions_conformance",
       "target": "doc_source_assertions_run",
