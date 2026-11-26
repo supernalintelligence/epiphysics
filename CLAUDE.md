@@ -27,7 +27,11 @@ npm run build                 # must pass before push
 
 ## GitHub
 Repo: supernalintelligence/epiphysics
-Always push to main. Vercel auto-deploys.
+Flow: `ian-dev` -> `main` -> `production`.
+- Land work on `ian-dev` (commit, then push to `origin ian-dev`). It does not deploy.
+- Promote by pull request only: `ian-dev` -> `main`, then `main` -> `production`.
+- Never push directly to `main` or `production`. GitHub branch protection refuses it.
+- Vercel builds and deploys only `production` (project Ignored Build Step skips every other branch).
 Do NOT commit .env.local or secrets.
 
 ## Naming
