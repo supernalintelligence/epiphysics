@@ -602,6 +602,32 @@
       "statement": "C4 preparation validated reviewed inputs without quality claims and selected two fresh raw executions. They reproduced exactly: five of six supported questions had a complete declared bundle at ranks 1, 3 and 5; all six unsupported questions returned passages. The controller selected inspection of the remaining declared-support gap. Three entity families remain unmeasured, and changed questions/scoring prevent a quality delta against C1/C3. No answers or answerability classifier were executed.",
       "status": "reported_result",
       "basis": "observed"
+    },
+    {
+      "id": "doc_retrieval_support_diagnosis_protocol",
+      "kind": "document",
+      "title": "Retained-evidence support diagnosis protocol",
+      "repo_path": "docs/experiments/retrieval-support-diagnosis.md"
+    },
+    {
+      "id": "exp_support_diagnosis",
+      "kind": "experiment",
+      "title": "Distinguish omitted retrieval evidence from annotation gaps",
+      "status": "proposed"
+    },
+    {
+      "id": "doc_retrieval_support_diagnosis_run",
+      "kind": "document",
+      "title": "Checked missing-evidence diagnosis and follow-up handoff",
+      "repo_path": "docs/planning/runs/2026-11-26-retrieval-diagnosis.md"
+    },
+    {
+      "id": "claim_support_diagnosis_result",
+      "kind": "claim",
+      "title": "Missing discovery evidence survived representation but was not retrieved",
+      "statement": "C5 reconciled the exposed C4 joint question with its saved receipts and exact source intervals. Discovery support was absent from the five returned windows but complete in the retained raw projection. Independent semantic review found no alternative complete answer in those windows. The fixed worker preserved all original scores and source bytes and selected one bounded follow-up preparation. This local diagnosis does not identify the ranking cause, demonstrate query-decomposition benefit or measure generated answers.",
+      "status": "reported_result",
+      "basis": "observed"
     }
   ],
   "edges": [
@@ -1273,6 +1299,31 @@
     {
       "source": "claim_fresh_coverage_result",
       "target": "exp_complete_support",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_support_diagnosis",
+      "target": "doc_retrieval_support_diagnosis_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fresh_coverage_result",
+      "target": "exp_support_diagnosis",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_support_diagnosis_result",
+      "target": "doc_retrieval_support_diagnosis_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_support_diagnosis_result",
+      "target": "doc_retrieval_support_diagnosis_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_support_diagnosis_result",
+      "target": "exp_support_diagnosis",
       "type": "depends_on"
     }
   ]

@@ -332,6 +332,8 @@ The supplied policy `offline-contracts-materialization-v6` permits only the offl
 
 The supervisor checks progress every 30 minutes or three core steps, then continues ready authorized work while its session is active. These checkpoints are review boundaries, not session stop rules. The 15-minute heartbeat checks for an existing active job before dispatching; it must not duplicate that work. Worker time/output limits and zero external spend remain unchanged. Neither schedule configuration nor a durable queue promises an always-online agent.
 
+Retained support failures can now use the schema-3 `support_diagnosis` phase. It checks original receipts and exact source intervals, retains independent semantic review as attributed claims, and binds the result to the actual queued predecessor. A checked diagnosis records follow-up preparation or clarification atomically; it does not rerun retrieval or emit a new quality score. The [study instructions](examples/retrieval/README.md#diagnose-a-retained-support-gap) describe exact additional fields, review categories and replay limits.
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:

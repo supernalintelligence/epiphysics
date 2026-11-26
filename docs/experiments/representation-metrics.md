@@ -182,6 +182,10 @@ Preparation validates the exact retained cohort, protocol, independent review an
 
 The [actual C4 record](../planning/runs/2026-11-26-retrieval-coverage.md) contains two exactly reproduced runs: complete declared support is 5/6 at 1/3/5, complete source sets 6/6, unsupported hits 6/6 and empty results 0/12. The controller selected inspection of the sole incomplete declared bundle case. These are descriptions of the six reviewed pairs; they neither improve nor worsen the earlier cohort's different metric contract.
 
+Support diagnosis reports covered and missing byte intervals for selected failed questions, with returned-window coverage separate from retained-projection coverage. These are checks of the saved result, not a fresh retrieval score. Annotation gaps, retrieval gaps and unresolved interpretations remain attributed review categories. The full failed-case inventory and deferred cases stay visible. A checked diagnosis leaves the prior quality outcome `unmeasured`; it cannot supply a zero-change improvement or calibrate the next action's success probability. The [diagnosis protocol](retrieval-support-diagnosis.md) fixes this distinction.
+
+For diagnosis timing, the assessment's stored inner duration ends before completion-time revalidation. The acceptance budget also checks that revalidation; dispatcher and outer caller durations include more of the lifecycle. Report these nested scopes separately rather than adding them. Whole-step builder/reviewer cost remains unknown.
+
 ## Prediction, calibration and coverage
 
 For binary outcomes, use mean Brier loss `(p − y)²` or log loss `−[y log p + (1−y) log(1−p)]`, lower being better. CRPS compares a predictive cumulative distribution with a realized scalar outcome; its units follow the outcome. Proper scores reward truthful probabilities in expectation. Calibration compares probabilities with observed frequencies; interval coverage needs interval width alongside it. [Gneiting and Raftery (2007)](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)
