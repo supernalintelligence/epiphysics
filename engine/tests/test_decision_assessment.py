@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from epiphysics import decision_assessment as assessment
+from epiphysics import decision_diagnosis as diagnosis
 from epiphysics import decision_evaluation as evaluation
 from epiphysics import decision_views as views
 
@@ -205,6 +206,37 @@ def write_fresh_study(directory, cohort, report):
     Path(request["paths"]["caller_stderr"]).write_bytes(stderr)
     path.write_bytes(raw(request))
     return path
+
+
+class DiagnosisBridgeTests(unittest.TestCase):
+    def test_explicit_diagnosis_routes_before_legacy_request_cap(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "diagnosis-request.json"
+            path.write_bytes(raw({"phase": diagnosis.PHASE, "padding": "x" * 20000}))
+            prepared = {"artifacts": {"request": path.read_bytes()}, "manifest": {}, "report": {}}
+            with patch.object(diagnosis, "prepare_diagnosis", return_value=prepared) as prepare:
+                self.assertIs(assessment.prepare_decision_study(path), prepared)
+            prepare.assert_called_once_with(path)
+            with patch.object(diagnosis, "check_prepared_diagnosis") as check:
+                assessment.check_prepared_decision_study(prepared)
+            check.assert_called_once_with(prepared)
+            result = {"report": {"status": "checked"}, "artifacts": {}}
+            with patch.object(diagnosis, "assess_prepared_diagnosis", return_value=result) as assess:
+                self.assertIs(assessment.assess_prepared_decision_study(prepared), result)
+            assess.assert_called_once_with(prepared)
+
+    def test_diagnosis_failure_preserves_new_historical_artifact_roles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "request.json"
+            path.write_bytes(raw({"phase": diagnosis.PHASE}))
+            error = diagnosis.PreparationError("owned incomplete history", {
+                "request": path.read_bytes(), "c8:caller_stdout": b"retained", "ledger_prefix": b"[]"})
+            with patch.object(diagnosis, "prepare_diagnosis", side_effect=error):
+                with self.assertRaises(diagnosis.PreparationError) as caught:
+                    assessment.prepare_decision_study(path)
+            self.assertIs(caught.exception, error)
+            self.assertEqual(caught.exception.artifacts["c8:caller_stdout"], b"retained")
+            self.assertEqual(caught.exception.artifacts["ledger_prefix"], b"[]")
 
 
 class DecisionAssessmentTests(unittest.TestCase):

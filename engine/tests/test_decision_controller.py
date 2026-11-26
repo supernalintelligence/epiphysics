@@ -265,5 +265,302 @@ class DecisionControllerTests(unittest.TestCase):
         self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
 
 
+class DecisionDiagnosisControllerTests(unittest.TestCase):
+    """Real queue/claim controls; core ancestry has separate non-stub tests."""
+
+    def setUp(self):
+        DecisionControllerTests.setUp(self)
+        self.parent = self.ledger.append("improvement_completed", {
+            "run_key": "owned-fresh", "request": {"manifest": {}},
+            "next_step": {"id": self.origin, "state": "queued",
+                          "action": "investigate_decision_information_limits"}}, "owned-fresh-complete")
+        self.compact.update(phase=improvement.decision_diagnosis.PHASE,
+            stage=improvement.decision_diagnosis.STAGE,
+            contract_id=improvement.decision_diagnosis.CONTRACT_ID,
+            evidence_origin={"event_id": self.parent["id"], "event_hash": self.parent["hash"]},
+            queue_parent={"event_id": self.parent["id"], "event_hash": self.parent["hash"]},
+            ancestry={"scope": "synthetic controller wiring only"},
+            next_step={"action": "prepare_dated_evidence_quality_protocol"})
+        self.prepared["artifacts"]["queue_parent"] = canonical(self.parent).encode()
+
+        def lineage(prepared, events, after_step):
+            # Simulate the core's exact-parent verdict. This stub does not
+            # stand in for historical blob or failed-request proof validation.
+            current = [e for e in events if e["kind"] in improvement.TRANSITIONS][-1]
+            if (prepared["artifacts"]["queue_parent"] != canonical(current).encode()
+                    or current["body"]["next_step"]["id"] != after_step):
+                raise ValueError("Owned lineage control refuses changed parent")
+
+        self.lineage = self.patches.enter_context(patch.object(
+            improvement.decision_diagnosis, "validate_lineage", side_effect=lineage))
+
+    tearDown = DecisionControllerTests.tearDown
+    run_assessment = DecisionControllerTests.run_assessment
+
+    def test_checked_diagnosis_is_atomic_and_exact_replay_does_not_assess(self):
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
+        self.assertEqual(result["next_step"]["action"], "prepare_dated_evidence_quality_protocol")
+        self.assertEqual(result["next_step"]["evidence"]["evidence_origin"], self.compact["evidence_origin"])
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+        self.assertIn("96 retained", result["scope"])
+        self.assertGreaterEqual(self.lineage.call_count, 4)
+        transitions = [e for e in self.ledger.events() if e["kind"] in improvement.TRANSITIONS
+                       and e["body"]["run_key"] == "owned-decision-run"]
+        self.assertEqual(len(transitions), 1)
+        self.measured.reset_mock()
+        before = len(self.ledger.events())
+        self.assertEqual(self.run_assessment(), result)
+        self.measured.assert_not_called()
+        self.assertEqual(len(self.ledger.events()), before)
+
+    def test_checked_diagnosis_routes_each_declared_successor(self):
+        for action in ("repair_decision_information_diagnosis", "review_unresolved_decision_evidence",
+                       "prepare_dated_evidence_quality_protocol"):
+            report = improvement.evaluate(improvement._load(self.suite)[0],
+                improvement.reference_candidate(improvement._load(self.suite)[0]))
+            for metric in ("source_span_resolution", "assertion_history_preservation",
+                           "representation_manifest_preservation", "transformation_preservation",
+                           "split_merge_preservation", "output_manifest_materialization"):
+                report["metrics"][metric] = 1
+            report["decision_pilot"] = deepcopy(self.compact)
+            report["decision_pilot"]["next_step"]["action"] = action
+            with self.subTest(action=action):
+                self.assertEqual(improvement.select_next(report, "owned")["action"], action)
+        report["decision_pilot"]["contract_id"] = "unreviewed-contract"
+        with self.assertRaisesRegex(ValueError, "diagnostic contract"):
+            improvement.select_next(report, "owned")
+
+    def test_bad_diagnosis_origin_is_refused_before_claim(self):
+        self.compact["origin"]["step_id"] = "unrelated"
+        before = len(self.ledger.events())
+        with self.assertRaisesRegex(ValueError, "currently queued"):
+            self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), before)
+        self.measured.assert_not_called()
+
+    def test_preparation_failure_does_not_consume_diagnostic_queue(self):
+        failed = {"prepared": {"artifacts": {"invalid-request": b"owned failure"}},
+                  "error": {"message": "owned missing historical blob"}}
+        before = len(self.ledger.events())
+        with patch.object(improvement, "_prepare_decision", return_value=failed):
+            with self.assertRaisesRegex(ValueError, "missing historical blob"):
+                self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), before)
+        self.assertEqual(improvement.status(self.ledger)["next_step"]["action"],
+                         "investigate_decision_information_limits")
+
+    def test_parent_changed_at_claim_is_refused_without_a_claim(self):
+        real = self.lineage.side_effect
+        calls = 0
+        def check(prepared, events, after_step):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise ValueError("Owned parent changed under claim lock")
+            return real(prepared, events, after_step)
+        self.lineage.side_effect = check
+        before = len(self.ledger.events())
+        with self.assertRaisesRegex(ValueError, "claim lock"):
+            self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), before)
+        self.measured.assert_not_called()
+
+    def test_parent_changed_after_measurement_does_not_publish_diagnostic(self):
+        def measure(prepared):
+            result = {"report": deepcopy(prepared["report"]), "artifacts": dict(prepared["artifacts"])}
+            prepared["artifacts"]["queue_parent"] = b"changed parent bytes"
+            return result
+        self.measured.side_effect = measure
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertEqual(result["next_step"]["action"], "diagnose_failed_assessment")
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+
+    def test_generic_assessment_cannot_consume_diagnosis_or_its_failure(self):
+        for action in ("investigate_decision_information_limits", "repair_decision_information_diagnosis",
+                       "review_unresolved_decision_evidence", "prepare_dated_evidence_quality_protocol"):
+            self.ledger.append("improvement_completed", {"run_key": "owned-" + action,
+                "request": {"manifest": {}}, "next_step": {"id": self.origin, "state": "queued", "action": action}},
+                "owned-" + action)
+            before = len(self.ledger.events())
+            with self.subTest(action=action), patch.object(improvement, "_prepare_decision", side_effect=REAL_PREPARE):
+                with self.assertRaisesRegex(ValueError, "generic assessment cannot complete"):
+                    improvement.assess(self.ledger, self.policy, self.suite, "reference", "missing-" + action,
+                        after_step=self.origin, completed_work="Owned missing evidence control")
+            self.assertEqual(len(self.ledger.events()), before)
+        self.ledger.append("improvement_failed", {"run_key": "owned-failure",
+            "request": {"manifest": {"decision-input:request": "a" * 64}},
+            "next_step": {"id": self.origin, "state": "queued", "action": "diagnose_failed_assessment"}},
+            "owned-failure")
+        before = len(self.ledger.events())
+        with patch.object(improvement, "_prepare_decision", side_effect=REAL_PREPARE):
+            with self.assertRaisesRegex(ValueError, "failed decision assessment requires"):
+                improvement.assess(self.ledger, self.policy, self.suite, "reference", "clear-failure",
+                    after_step=self.origin, completed_work="Owned unrelated generic assessment")
+        self.assertEqual(len(self.ledger.events()), before)
+
+
+    def test_protocol_successor_refuses_malformed_and_wrong_phase_before_claim(self):
+        self.ledger.append("improvement_completed", {"run_key": "owned-protocol-preparation",
+            "request": {"manifest": {}}, "next_step": {"id": self.origin, "state": "queued",
+            "action": "prepare_dated_evidence_quality_protocol"}}, "owned-protocol-preparation")
+        before = len(self.ledger.events())
+        failed = {"prepared": {"artifacts": {"invalid-request": b"owned malformed request"}},
+                  "error": {"message": "owned unreadable protocol evidence"}}
+        with patch.object(improvement, "_prepare_decision", return_value=failed):
+            with self.assertRaisesRegex(ValueError, "unreadable protocol evidence"):
+                self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), before)
+        for phase in ("development", "fresh_comparison"):
+            self.compact["phase"] = phase
+            with self.subTest(phase=phase), self.assertRaises(ValueError):
+                self.run_assessment()
+            self.assertEqual(len(self.ledger.events()), before)
+        self.assertEqual(improvement.status(self.ledger)["next_step"]["action"],
+                         "prepare_dated_evidence_quality_protocol")
+        self.measured.assert_not_called()
+
+
+    def test_explicit_invalid_diagnosis_cannot_consume_an_unrelated_queue(self):
+        self.ledger.append("improvement_completed", {"run_key": "owned-generic",
+            "request": {"manifest": {}}, "next_step": {"id": self.origin, "state": "queued",
+            "action": "build_retrieval_baseline"}}, "owned-generic")
+        path = self.root / "owned-request.json"
+        path.write_text(canonical({"phase": improvement.decision_diagnosis.PHASE,
+                                   "schema_version": 999, "invalid": "owned malformed diagnosis"}))
+        before = len(self.ledger.events())
+        with patch.object(improvement, "_prepare_decision", side_effect=REAL_PREPARE):
+            with self.assertRaisesRegex(ValueError, "Invalid supplied decision diagnosis"):
+                self.run_assessment()
+        self.assertEqual(len(self.ledger.events()), before)
+        self.assertEqual(improvement.status(self.ledger)["next_step"]["action"], "build_retrieval_baseline")
+        self.measured.assert_not_called()
+
+    def test_impossible_nested_diagnostic_time_fails_with_receipt(self):
+        self.measured.side_effect = lambda prepared: {
+            "report": deepcopy(prepared["report"]), "artifacts": dict(prepared["artifacts"]),
+            "actual_resources": {"diagnostic_elapsed_seconds": 9.0}}
+        tick = [0.0]
+        def clock():
+            tick[0] += 0.001
+            return tick[0]
+        with patch.object(improvement.time, "monotonic", side_effect=clock):
+            result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertIn("exceeds its enclosing assessment duration", result["message"])
+        self.assertEqual(result["next_step"]["action"], "diagnose_failed_assessment")
+
+
+class DecisionDiagnosisIntegrationTests(unittest.TestCase):
+    """Actual diagnostic, historical blobs and controller; no research data."""
+
+    def setUp(self):
+        from test_decision_diagnosis import make_study
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.study = make_study(Path(self.temporary.name))
+        self.ledger = self.study["ledger"]
+        self.addCleanup(self.ledger.close)
+        self.patches = ExitStack()
+        self.addCleanup(self.patches.close)
+        # These old fixture probes have separate integration coverage. The
+        # diagnostic, ancestry validator, captures and atomic locks stay real.
+        for name, metrics in (
+            ("run_source_span_checks", ("source_span_resolution", "assertion_history_preservation")),
+            ("run_manifest_checks", ("representation_manifest_preservation",)),
+            ("run_transformation_checks", ("transformation_preservation",)),
+            ("run_graph_view_checks", ("split_merge_preservation",)),
+            ("run_materialization_checks", ("output_manifest_materialization",)),
+        ):
+            self.patches.enter_context(patch.object(improvement, name,
+                return_value={"metrics": {metric: 1 for metric in metrics}, "scope": "owned legacy probe stub"}))
+
+    def assess(self, run_key, *, candidate="reference"):
+        return improvement.assess(self.ledger, EXAMPLES / "policy.json", EXAMPLES / "entities.json",
+            candidate, run_key, after_step=self.study["request"]["origin"]["step_id"],
+            completed_work="Owned real-diagnostic integration control; not a research execution",
+            decision_study_path=self.study["request_path"])
+
+    def assert_full_completion(self, result):
+        self.assertEqual(result["result"], "assessed", result.get("message"))
+        pilot = result["report"]["decision_pilot"]
+        self.assertEqual(pilot["phase"], improvement.decision_diagnosis.PHASE)
+        self.assertEqual(pilot["counts"]["attempts"], 96)
+        self.assertEqual(pilot["status"], "checked")
+        self.assertGreaterEqual(result["actual_resources"]["first_diagnostic_elapsed_seconds"], 0)
+        self.assertLessEqual(result["actual_resources"]["first_diagnostic_elapsed_seconds"], 10)
+        observation = self.ledger.get(result["input_observations"]["decision-result:diagnostic_table"], "observation")
+        raw = (self.ledger.root / "blobs" / observation["body"]["content_hash"]).read_bytes()
+        self.assertEqual(digest(raw), pilot["diagnosis"]["detail_sha256"])
+        self.assertEqual(len(json.loads(raw)["attempts"]), 96)
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+        self.assertTrue(self.ledger.verify()["valid"])
+
+    def test_real_initial_diagnosis_and_zero_computation_replay(self):
+        from test_decision_diagnosis import calls_named, FORBIDDEN_CALLS
+        with calls_named(FORBIDDEN_CALLS) as forbidden:
+            result = self.assess("owned-information-initial")
+        self.assertEqual(forbidden, [])
+        self.assert_full_completion(result)
+        before = len(self.ledger.events())
+        with calls_named(FORBIDDEN_CALLS | {"_diagnose"}) as replayed:
+            self.assertEqual(self.assess("owned-information-initial"), result)
+        self.assertEqual(replayed, [])
+        self.assertEqual(len(self.ledger.events()), before)
+        changed = deepcopy(self.study["request"])
+        changed["study_id"] = "owned-altered-replay"
+        self.study["request_path"].write_text(canonical(changed))
+        with self.assertRaisesRegex(ValueError, "Run key already used with different"):
+            self.assess("owned-information-initial")
+        self.assertEqual(len(self.ledger.events()), before)
+
+    def test_real_failed_diagnosis_directly_completes_full_corrected_diagnosis(self):
+        from test_decision_diagnosis import calls_named, FORBIDDEN_CALLS
+        with patch.object(improvement.decision_assessment, "assess_prepared_decision_study",
+                          side_effect=ValueError("Owned postclaim diagnostic interruption")):
+            failed = self.assess("owned-information-failed")
+        self.assertEqual(failed["result"], "failed")
+        self.assertEqual(failed["next_step"]["action"], "diagnose_failed_assessment")
+        failure_event = self.ledger.get("improvement:owned-information-failed:failed")
+        request = self.study["request"]
+        request["origin"] = {"step_id": failed["next_step"]["id"]}
+        request["queue_parent"] = {"event_id": failure_event["id"], "event_hash": failure_event["hash"]}
+        self.study["request_path"].write_text(canonical(request))
+        with calls_named(FORBIDDEN_CALLS) as forbidden:
+            completed = self.assess("owned-information-corrected")
+        self.assertEqual(forbidden, [])
+        self.assert_full_completion(completed)
+        self.assertEqual(completed["report"]["decision_pilot"]["ancestry"]["mode"], "failed_attempt_continuation")
+        self.assertEqual(completed["report"]["decision_pilot"]["evidence_origin"]["event_hash"],
+                         self.study["origin"]["hash"])
+        transitions = [e for e in self.ledger.events() if e["kind"] in improvement.TRANSITIONS]
+        self.assertEqual([e["body"]["run_key"] for e in transitions],
+                         ["owned-c8", "owned-information-failed", "owned-information-corrected"])
+        self.assertEqual(completed["next_step"]["action"], "prepare_dated_evidence_quality_protocol")
+        before = len(self.ledger.events())
+        with calls_named(FORBIDDEN_CALLS | {"_diagnose"}) as replayed:
+            self.assertEqual(self.assess("owned-information-corrected"), completed)
+        self.assertEqual(replayed, [])
+        with self.assertRaisesRegex(ValueError, "Stale predecessor"):
+            self.assess("owned-information-stale")
+        self.assertEqual(len(self.ledger.events()), before)
+
+
+    def test_failed_enclosing_fixture_cannot_replace_the_diagnostic_successor(self):
+        result = self.assess("owned-information-degraded", candidate="degraded")
+        self.assertEqual(result["result"], "failed")
+        self.assertIn("enclosing conformance check", result["message"])
+        self.assertEqual(result["next_step"]["action"], "diagnose_failed_assessment")
+        self.assertIn("decision-input:request", result["request"]["manifest"])
+        observations = [e for e in self.ledger.events() if e["kind"] == "observation"]
+        self.assertTrue(any(e["body"]["source"] == "improvement-input:decision-result:diagnostic_table"
+                            for e in observations))
+        self.assertFalse(any(e["kind"] == "improvement_completed"
+                             and e["body"]["run_key"] == "owned-information-degraded" for e in self.ledger.events()))
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

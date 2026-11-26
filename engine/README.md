@@ -344,6 +344,34 @@ The separate `fresh_comparison` phase extends that path to one registered 24-cas
 
 Fresh results select repair, preparation of a nonacting prospective test, or investigation of information limits. The latter two are research tasks for the supervisor, not executable generic assessments: omission of their specific evidence is refused. There is no automatic repeat, learned selector, live authority or scale promotion. Fresh-only evidence caps are 16 MiB report, 24 MiB journal and 48 MiB bundle so all 96 maximal failure prefixes can survive validation; existing development caps and 30/60-second program limits stay fixed. See the [fresh comparison protocol](../docs/experiments/control-exchange-fresh-comparison.md).
 
+### Diagnose retained decision information
+
+The `information_limits_diagnosis` phase uses the same `--decision-study FILE` entry point. Its [contract](examples/control-exchange/information-contract.json) covers the 96 accepted fresh attempts. It parses dated evidence and retained source/view mappings, reconciles the original metrics, and reports supplemental retention and verification-quality findings. It never executes the original decision candidates. Controller acceptance still runs the existing synthetic conformance probes.
+
+A request has these exact fields; paths must be absolute and identifiers must come from verified ledger state:
+
+```json
+{
+  "schema_version": 1,
+  "study_id": "your-diagnosis-id",
+  "phase": "information_limits_diagnosis",
+  "origin": {"step_id": "CURRENT_QUEUED_STEP_ID"},
+  "ledger_path": "/absolute/path/to/persistent-improvement-store",
+  "evidence_origin": {"event_id": "ACCEPTED_C8_EVENT_ID", "event_hash": "ACCEPTED_C8_EVENT_HASH"},
+  "queue_parent": {"event_id": "CURRENT_TRANSITION_ID", "event_hash": "CURRENT_TRANSITION_HASH"},
+  "paths": {"contract": "/absolute/path/to/information-contract.json"},
+  "supplemental_evidence": {}
+}
+```
+
+The two event identities coincide only for the initial handoff. A checked repair/review or verified failed attempt uses its own immediate queue parent while keeping the accepted C8 origin. The loader opens the existing ledger read-only, captures the bounded historical prefix ending at that parent, and resolves C8 observations and content-addressed blobs. Old worktree paths are metadata, never locators. Current diagnostic/helper/controller sources are separately identified; historical code is never executed. The retained view decoder must match the accepted view format.
+
+Optional supplemental entries are named `outer_execution` and `custodian_process`, each with `path`, `sha256` and `source`. They are separately attributed local receipts, not invented C8 input roles. Omit them when unavailable. They cannot replace a missing accepted artifact or establish an external time witness.
+
+`prepare_diagnosis` and `check_prepared_diagnosis` capture/check inputs and ancestry without computing the case diagnosis. `assess_prepared_diagnosis` returns a compact checked report, a separate `diagnostic_table` artifact, and measured diagnostic wall time outside the deterministic report. The controller captures both outputs. Exact successful replay checks input identity and returns the recorded result without calling the diagnostic; changed inputs under the same run key are refused.
+
+Initial evidence errors and stale/unrelated ancestry refuse before claim, leaving the queue unchanged. A durable C9 failure requires the captured prior request, its actual claim and original semantic parent before a corrected full diagnostic can consume it. Generic fixture assessments and failure notes cannot substitute. A successful corrected diagnostic writes one completion and its normal successor, without an intermediate requeue. The [protocol](../docs/experiments/control-exchange-information-limits.md) defines the three nonexclusive axes, explicit unknowns and bounded next steps.
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:
