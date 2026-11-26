@@ -1,0 +1,930 @@
+{
+  "schema_version": 1,
+  "contract_id": "control-exchange-release-hold-v1",
+  "status": "development_preparation_review_candidate",
+  "fixture_date": "2026-11-26",
+  "scope": {
+    "mode": "owned_simulation_only",
+    "roles": [
+      "requester",
+      "delegate",
+      "provider"
+    ],
+    "objects": [
+      "artifact",
+      "obligation"
+    ],
+    "actions": [
+      "release",
+      "hold"
+    ],
+    "live_effects": false,
+    "external_spend": 0,
+    "model_calls": 0
+  },
+  "input_schema": {
+    "exact_fields": [
+      "schema_version",
+      "contract_id",
+      "time_origin",
+      "cutoff",
+      "decision_at",
+      "task",
+      "events"
+    ],
+    "task_fields": [
+      "obligation_id",
+      "requester",
+      "delegate",
+      "provider",
+      "artifact_id",
+      "artifact_sha256",
+      "amount",
+      "unit",
+      "deadline"
+    ],
+    "task_constraints": "One obligation, one expected artifact hash, one provider, positive integer simulation_credit amount; distinct role IDs and artifact/obligation IDs; whole-second UTC times.",
+    "event_fields": [
+      "event_id",
+      "kind",
+      "issuer",
+      "subject",
+      "object",
+      "obligation_id",
+      "effective_at",
+      "observed_at",
+      "reference",
+      "artifact_sha256",
+      "verdict",
+      "authentication"
+    ],
+    "event_kinds": [
+      "grant",
+      "revoke",
+      "delivery_claim",
+      "verification",
+      "dispute_open",
+      "dispute_close",
+      "release_committed",
+      "note"
+    ],
+    "authentication": [
+      "verified",
+      "unknown",
+      "invalid"
+    ],
+    "verdict_by_kind": {
+      "verification": [
+        "pass",
+        "fail"
+      ],
+      "other_kinds": [
+        null
+      ]
+    },
+    "max_input_bytes": 32768,
+    "max_domain_events_including_private_outcome": 16,
+    "cutoff_rule": "Both arms receive exactly same-obligation records with observed_at <= cutoff. Visible future-effective records remain in tape and charged census, but no kind may alter current state, satisfy a prerequisite, create an operative conflict or close a dispute unless effective_at <= decision_at. No case/attempt ID, annotations, private outcome, hidden-state label, seed or evaluator result enters candidate input.",
+    "canonical_tape": "Use exact codec below. Strictly unique event IDs; sort eligible events by parsed observed_at then event_id in Unicode code-point order. Each canonical event object contributes its UTF-8 bytes plus one LF byte. Span start/end is zero-based, half-open, and excludes that LF. Header is exact schema excluding events; input_hash=SHA256(header_bytes+LF+tape).",
+    "synthetic_times": "2020-01-01T00:00:00Z is the owned fixture time origin. It is not Ledger.recorded_at; future ingestion uses current capture time and labels simulated clocks.",
+    "event_identity": "event_id is unique within the complete case history, including the private outcome ID. Preparation rejects duplicates before filtering; eligible tape therefore has one event ID and one distinct canonical row span per event. Input order has no semantic priority.",
+    "field_constraints": {
+      "identifiers": {
+        "fields": [
+          "task.obligation_id",
+          "task.requester",
+          "task.delegate",
+          "task.provider",
+          "task.artifact_id",
+          "event.event_id",
+          "event.issuer",
+          "event.subject",
+          "event.object",
+          "event.obligation_id"
+        ],
+        "type": "nonempty string, UTF-8 length1..32, no whitespace or Unicode control code points U+0000..U+001F/U+007F; no Unicode normalization"
+      },
+      "digests": {
+        "fields": [
+          "task.artifact_sha256",
+          "event.artifact_sha256 when nonnull",
+          "release_committed.reference"
+        ],
+        "type": "64 lowercase ASCII hex characters"
+      },
+      "references": {
+        "grant": "null",
+        "revoke": "null or event ID string (identifier constraints)",
+        "delivery_claim": "null",
+        "verification": "null",
+        "dispute_open": "null",
+        "dispute_close": "nonnull event ID string (identifier constraints)",
+        "release_committed": "64 lowercase hex release key",
+        "note": "null or identifier-shaped opaque string"
+      },
+      "artifact_sha256": {
+        "required_nonnull_kinds": [
+          "delivery_claim",
+          "verification",
+          "release_committed"
+        ],
+        "required_null_kinds": [
+          "grant",
+          "revoke",
+          "dispute_open",
+          "dispute_close",
+          "note"
+        ]
+      },
+      "amount": "integer1..1000000000, bool is invalid; unit exactly simulation_credit",
+      "timestamps": "strings exactly YYYY-MM-DDTHH:MM:SSZ, valid UTC calendar instants, no fraction/offset aliases/leap seconds; offsets relative to time_origin in [-86400,86400] integer seconds",
+      "time_origin": "exactly2020-01-01T00:00:00Z in this owned pilot",
+      "case_locality": "Each case has its own world state and event-ID namespace; repeated IDs across cases do not share state."
+    }
+  },
+  "time_and_authority": {
+    "decision_time_relation": "decision_at == cutoff in v1; no latency extrapolation",
+    "rights_basis": "Within this simulator, active rights are a set of distinct valid grant event IDs. The world reducer applies the rules to full domain history; the observer reducer independently applies the same rules to cutoff-visible verified records only. Only records effective by decision_at can act. No resolver state enters the observer policy.",
+    "grant_direction": "issuer=requester, subject=requester, object=delegate, obligation matches",
+    "revocation_direction": "Verified issuer=requester, subject=requester, object=delegate, matching obligation; artifact_sha256/verdict null. Reference null clears the applicable live-grant set; a named reference can remove only that valid matching grant.",
+    "authority_order": "Sort operative bound grant/revoke records by (effective_at, phase, event_id); phase grant=0 and revoke=1. Thus all same-time grants are added before revokes, but each named revoke retains its specific scope. Other event kinds do not enter this reducer.",
+    "verification_binding": "Requester-authenticated verification for exact artifact ID, expected hash and obligation. Provider-authenticated matching delivery claim is also required. Neither claim proves later delivery truth.",
+    "dispute_rule": "Maintain a set of verified bound open IDs. A verified bound operative close removes only a referenced verified bound open for the same obligation/requester, with open.effective_at < close.effective_at <= decision_at. Missing, foreign, future or same-time references do nothing; closing an already closed valid open is idempotent. Invalid authentication never closes; bound operative unknown authentication causes observer hold and does not close. Open/close ordering is effective_at then open before close then event_id; strict earlier-reference requirement remains.",
+    "duplicate_key": "SHA256(canonical([contract_id,obligation_id,artifact_sha256,provider,amount,unit])). Attempt IDs never enter this key.",
+    "duplicate_evidence": "Any requester-authenticated release_committed matching delegate→provider, artifact hash, obligation and exact computed release key effective by decision_at causes hold.",
+    "later_outcome": "Private resolver-only artifact validity/completion record. It can establish simulated delivered-in-time truth but cannot modify an earlier view or expected visible-policy action.",
+    "active_grant_set_rules": {
+      "initial_state": [],
+      "grant": "A verified role-bound operative grant adds its unique event_id; grants do not supersede other grants. Authority is active iff the resulting set is nonempty.",
+      "null_revoke": "Remove every grant currently in the set. This includes same-time grants already processed, not grants effective later. It creates no permanent tombstone.",
+      "named_revoke": "Resolve reference within that reducer history to a verified role-bound grant for the identical requester/delegate/obligation whose effective_at <= revoke.effective_at. If valid, remove only that ID.",
+      "stale_reference": "A valid target already removed is an idempotent no-op; it cannot remove another grant.",
+      "missing_reference": "A name absent from that reducer history is inert; emit reference diagnostic only. It does not remove unrelated grants or establish a future tombstone.",
+      "foreign_reference": "Wrong kind, issuer/direction/obligation binding or unverified target is inert, as is a self-reference to a revoke. It does not remove unrelated grants.",
+      "future_reference": "A grant with effective_at > revoke.effective_at is not an applicable target, even if already observed. The revoke is inert; a later grant can still become active.",
+      "invalid_reference_policy": "Schema-invalid references invalidate input/view. Shape-valid missing/foreign/future references are inert domain records with diagnostics, not an implicit authority denial or a new hold reason by themselves.",
+      "no_supersession": "There is no scalar current-grant or superseded-grant concept in v1. A later grant can coexist with an earlier grant."
+    },
+    "all_kind_applicability": "Every state-changing or evidentiary prerequisite/conflict record requires effective_at <= decision_at. A future-effective pass does not satisfy verification; a future-effective fail does not conflict yet; a future-effective close cannot close a current dispute. Visible future records still count in the same public completeness census.",
+    "authentication_and_binding": {
+      "verified": "Only verified records with the exact per-kind base role/scope binding below can affect state/evidence, subject to time and reference rules.",
+      "invalid": "Inert for every kind: cannot add/remove rights, satisfy delivery/pass, create conflicts, open/close disputes or count as prior release. It remains a source record in the charged relevant-kind census.",
+      "unknown": "If effective by decision and base role/scope bound for any policy kind, observer policy holds with uncertain_authentication. It does not alter rights/evidence state. Reference resolution or matching digest is not assumed to cure uncertainty. Future-effective or foreign-role/scope unknown records are inert for the present decision.",
+      "foreign_binding": "A wrong issuer, subject, object or obligation is inert regardless of authentication; retain provenance and diagnostics. Wrong digest on otherwise bound delivery/verification is instead an explicit content conflict if operative and verified.",
+      "note": "Never changes state or evidence and never causes an authentication hold. Notes can affect retention selection and storage cost; they are excluded from relevant-kind completeness counts."
+    },
+    "per_kind_binding": [
+      {
+        "kind": "grant",
+        "issuer": "requester",
+        "subject": "requester",
+        "object": "delegate",
+        "obligation": "task.obligation_id",
+        "artifact": "null",
+        "reference": "null",
+        "verified_operative_effect": "Add own event_id to active-grant set."
+      },
+      {
+        "kind": "revoke",
+        "issuer": "requester",
+        "subject": "requester",
+        "object": "delegate",
+        "obligation": "task.obligation_id",
+        "artifact": "null",
+        "reference": "null or named grant",
+        "verified_operative_effect": "Apply exact named/null active-set rules."
+      },
+      {
+        "kind": "delivery_claim",
+        "issuer": "provider",
+        "subject": "provider",
+        "object": "artifact_id",
+        "obligation": "task.obligation_id",
+        "artifact": "digest required",
+        "reference": "null",
+        "verified_operative_effect": "Expected digest supplies delivery evidence; any different digest creates conflicting_evidence."
+      },
+      {
+        "kind": "verification",
+        "issuer": "requester",
+        "subject": "requester",
+        "object": "artifact_id",
+        "obligation": "task.obligation_id",
+        "artifact": "digest required",
+        "reference": "null",
+        "verified_operative_effect": "Expected digest plus pass supplies pass evidence. Fail or any different digest creates conflicting_evidence. No latest-wins or vote rule cancels conflict."
+      },
+      {
+        "kind": "dispute_open",
+        "issuer": "requester",
+        "subject": "requester",
+        "object": "obligation_id",
+        "obligation": "task.obligation_id",
+        "artifact": "null",
+        "reference": "null",
+        "verified_operative_effect": "Add own event_id to open-dispute set."
+      },
+      {
+        "kind": "dispute_close",
+        "issuer": "requester",
+        "subject": "requester",
+        "object": "obligation_id",
+        "obligation": "task.obligation_id",
+        "artifact": "null",
+        "reference": "named dispute_open",
+        "verified_operative_effect": "Remove only the valid bound named open, strictly earlier effective than close; otherwise inert diagnostic."
+      },
+      {
+        "kind": "release_committed",
+        "issuer": "requester",
+        "subject": "delegate",
+        "object": "provider",
+        "obligation": "task.obligation_id",
+        "artifact": "expected task digest",
+        "reference": "exact computed release key",
+        "verified_operative_effect": "Mark that release key used. Different digest/key cannot mark this task release used."
+      },
+      {
+        "kind": "note",
+        "issuer": "identifier only",
+        "subject": "identifier only",
+        "object": "identifier only",
+        "obligation": "task.obligation_id",
+        "artifact": "null",
+        "reference": "null or opaque identifier-shaped string",
+        "verified_operative_effect": "None."
+      }
+    ],
+    "hand_derived_examples": [
+      {
+        "records": "g1@100; g2@200; revoke(g1)@300",
+        "active_grants": [
+          "g2"
+        ],
+        "claim": "Named revoke is not global."
+      },
+      {
+        "records": "g1@100; g2@200; revoke(null)@300",
+        "active_grants": [],
+        "claim": "Null revoke clears both current grants."
+      },
+      {
+        "records": "g1@100; g2@100; revoke(g1)@100",
+        "active_grants": [
+          "g2"
+        ],
+        "claim": "Same-time grant-before-revoke order preserves named scope."
+      },
+      {
+        "records": "revoke(g1)@90; g1@100",
+        "active_grants": [
+          "g1"
+        ],
+        "claim": "Future target is inert, not a tombstone."
+      },
+      {
+        "records": "g1@100; revoke(g1)@200; g2@250; revoke(g1)@300",
+        "active_grants": [
+          "g2"
+        ],
+        "claim": "Stale valid reference is idempotent."
+      },
+      {
+        "records": "g1@100; revoke(missing-or-foreign)@300",
+        "active_grants": [
+          "g1"
+        ],
+        "claim": "Missing/foreign target never removes unrelated g1."
+      },
+      {
+        "records": "complete baseline plus visible verified fail effective700 at decision600",
+        "visible_action": "release",
+        "claim": "Future failure is not an operative conflict."
+      },
+      {
+        "records": "baseline with sole pass effective700 at decision600",
+        "visible_action": "hold/missing_verification",
+        "claim": "Future pass cannot establish present verification."
+      },
+      {
+        "records": "baseline plus verified open@300 and verified close observed550/effective700; decision600",
+        "visible_action": "hold/unresolved_dispute",
+        "claim": "Future close cannot close a current open."
+      },
+      {
+        "records": "baseline plus correctly bound invalid-auth fail@400",
+        "visible_action": "release",
+        "claim": "Invalid authentication is inert even for negative evidence."
+      },
+      {
+        "records": "baseline plus correctly bound unknown-auth fail@400",
+        "visible_action": "hold/uncertain_authentication",
+        "claim": "Unknown operative evidence remains uncertainty, not established failure."
+      },
+      {
+        "records": "baseline plus open@300 and close of missing/foreign/same-time open",
+        "visible_action": "hold/unresolved_dispute",
+        "claim": "A close cannot erase an unrelated open."
+      }
+    ]
+  },
+  "shared_policy": {
+    "id": "conservative-release-hold-v1",
+    "imports_resolver": false,
+    "input": "VerifiedPolicyInput only; no source store/file handle, omitted-record bytes or outcome object.",
+    "completeness_metadata": [
+      "eligible_policy_kind_record_count",
+      "retained_policy_kind_record_count"
+    ],
+    "policy_kinds": [
+      "grant",
+      "revoke",
+      "delivery_claim",
+      "verification",
+      "dispute_open",
+      "dispute_close",
+      "release_committed"
+    ],
+    "completeness_rule": "Let E be distinct eligible source-row identities in policy kinds and S be distinct retained identities in those kinds. Each identity is (event_id,start,end) resolved to the one exact canonical tape row. Preparation rejects duplicate event IDs. Validator rejects repeated retained event IDs, repeated spans, non-row/overlapping spans, altered fields, identities outside tape, wrong counts, or duplicate graph edges. It requires S subset E and coverage==[len(E),len(S)]. Complete means exact set equality S==E, not unvalidated row-count equality. A genuine strict subset is valid partial evidence => hold/incomplete_evidence; duplicate substitution is an invalid view/error, never a successful hold.",
+    "release_iff": [
+      "All distinct relevant cutoff-visible source rows retained exactly once, source provenance valid, and relevant identity sets equal",
+      "No correctly role/scope-bound policy-kind record with unknown authentication and effective_at<=decision_at; invalid authentication and foreign bindings are inert",
+      "Active directionally valid grant set is nonempty after the precise named/null revoke reducer",
+      "Decision time <= deadline",
+      "At least one operative verified matching provider delivery and requester pass; no operative verified bound digest conflict or fail verification",
+      "No unresolved requester dispute",
+      "No matching earlier release_committed"
+    ],
+    "hold_precedence": [
+      "incomplete_evidence",
+      "uncertain_authentication",
+      "authority_absent_or_revoked",
+      "deadline_expired",
+      "duplicate_release",
+      "unresolved_dispute",
+      "conflicting_evidence",
+      "missing_delivery",
+      "missing_verification"
+    ],
+    "output_fields": [
+      "action",
+      "reason",
+      "release_key",
+      "support_event_ids"
+    ],
+    "output_limit_bytes": 1024,
+    "failure_behavior": "Invalid/missing/over-budget view or invalid output is a failed attempt, not an invented successful hold. Evaluator keeps it in all-case denominators.",
+    "conservative_tradeoff": "Known-scope unsafe proposals may be suppressed mechanically, at the cost of holds and missed valid opportunities. Later invisible rights can still make an evidence-justified proposal unauthorized. Both distinctions must be reported."
+  },
+  "transition_table": [
+    {
+      "state": "live_grants=S",
+      "event": "verified bound grant g effective now",
+      "next": "S union {g.event_id}",
+      "effect": "no transfer"
+    },
+    {
+      "state": "live_grants=S",
+      "event": "valid named revoke of g effective now",
+      "next": "S minus {g.event_id}",
+      "effect": "no transfer; stale removal is idempotent"
+    },
+    {
+      "state": "live_grants=S",
+      "event": "valid null-reference revoke effective now",
+      "next": "empty set",
+      "effect": "no transfer; later grants remain possible"
+    },
+    {
+      "state": "live_grants=S",
+      "event": "shape-valid missing/foreign/future named revoke",
+      "next": "S",
+      "effect": "inert reference diagnostic; no unrelated rights removed"
+    },
+    {
+      "state": "unsettled",
+      "event": "hold proposal",
+      "next": "unsettled",
+      "effect": "none"
+    },
+    {
+      "state": "unsettled",
+      "event": "release proposal with actual active rights, within deadline, no open actual dispute, unused release key",
+      "next": "settled",
+      "effect": "append one simulated release receipt"
+    },
+    {
+      "state": "any",
+      "event": "release proposal forbidden by current rights/deadline/dispute or used release key",
+      "next": "unchanged",
+      "effect": "record refused attempt, never a second effect"
+    },
+    {
+      "state": "settled",
+      "event": "retry under any attempt ID",
+      "next": "settled",
+      "effect": "same existing effect receipt; attempted duplicate remains counted"
+    },
+    {
+      "state": "any",
+      "event": "later artifact outcome",
+      "next": "unchanged transfer state",
+      "effect": "assessment evidence only; settlement does not prove delivery"
+    }
+  ],
+  "view_contract": {
+    "budget_bytes": 2048,
+    "budget_status": "Confirmed for development serialization; full lossless stress views exceed ceiling as intended. No decision quality measured.",
+    "common_task_filter": "Both arms first receive/filter the identical obligation. No global-history handicap for flat baseline.",
+    "common_record_codec": "Exact codec object below. No repeated source identity or inferred fact; records length14, times exact integer offsets, spans exact canonical tape rows.",
+    "common_output_fields": [
+      "v",
+      "arm",
+      "input_hash",
+      "source_hash",
+      "source_bytes",
+      "time_origin",
+      "cutoff_s",
+      "decision_s",
+      "task",
+      "coverage",
+      "records"
+    ],
+    "flat_recipe": {
+      "id": "flat-recency-v1",
+      "priority": "observed_at descending, event_id ascending",
+      "retention": "Visit complete records in priority order; include a record iff full reserialized view including shared metadata remains <=2048 bytes; continue scanning after a skip. Emit records ordered observed_at/event_id."
+    },
+    "relational_recipe": {
+      "id": "task-proximity-v1",
+      "additional_fields": [
+        "nodes",
+        "edges"
+      ],
+      "priority": "Build undirected distance index over all eligible subject/object edges for retention only; seeds delegate and artifact. Sort by summed endpoint distances ascending, observed_at descending, event_id ascending. Unreachable distance=999.",
+      "retention": "Same whole-record greedy inclusion rule, with nodes and directed edges index fully rebuilt and charged on every candidate addition. Nodes sorted lexicographically; directed edge=[subject_node_index,object_node_index,kind,record_index]. Output preserves direction; undirected distance is never authority inference."
+    },
+    "lossless_control": "Same input, same codecs and exact field values; ceiling waived only for this declared plumbing control (max32768 bytes/view). Decode both views, canonically sort full facts and require equality with input and identical shared-policy outputs. No later or hidden records supplied.",
+    "provenance_validation": "Validate unique tape event IDs; every retained record must match exactly one source row and its exact half-open span. Reject duplicate IDs or spans, any copied substitution, altered value, partial row, overlapping span, wrong count or foreign source. Verify coverage over distinct relevant identity sets (subset for partial, equality for complete), task/header/source hashes and budget. Recompute directed index exactly from retained records; every record has exactly one matching edge. Only then produce VerifiedPolicyInput with retained facts, coverage counts and complete_relevant_source_set derived from equality. Never supply omitted record bytes, world state or private outcome.",
+    "interpretation": "Whole-system retention-policy/view comparison, not graph encoding advantage. Both use same task scope and codec; relational construction/index and validation costs are included."
+  },
+  "resource_accounting": {
+    "program_seconds": 30,
+    "worker_seconds": 60,
+    "development_revisions_per_arm": 1,
+    "preparation_correction_cycles": 1,
+    "charge_per_arm": [
+      "input bytes",
+      "source decoding/normalization time",
+      "view construction/index time",
+      "view bytes including metadata/index/provenance",
+      "validation full-source bytes and time",
+      "view decode bytes/time",
+      "shared-policy bytes/time",
+      "outer wall time through receipt"
+    ],
+    "report_separately": [
+      "lossless control work",
+      "supervisor elapsed window",
+      "builder effort",
+      "reviewer effort",
+      "peak memory if actually measured"
+    ],
+    "no_fake_totals": "Do not add nested timings as disjoint work. Parent total wall time is authoritative; inner phase timings need explicit nonoverlapping measurement points. No CPU/money inference from wall time."
+  },
+  "implementation_interface": {
+    "prepare_decision_input": "prepare_decision_input(trace_public_records,task,cutoff,decision_at)->{header_bytes,event_tape_bytes,input_hash}; receives no annotations/outcomes.",
+    "build_view": "build_decision_view(header_bytes,event_tape_bytes,*,recipe,budget_bytes=2048)->view_bytes; exact two recipe IDs only.",
+    "validate_decode": "validate_decode_view(header_bytes,event_tape_bytes,view_bytes)->VerifiedPolicyInput{task,cutoff,decision_at,retained_records,coverage,complete_relevant_source_set}; rejects duplicates/identity substitution, charged, no resolver imports.",
+    "policy": "decide_release_hold(verified_input)->{action,reason,release_key,support_event_ids}.",
+    "resolver": "evaluate_simulated_proposal(world_trace_private,proposal,*,release_key)->{rights_in_force,evidence_justification,artifact_outcome,attempt_class,effect_receipt}; evaluator-owned, never imported by builders/policy.",
+    "driver": "One fixed bounded comparison command loads prepared public inputs, executes two arms and one lossless control, retains each attempted output/resource/error independently; evaluator separately reads private outcomes. Reuse capture/snapshot/assertion spans and bounded subprocess receipts, no generic scheduler."
+  },
+  "adversarial_falsifiers": [
+    "Replace a revoke row by a second genuine grant row: provenance must reject duplicate identity/span before any completeness or policy decision.",
+    "Same visible inputs with later revocation must yield byte-identical views/decisions in both cases",
+    "Reversed grant direction cannot authorize release",
+    "Changing attempt ID cannot alter release key or cause second effect",
+    "Removing a relevant retained event without updating charged counts must fail provenance",
+    "Source span/hash, role, unit or cutoff mismatch must fail, not be repaired from outcome labels",
+    "A graph crowded by high-proximity notes may miss more eligible opportunities than flat recency",
+    "A chronological view crowded by recent notes may lose older essential relations",
+    "Both always holding is not success; opportunity completion and failure-inclusive denominators remain visible",
+    "An equally safe and successful cheaper flat view is a negative result for this branch",
+    "Lossless parity failure or future/outcome leakage stops comparison and selects repair"
+  ],
+  "future_cohort": {
+    "status": "not_generated",
+    "cases": 24,
+    "batches": 1,
+    "custody": "Separate evaluator/custodian creates exact cases only after contract, both builders and evaluator are source-frozen. Builders receive public cutoff bundles only; record first exposure and all attempted results. Same-user process isolation is not adversarial confidentiality.",
+    "mechanism_mix_proposal": {
+      "late_visibility": 6,
+      "visible_authority_changes": 4,
+      "verification_dispute": 4,
+      "duplicate_identity": 4,
+      "retention_pressure": 4,
+      "role_direction": 2
+    },
+    "revisions": "One logged development revision per arm before freeze; no final-batch tuning/reruns. Any exposed final outcomes relabel the cohort development-only.",
+    "root_owned_evaluator_decision": "Root independently fixes denominators, practical margin and successor before final generation. Suggested strategy threshold remains research triage, not deployment or superiority."
+  },
+  "feasibility": {
+    "method": "Read-only preparation-byte-check.py validates corrected schemas and distinct source identities, reconstructs exact canonical header/tape and both greedy serializations, checks source-span decoding and lossless fact parity, and emits hashes, byte counts and golden views. No decision policy/resolver/scorer/retrieval/network or final cases. No input rewriting. Stored counts are format/retention evidence only.",
+    "records": [
+      {
+        "trace_id": "dev-01",
+        "eligible_input_bytes": 1318,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 787,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 787
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 893,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 893
+          }
+        }
+      },
+      {
+        "trace_id": "dev-02",
+        "eligible_input_bytes": 1318,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 787,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 787
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 893,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 893
+          }
+        }
+      },
+      {
+        "trace_id": "dev-03",
+        "eligible_input_bytes": 1568,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 861,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 861
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 984,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 984
+          }
+        }
+      },
+      {
+        "trace_id": "dev-04",
+        "eligible_input_bytes": 1819,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 936,
+            "retained_records": 5,
+            "eligible_records": 5,
+            "retained_policy_kind_records": 5,
+            "eligible_policy_kind_records": 5,
+            "lossless_bytes": 936
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1075,
+            "retained_records": 5,
+            "eligible_records": 5,
+            "retained_policy_kind_records": 5,
+            "eligible_policy_kind_records": 5,
+            "lossless_bytes": 1075
+          }
+        }
+      },
+      {
+        "trace_id": "dev-05",
+        "eligible_input_bytes": 997,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 644,
+            "retained_records": 2,
+            "eligible_records": 2,
+            "retained_policy_kind_records": 2,
+            "eligible_policy_kind_records": 2,
+            "lossless_bytes": 644
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 727,
+            "retained_records": 2,
+            "eligible_records": 2,
+            "retained_policy_kind_records": 2,
+            "eligible_policy_kind_records": 2,
+            "lossless_bytes": 727
+          }
+        }
+      },
+      {
+        "trace_id": "dev-06",
+        "eligible_input_bytes": 1640,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 933,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 933
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1062,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 1062
+          }
+        }
+      },
+      {
+        "trace_id": "dev-07",
+        "eligible_input_bytes": 1707,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 1000,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 1000
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1134,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 1134
+          }
+        }
+      },
+      {
+        "trace_id": "dev-08",
+        "eligible_input_bytes": 1707,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 1000,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 1000
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1134,
+            "retained_records": 4,
+            "eligible_records": 4,
+            "retained_policy_kind_records": 4,
+            "eligible_policy_kind_records": 4,
+            "lossless_bytes": 1134
+          }
+        }
+      },
+      {
+        "trace_id": "dev-09",
+        "eligible_input_bytes": 1454,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 923,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 923
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1069,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 1069
+          }
+        }
+      },
+      {
+        "trace_id": "dev-10",
+        "eligible_input_bytes": 1454,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 923,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 923
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1069,
+            "retained_records": 3,
+            "eligible_records": 3,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 1069
+          }
+        }
+      },
+      {
+        "trace_id": "dev-11",
+        "eligible_input_bytes": 4728,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 2048,
+            "retained_records": 12,
+            "eligible_records": 14,
+            "retained_policy_kind_records": 1,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 2261
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1937,
+            "retained_records": 10,
+            "eligible_records": 14,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 2536
+          }
+        }
+      },
+      {
+        "trace_id": "dev-12",
+        "eligible_input_bytes": 4728,
+        "arms": {
+          "flat-recency-v1": {
+            "bounded_bytes": 1999,
+            "retained_records": 12,
+            "eligible_records": 14,
+            "retained_policy_kind_records": 3,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 2261
+          },
+          "task-proximity-v1": {
+            "bounded_bytes": 1959,
+            "retained_records": 10,
+            "eligible_records": 14,
+            "retained_policy_kind_records": 0,
+            "eligible_policy_kind_records": 3,
+            "lossless_bytes": 2536
+          }
+        }
+      }
+    ],
+    "candidate_quality_measured": false,
+    "reproduction_artifact": "preparation-byte-check.json; includes exact input-file/source hashes, per-case input/source hashes and view hashes, ordinary/stress golden serialized views, and equality with these declared feasibility rows."
+  },
+  "open_choices_for_review": [
+    "Completeness count conservatism may make both bounded arms unhelpful; keep missed opportunities visible rather than relaxing after results.",
+    "Candidate retention order is intentionally simple and deterministic. Flat has equal task filtering; a future smarter summary is outside this two-arm pilot.",
+    "Actual-effect guard and proposal safety must be separate metrics; zero committed duplicates from an idempotency gate is not proof that the view avoided duplicate attempts.",
+    "The trust/authentication and later outcome fields are stipulated simulation receipts, not real-world verification or universal truth."
+  ],
+  "preparation_revision": 1,
+  "preparation_correction": {
+    "round": 1,
+    "maximum_rounds": 1,
+    "addresses": [
+      "unique retained source identities, not counts alone",
+      "active-grant set and reference semantics",
+      "all-kind effective-time and authentication bindings",
+      "exact reproducible JSON/tape/view codec"
+    ],
+    "remaining_blockers_policy": "Record any unresolved blocker explicitly; do not begin another preparation tuning cycle."
+  },
+  "codec": {
+    "id": "decision-view-json-v1",
+    "strict_parser": "UTF-8 JSON, duplicate object keys rejected, no NaN/Infinity/floats; every integer field rejects bool; exact key sets. No JSON comments or trailing non-whitespace input.",
+    "canonical_json": "Equivalent to Python json.dumps(value, sort_keys=True, separators=(comma,colon), ensure_ascii=False, allow_nan=False).encode(utf-8), where comma=\",\" and colon=\":\". Keys sorted by Unicode code point; no Unicode normalization, no spaces or indentation. Exact integer decimal representation. None/False/True serialize null/false/true. Canonical view bytes have NO trailing LF.",
+    "header_fields": [
+      "schema_version",
+      "contract_id",
+      "time_origin",
+      "cutoff",
+      "decision_at",
+      "task"
+    ],
+    "header_values": "schema_version=1; contract_id exact; time_origin exact; task is the exact named-field object; cutoff==decision_at. Field ordering in the object follows canonical key sort, not this documentation order.",
+    "tape": "Each eligible named-field event object canonical-serialized plus byte0x0A. Empty tape is zero bytes. Nonempty tape ends in LF. source_hash=SHA256(tape), source_bytes=len(tape). Header has no LF; input_hash=SHA256(header_bytes+oneLF+tape).",
+    "source_span": "[start,end) indexes bytes in tape, excludes the record LF, exactly matches a full canonical event object. Row identity is event_id plus exact start,end; all IDs/spans unique.",
+    "view_common_exact_keys": [
+      "v",
+      "arm",
+      "input_hash",
+      "source_hash",
+      "source_bytes",
+      "time_origin",
+      "cutoff_s",
+      "decision_s",
+      "task",
+      "coverage",
+      "records"
+    ],
+    "view_flat_exact_keys": [
+      "v",
+      "arm",
+      "input_hash",
+      "source_hash",
+      "source_bytes",
+      "time_origin",
+      "cutoff_s",
+      "decision_s",
+      "task",
+      "coverage",
+      "records"
+    ],
+    "view_relational_exact_keys": [
+      "v",
+      "arm",
+      "input_hash",
+      "source_hash",
+      "source_bytes",
+      "time_origin",
+      "cutoff_s",
+      "decision_s",
+      "task",
+      "coverage",
+      "records",
+      "nodes",
+      "edges"
+    ],
+    "view_values": {
+      "v": 1,
+      "arm": "one exact recipe ID",
+      "input_hash": "lowercase SHA256 as above",
+      "source_hash": "lowercase SHA256(tape)",
+      "source_bytes": "integer len(tape)",
+      "time_origin": "exact2020-01-01T00:00:00Z",
+      "cutoff_s": "integer seconds cutoff-time_origin",
+      "decision_s": "integer seconds decision_at-time_origin",
+      "task": "exact ordered9-element tuple below",
+      "coverage": "exact2-element integer tuple [eligible_distinct_policy_kind_rows,retained_distinct_policy_kind_rows]",
+      "records": "list of exact14-element tuples, emitted ascending (observed_offset,event_id)"
+    },
+    "task_tuple": [
+      "obligation_id",
+      "requester",
+      "delegate",
+      "provider",
+      "artifact_id",
+      "artifact_sha256",
+      "amount",
+      "unit",
+      "deadline_seconds_from_time_origin"
+    ],
+    "record_tuple": [
+      "event_id",
+      "kind",
+      "issuer",
+      "subject",
+      "object",
+      "obligation_id",
+      "effective_seconds_from_time_origin",
+      "observed_seconds_from_time_origin",
+      "reference",
+      "artifact_sha256",
+      "verdict",
+      "authentication",
+      "source_start",
+      "source_end"
+    ],
+    "relational_nodes": "Sorted unique identifiers from task requester/delegate/provider/artifact_id/obligation_id plus issuer/subject/object of RETAINED records; do not add referenced event IDs or omitted-record-only nodes.",
+    "relational_edges": "Exactly one per retained record in emitted record order: [index(subject in nodes),index(object in nodes),kind,record_index]. All indices zero-based integers, no reverse-edge augmentation. Equality with this reconstruction required.",
+    "distance_index": "For selection only, use all eligible subject/object pairs as undirected edges; include task nodes and eligible issuer/subject/object identifiers. Multi-source shortest unweighted distance from task delegate and artifact. Unknown/unreachable node distance999. No authentication/state/policy labels enter priority.",
+    "greedy_rule": "Start with empty serialized view; if its mandatory metadata already exceeds budget, fail. Visit each whole source record in exact recipe priority. Rebuild tentative output (canonical record order, relevant counts, and relational nodes/edges if applicable); retain iff exact no-LF canonical bytes <= budget. If rejected, continue to next record; no partial rows, source edits, post-serialization compression, padding or substitutions.",
+    "lossless_rule": "Retain all eligible source rows once, use same emitted ordering/codec/index, max32768 serialized bytes. Only budget selection is disabled. Expected policy parity belongs to later implementation; preparation checker compares decoded facts only.",
+    "byte_accounting": "Budget covers every byte of the canonical view, including hashes, counts, IDs, source ranges and graph index. Header/tape and validator source reads are separate charged construction/validation bytes, not free policy inputs. Audit assertions may derive per-span SHA256 from exact rows; their stored bytes/time must be separately charged."
+  },
+  "correction_mapping": {
+    "unguided-1": "input_schema.event_identity + shared_policy.completeness_rule + view_contract.provenance_validation; repeated row/span is invalid, partial distinct set holds",
+    "unguided-2/guided-1": "time_and_authority.active_grant_set_rules + authority_order + hand_derived_examples; no scalar or superseded-grant semantics",
+    "unguided-3/guided-2": "all_kind_applicability + authentication_and_binding + per_kind_binding + dispute_rule; future/unknown/invalid meanings explicit",
+    "unguided-4": "codec + field_constraints + retained read-only byte checker/report; exact no-LF view serialization and golden bytes"
+  }
+}

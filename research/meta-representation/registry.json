@@ -660,6 +660,46 @@
       "statement": "Two fixed local repetitions returned identical ordered results. Discovery support was complete at five passages and commitment support at one. The union of both top-five lists covers the original complete bundles using ten distinct passages rather than five. A post-execution transport repair preserved the unchanged measurement core without new retrieval. The actual controller selected one offline control/exchange decision-pilot preparation. This visible development diagnostic is not an equal-budget quality improvement, adoption result, predictive advantage or business advantage.",
       "status": "reported_result",
       "basis": "observed"
+    },
+    {
+      "id": "doc_decision_pilot_protocol",
+      "kind": "document",
+      "title": "Owned release-or-hold comparison protocol",
+      "repo_path": "docs/experiments/control-exchange-decision-pilot.md"
+    },
+    {
+      "id": "doc_decision_pilot_result",
+      "kind": "document",
+      "title": "Two compact records with opposite missed decisions",
+      "repo_path": "docs/experiments/results/2026-11-26-decision-pilot.md"
+    },
+    {
+      "id": "doc_decision_pilot_run",
+      "kind": "document",
+      "title": "C7 execution, review and continuation record",
+      "repo_path": "docs/planning/runs/2026-11-26-decision-pilot.md"
+    },
+    {
+      "id": "claim_decision_retention_result",
+      "kind": "claim",
+      "title": "Equal development totals can conceal opposite retention losses",
+      "statement": "In one owned twelve-case simulation, both 2048-byte views completed four of five observable opportunities and four of seven world opportunities, but missed opposite storage-pressure cases. Both lossless controls completed five of five observable opportunities. This is an exposed development comparison of full retention/view systems, not graph superiority, broad predictive capability or live exchange evidence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_decision_late_rights",
+      "kind": "claim",
+      "title": "Identical available evidence can conceal different actual rights",
+      "statement": "The constructed baseline and late-revocation cases supplied identical candidate bytes and produced the same release proposal, although authority differed in the stipulated world. Each arm therefore retained one unauthorized proposal, which the common world-state guard refused. No duplicate or unauthorized effects were observed, but this guard conformance does not establish observer safety or a realizable distributed authorization service.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "exp_fresh_decision_comparison",
+      "kind": "experiment",
+      "title": "Compare frozen decision views on one new exploratory cohort",
+      "status": "proposed"
     }
   ],
   "edges": [
@@ -1392,6 +1432,56 @@
       "source": "claim_fixed_clause_probe_result",
       "target": "exp_control_exchange_decisions",
       "type": "motivates"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "rep_text",
+      "type": "compares"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "rep_graph",
+      "type": "compares"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "doc_decision_pilot_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
     }
   ]
 }

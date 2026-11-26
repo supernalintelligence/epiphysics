@@ -491,8 +491,11 @@ def create_coverage_freeze(ledger, *, cohort_raw, protocol_raw, review_raw, refe
         if _body(prepared, found["event"]["body"]["artifacts"], run_keys) != found["event"]["body"] or found["preparation"]["file_hashes"] != prepared["file_hashes"]:
             raise ValueError("Coverage study already frozen with different inputs")
         return found["event"]
-    preflight_coverage_capture(ledger, prepared, cohort_raw=cohort_raw, protocol_raw=protocol_raw,
-        review_raw=review_raw, run_keys=run_keys)
+    # Keep the selected prefix and capture lookups in the same read snapshot.
+    # Release it before captures; append validation still rechecks under its lock.
+    with assertions._read_transaction(ledger):
+        preflight_coverage_capture(ledger, prepared, cohort_raw=cohort_raw, protocol_raw=protocol_raw,
+            review_raw=review_raw, run_keys=run_keys)
     refs = {role: _capture(ledger, study_id, role, raw) for role, raw in
         (("cohort", cohort_raw), ("protocol", protocol_raw), ("review", review_raw))}
     body = _body(prepared, refs, run_keys)

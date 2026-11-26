@@ -336,6 +336,10 @@ Retained support failures can now use the schema-3 `support_diagnosis` phase. It
 
 The subsequent `support_probe` phase accepts two fixed clause-query executions from that queued preparation. It verifies the pre-execution envelope, each exact request, the inherited evidence boundary and actual caller receipts before comparing results. The report remains a separate development diagnostic; reproduced outcomes select decision-pilot preparation, disagreement selects repair, and incomplete evidence fails with retained inputs. See the [fixed-probe instructions](examples/retrieval/README.md#accept-a-fixed-clause-probe).
 
+The decision pilot executes a different task: twelve owned simulated release-or-hold attempts under two 2,048-byte views and two lossless controls. `decision_pilot` gives fixed child programs only public cutoff-eligible bytes; `decision_evaluation` independently resolves stipulated rights, artifact outcomes and case-local effects. Worker responses and evaluated rows are persisted during execution. A failed or incomplete run cannot become a complete-cohort score. See the [owned inputs and reproduction instructions](examples/control-exchange/README.md).
+
+`--decision-study FILE` accepts the retained decision results through the same completion-to-successor controller. It is mutually exclusive with `--retrieval-study`. The validator captures the owned cohort, report, attempt journal, contracts and source bytes; checks all 48 slots and independent denominators; and never executes a candidate. Both dispatcher input identity and the current queued predecessor are checked before consuming work. Completed requests remain idempotent, and completion revalidates captured evidence. A checked development comparison selects `prepare_fresh_decision_comparison`; failed conformance selects `repair_decision_pilot`. Neither changes the existing authority, spending or scale limits. A local journal is not an independent execution witness.
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:

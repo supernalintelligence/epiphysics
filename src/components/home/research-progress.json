@@ -1,30 +1,30 @@
 {
   "recordDate": "2026-11-25",
-  "heading": "Splitting the question recovered the missing evidence.",
-  "scope": "We tested what a small retrieval system kept, what it returned, and whether the returned passages covered every part of a question.",
+  "heading": "Different records missed different decisions.",
+  "scope": "We tested two ways to keep the same dated evidence for a simulated exchange. Both reached the same overall result, with different failures.",
   "evidence": [
     {
       "id": "coverage",
-      "href": "/planning/runs/2026-11-26-retrieval-coverage",
+      "href": "/experiments/results/2026-11-26-decision-pilot",
       "requiredText": [
-        "Complete declared support at 1, 3 and 5 | 5/6 at each cutoff",
-        "All six unsupported questions also returned passages."
+        "The compact views each missed a different storage-pressure case.",
+        "Completed opportunities supported by available evidence | 4/5 | 4/5"
       ]
     },
     {
       "id": "diagnosis",
-      "href": "/experiments/results/2026-11-26-retrieval-probe",
+      "href": "/experiments/results/2026-11-26-decision-pilot",
       "requiredText": [
-        "Both fixed executions returned identical ordered results.",
-        "This result demonstrates sensitivity to asking separate questions under a larger selection budget."
+        "All four recorded that proposal as unauthorized in the simulated world.",
+        "Zero effects demonstrates the common simulation guard, not the safety of either observer or a working distributed authorization service."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/retrieval-fixed-clause-probe",
+      "href": "/experiments/control-exchange-decision-pilot",
       "requiredText": [
-        "The next application should test one release-or-hold decision for a simulated agent-delivered artifact.",
-        "Development retrieval results do not establish predictive or business advantage, recursive adaptation or market concentration."
+        "a separate custodian may generate one 24-case exploratory comparison.",
+        "The comparison concerns the complete retention and decision system; differences in selected facts or construction work cannot be attributed to graph encoding alone."
       ]
     }
   ],
@@ -32,29 +32,29 @@
     {
       "id": "coverage",
       "status": "completed",
-      "label": "Coverage check",
-      "value": "5 of 6",
-      "measure": "supported questions had complete evidence",
-      "summary": "Two runs reproduced the same result. All six unsupported questions also returned passages; retrieving text does not establish that a question can be answered.",
-      "linkLabel": "Coverage result"
+      "label": "Storage tradeoff",
+      "value": "4 of 5 each",
+      "measure": "valid opportunities supported by the available evidence",
+      "summary": "The chronological and relational views each missed a different storage-pressure case. Both lossless controls reached all five observable opportunities.",
+      "linkLabel": "Read the comparison"
     },
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "Fixed follow-up",
-      "value": "Both parts found",
-      "measure": "with ten passages instead of five",
-      "summary": "Two separate questions recovered complete evidence for discovery and payment commitment. Both runs agreed. The larger reading budget prevents a claim that this method is better.",
-      "linkLabel": "Follow-up result"
+      "label": "Late revocation",
+      "value": "1 unsafe proposal",
+      "measure": "after a revocation arrived too late",
+      "summary": "Authority changed before the observer received the news. Both views proposed release; the simulated guard refused it. Better organization cannot recover evidence that had not arrived by the decision.",
+      "linkLabel": "See the failure and its limits"
     }
   ],
-  "limits": "These are visible development questions over four saved sources. No answers were generated. Predictive advantage, broader entity coverage and the cause of the retrieval ranking remain unmeasured.",
+  "limits": "Twelve exposed synthetic cases; no real payments or model calls. Equal aggregate scores do not establish general capability. The guard knows stipulated world state; an actual distributed service would need to establish its own authority and timing guarantees.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "When should an automated exchange be released or held?",
-    "description": "Prepare a simulation for one agent-delivered artifact. Compare flat and relational records of the same dated evidence about authority, verification and prior release.",
-    "budget": "Two compact views and a lossless control. Measure valid releases, unauthorized releases, duplicates, missing decisions and total processing cost. Live settlement is outside this experiment.",
-    "linkLabel": "Next experiment boundaries"
+    "question": "Do these tradeoffs persist on new cases?",
+    "description": "Prepare one 24-case exploratory comparison after independent review, including invalid artifacts and dispute timing as well as late information and storage pressure.",
+    "budget": "Keep the same two compact views, decision rule, resource limits and independent evaluator. Report every failure and opportunity; no live effects or increase in authority.",
+    "linkLabel": "Read the experiment boundaries"
   }
 }
