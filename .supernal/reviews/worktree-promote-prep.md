@@ -1,7 +1,7 @@
 ---
 task: promote-prep
 branch: worktree-promote-prep
-reviewed_patch_id: de0dd15ee87107a584e2c09a6224c88d80626f69
+reviewed_patch_id: 057ab408d718e2f75d60496b2f553f68a9e83b16
 reviewer_model: "claude-sonnet-5-5"
 reviewer_agent_id: ""
 author_session_id: ""
