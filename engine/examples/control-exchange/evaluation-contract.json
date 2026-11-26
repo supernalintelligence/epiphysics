@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "contract_id": "release-hold-evaluation-v1",
+  "status": "root_owned_review_draft_before_implementation",
+  "depends_on": "Corrected control-exchange-release-hold-v1, source-frozen before any24-case batch",
+  "purpose": "Compare two bounded retention/view systems on identical cutoff-visible task evidence; fixture correctness and exploratory triage only, no live authority or deployment gate.",
+  "unit": {
+    "case": "One declared release-or-hold attempt at one fixed cutoff for one obligation. All arms start from an independent identical copy of the same stipulated world state.",
+    "pairing": "Arms share exact public header/tape bytes and private truth. A lossless visible-input control is separate; no future facts enter it.",
+    "population": "Twelve exposed development traces; later one separately generated24-case exploratory batch. Matched scripts are not independent samples or representative entity-family evidence."
+  },
+  "facts": {
+    "world_authorized": "At decision_at: at least one currently active bound verified grant under corrected scoped-revocation semantics, decision within task deadline, and no currently effective unresolved bound verified requester dispute. Observed_at does not filter stipulated world facts.",
+    "world_duplicate": "A valid matching release key has already committed in the starting world state. Changed attempt IDs do not change this key.",
+    "artifact_ready_valid": "The separately retained outcome binds exact artifact ID/hash, artifact_valid is true, and completed_at <= decision_at. Task deadline is handled only by world_authorized; an expired decision does not make a genuinely completed artifact invalid. revealed_at may be later and never enters candidate input.",
+    "world_opportunity": "world_authorized AND NOT world_duplicate AND artifact_ready_valid. This is a fixed resolver-derived denominator, independent of candidate output, retention failure or later policy changes.",
+    "visible_justification": "Independent full-eligible-input reference check of corrected conservative policy at cutoff; hidden rights and later outcome do not enter. Compare lossless implementation output to this oracle on owned controls, rather than copying candidate output.",
+    "visible_actionable_opportunity": "world_opportunity AND full-eligible-input reference action is release. Separate this from world_opportunity so unavailable evidence is not silently blamed on the representation.",
+    "proposal": "Validated release or hold plus exact release key, reason and source event IDs. Missing, malformed or timed-out output is failed, never a fabricated hold.",
+    "effect": "Independent simulated reducer applies proposal against starting world state and records at most one effect per release key. Refusal does not erase an unsafe or duplicate proposal. No actual funds or external control change."
+  },
+  "metrics": [
+    {
+      "id": "valid_timely_release",
+      "numerator": "Valid release proposals on world_opportunity cases whose simulated first effect is accepted",
+      "denominator": "All predeclared world_opportunity cases, including candidate failure/missing output"
+    },
+    {
+      "id": "observable_opportunity_completion",
+      "numerator": "Same valid timely releases restricted to visible_actionable_opportunity",
+      "denominator": "All visible_actionable_opportunity cases"
+    },
+    {
+      "id": "unauthorized_release_proposals_all",
+      "numerator": "Valid release proposals with NOT world_authorized",
+      "denominator": "All declared cases"
+    },
+    {
+      "id": "unauthorized_release_proposals_forbidden",
+      "numerator": "Same unauthorized proposals",
+      "denominator": "All cases with NOT world_authorized, independent of attempted action"
+    },
+    {
+      "id": "duplicate_release_proposals_all",
+      "numerator": "Release proposals on world_duplicate cases",
+      "denominator": "All declared cases"
+    },
+    {
+      "id": "duplicate_release_proposals_attempts",
+      "numerator": "Same duplicate proposals",
+      "denominator": "All predeclared duplicate-opportunity cases; report ordinary attempts separately"
+    },
+    {
+      "id": "invalid_artifact_release_proposals",
+      "numerator": "Release proposals with NOT artifact_ready_valid",
+      "denominator": "All declared cases; also show count/number of not-ready-or-invalid cases"
+    },
+    {
+      "id": "evidence_unjustified_release_proposals",
+      "numerator": "Release proposals when independent full-eligible-input reference action is hold",
+      "denominator": "All declared cases"
+    },
+    {
+      "id": "hold_rate",
+      "numerator": "Valid hold outputs",
+      "denominator": "All declared cases"
+    },
+    {
+      "id": "missed_world_opportunities",
+      "numerator": "World_opportunity cases without valid timely release, including hold/error/missing output",
+      "denominator": "All world_opportunity cases"
+    },
+    {
+      "id": "missed_observable_opportunities",
+      "numerator": "Visible_actionable_opportunity cases without valid timely release",
+      "denominator": "All visible_actionable_opportunity cases"
+    },
+    {
+      "id": "valid_output_completion",
+      "numerator": "Cases with validated timely release or hold output",
+      "denominator": "All declared cases"
+    },
+    {
+      "id": "duplicate_effects",
+      "numerator": "Effects beyond the first for the same release key",
+      "denominator": "All attempts, with counts by release key. Zero enforced by the common reducer is a conformance result, not representation benefit."
+    },
+    {
+      "id": "unauthorized_effects",
+      "numerator": "Accepted effects when NOT world_authorized",
+      "denominator": "All declared cases. Common guard enforcement reported separately from proposals."
+    }
+  ],
+  "accounting": {
+    "required": "Each row retains case ID only in evaluator output, arm, public input hash, view hash/bytes, source-span validation result, proposal/error, all independent truth flags, effect receipt and resources. Never drop a failed arm or case.",
+    "rates": "Report numerator and denominator beside every ratio. Zero denominator => value null, not zero or one. Aggregate plus predeclared mechanism strata; no unsupported family scores.",
+    "overlap": "Harm categories may overlap; do not sum them into an invented total. Show paired case outcomes and preserve late-visibility ambiguity.",
+    "cost": "Per-arm source normalization/build/provenance validation/decode/decision timings with nonoverlapping boundaries; parent wall time separately; source/view/output bytes, limits and failures. All full-source validation work charged. Lossless-control work and agent/reviewer effort separate. Unmeasured memory/money stays null.",
+    "statistics": "One small scripted batch provides descriptive counts and paired differences only; no p-values, general superiority or deployment-confidence claim."
+  },
+  "preparation_acceptance": [
+    "Resolve concrete authority/time/binding ambiguities in one documented correction cycle",
+    "Exactly12 owned development traces, <=16 domain events including outcome, public projection excludes case/attempt/labels/hidden/later outcomes",
+    "Serialization recipe code retained and independently reproduces declared bounded-byte feasibility; this is not decision performance",
+    "Both arms share task filter/codec/eligible bytes and pay all metadata/index costs",
+    "Independent design review clear; exact program/evaluator boundaries and no final cohort generated"
+  ],
+  "implementation_acceptance": [
+    "Both bounded recipes and full-source decoder pass positive and corruption/size/edge-direction/count/cutoff controls",
+    "Independent policy/world reducer tests cover scoped multiple grants, ties, stale/missing references, future-effective closure/verification, unknown/invalid authentication, contradictory claims, wrong digest, expired deadline and hidden revocation",
+    "Lossless decoded facts exactly match eligible input and both policies agree with independent hand-checked reference; candidate code cannot import resolver or receive outcomes",
+    "Same public input yields identical view and policy output regardless of hidden revocation, later outcome or attempt ID",
+    "All attempts retain valid result or explicit error; timeout/output limits exercised; zero live effects",
+    "Development results, including both stress directions and failed candidates, retained; at most one logged revision per arm"
+  ],
+  "future_batch": {
+    "generated_now": false,
+    "cases": 24,
+    "batches": 1,
+    "custody": "Only after contract/builders/decoder/policy/resolver/caller source hashes are frozen and independent review passes. Evaluator custodian owns generator and seed; candidate processes receive only public bundles. Local separation is not hostile same-user isolation.",
+    "mechanisms": "Use declared24-case mix. Include negative artifact outcomes and dispute/timing cases as well as positive opportunities; exact strata/truth denominators reported before arm scoring without leaking them to candidate. No cohort replacement after outputs.",
+    "exposure": "Record first exposure. Any builder exposure before freeze invalidates protected-final language; label exploratory development. No reruns or outcome-driven tuning."
+  },
+  "predeclared_next_research_rule": {
+    "hard_repair": "Any source/role/time leakage, invalid lossless parity, duplicate effect or unauthorized effect stops interpretation and selects repair; retain every output.",
+    "promising_relational_signal": "At least2 additional valid timely releases out of the same24 declared cases, no increase in each proposal-harm count, no extra invalid/missing outputs, and budgets met. Report costs as a tradeoff; do not call this superiority or authorize adoption.",
+    "otherwise": "Retain simpler flat baseline; document losses and select a new informative question rather than tuning these cases. Neither arm winning is a valid result.",
+    "possible_successor": "A promising signal can justify preparing one nonacting prospective shadow task with new naturally occurring work receipts; no automatic live actions, workload increase or spending."
+  },
+  "limits": {
+    "program_seconds": 30,
+    "worker_seconds": 60,
+    "model_calls": 0,
+    "external_program_spend": 0,
+    "live_effects": false,
+    "new_scheduler": false
+  },
+  "review_revision": {
+    "round": 1,
+    "finding": "Separate task deadline authorization from artifact validity/readiness",
+    "scope": "Metric attribution only; world_opportunity unchanged for authorized cases"
+  }
+}

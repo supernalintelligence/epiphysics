@@ -187,6 +187,37 @@ class CoveragePreparationTests(unittest.TestCase):
         self.assertEqual(results[0], results[1])
         self.assertEqual(1, len(self.ledger.events("coverage_freeze")))
 
+    def test_concurrent_capture_after_prefix_read_uses_one_snapshot(self):
+        other = Ledger(self.ledger.root)
+        self.addCleanup(other.close)
+        observed = {}
+        target_code = coverage.preflight_coverage_capture.__code__
+        def trace(frame, event, argument):
+            if (event == "line" and frame.f_code is target_code
+                    and frame.f_locals.get("ledger") is self.ledger
+                    and "end" in frame.f_locals and not observed):
+                # Force the competing commit after the prefix boundary was read,
+                # without replacing a guarded function or relying on timing.
+                observed["end"] = frame.f_locals["end"]
+                observed["winner"] = coverage.create_coverage_freeze(
+                    other, **validation_args(self.data), run_keys=self.data["run_keys"])
+                eid = "coverage-input:" + digest(self.data["protocol"]["study_id"].encode()) + ":cohort"
+                observed["capture_seq"] = other.get(eid)["seq"]
+            return trace
+        previous_trace = sys.gettrace()
+        sys.settrace(trace)
+        try:
+            result = self.freeze()
+        finally:
+            sys.settrace(previous_trace)
+        self.assertGreater(observed["capture_seq"], observed["end"])
+        self.assertEqual(result, observed["winner"])
+        self.assertEqual(1, len(self.ledger.events("coverage_freeze")))
+        captures = [event for event in self.ledger.events("observation")
+                    if event["id"].startswith("coverage-input:")]
+        self.assertEqual(3, len(captures))
+        self.assertTrue(self.ledger.verify()["valid"])
+
     def test_changed_freeze_binding_refuses_and_corrupt_blob_never_replays(self):
         event = self.freeze()
         with self.assertRaisesRegex(ValueError, "different inputs"):

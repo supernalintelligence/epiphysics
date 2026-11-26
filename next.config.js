@@ -155,26 +155,6 @@ const nextConfig = {
       });
     }
 
-    // Optimize vendor chunks for client-side
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              name: 'vendor',
-              test: /[\\/]node_modules[\\/]/,
-              // JavaScript only: CSS in this named chunk is emitted as a <script> tag
-              type: /^javascript\//,
-              chunks: 'all',
-              priority: 10
-            }
-          }
-        }
-      };
-    }
-
     return config;
   },
 };
