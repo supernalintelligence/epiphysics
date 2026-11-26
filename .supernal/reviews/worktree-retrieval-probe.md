@@ -312,7 +312,7 @@ The merge retains both sides. C6's homepage component/data, protocol and executi
 
 Independently checked `/tmp/epiphysics-c6-merged-content-data.json`: 55 entries versus the prior build's 68; all thirteen removed entries are now intentionally marked draft. C4/C5/C6 records and the new protocol remain present. Artifact SHA-256: `cd62569b194da8deee19721014fbbd045723f604419051e4eacf4cd529b66a63`. The tracked generated artifact was restored by the parent after archiving; its older contents are not the merged-build evidence.
 
-Parent reports the merged site build exited zero, graph compilation produced 123 nodes / 146 edges / 24 documents / 32 sources, and the managed workflow's reviewed patch ID remains `2143a83745a7981ded5ad19b3a6f70955495d659`. No experiment review was repeated. Integration review remains clear; no deployment or rendered-browser claim is made.
+Parent reports the merged site build exited zero, graph compilation produced 123 nodes / 146 edges / 24 documents / 32 sources, and the managed workflow's reviewed patch ID remains `cd1fe7bdf991c878820e5a8c0954de1f7e94a778`. No experiment review was repeated. Integration review remains clear; no deployment or rendered-browser claim is made.
 
 ## Final public-result path — cleared
 
