@@ -699,7 +699,7 @@
       "id": "exp_fresh_decision_comparison",
       "kind": "experiment",
       "title": "Compare frozen decision views on one new exploratory cohort",
-      "status": "reported_exploratory_result"
+      "status": "proposed"
     },
     {
       "id": "doc_fresh_decision_protocol",
