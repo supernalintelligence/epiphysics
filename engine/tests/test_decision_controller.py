@@ -903,5 +903,132 @@ class DatedDeliveryIntegrationTests(unittest.TestCase):
         self.assert_pending_check_preserves_queue("owned-premature-closure")
 
 
+class PublicMapIntegrationTests(unittest.TestCase):
+    """Real map core/ledger/controller, with unrelated legacy probes isolated."""
+
+    def setUp(self):
+        from test_public_map_assessment import make_study
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.study = make_study(self.temp.name); self.ledger = self.study['ledger']; self.addCleanup(self.ledger.close)
+        self.stack = ExitStack(); self.addCleanup(self.stack.close)
+        for name, metrics in (
+            ('run_source_span_checks', ('source_span_resolution', 'assertion_history_preservation')),
+            ('run_manifest_checks', ('representation_manifest_preservation',)),
+            ('run_transformation_checks', ('transformation_preservation',)),
+            ('run_graph_view_checks', ('split_merge_preservation',)),
+            ('run_materialization_checks', ('output_manifest_materialization',)),
+        ):
+            self.stack.enter_context(patch.object(improvement, name,
+                return_value={'metrics': {metric: 1 for metric in metrics}, 'scope': 'owned unrelated probe stub'}))
+
+    def assess(self, key='owned-map', candidate='reference'):
+        return improvement.assess(self.ledger, EXAMPLES / 'policy.json', EXAMPLES / 'entities.json', candidate, key,
+            after_step=self.study['request']['origin']['step_id'], completed_work='Owned retained public-map integration, no frontend execution',
+            decision_study_path=self.study['request_path'])
+
+    def test_real_map_completion_and_exact_replay_without_reconciliation(self):
+        from test_decision_diagnosis import calls_named, FORBIDDEN_CALLS
+        with calls_named(FORBIDDEN_CALLS | {'verify_inventory', '_diagnose', 'Popen', 'run', 'system'}) as called:
+            result = self.assess()
+        self.assertEqual(called, [])
+        self.assertEqual(result['result'], 'assessed', result.get('message'))
+        self.assertEqual(result['next_step']['action'], 'prepare_evidence_navigation_evaluation')
+        self.assertLessEqual(result['actual_resources']['first_retained_map_check_elapsed_seconds'], result['actual_resources']['elapsed_seconds'])
+        self.ledger.capture('improvement-input:unrelated', b'later unrelated data', event_id='owned-map:unrelated')
+        before = len(self.ledger.events())
+        with calls_named({'assess_prepared_public_map', '_dataset', '_successful_output', 'Popen', 'verify_inventory'}) as called:
+            self.assertEqual(self.assess(), result)
+        self.assertEqual(called, []); self.assertEqual(len(self.ledger.events()), before)
+        self.assertEqual(improvement.status(self.ledger)['unfinished_runs'], [])
+        self.assertTrue(self.ledger.verify()['valid'])
+
+    def test_generic_and_malformed_requests_leave_all_map_semantic_steps_unconsumed(self):
+        for index, action in enumerate(sorted(improvement.public_map_assessment.SEMANTIC_ACTIONS | improvement.public_map_assessment.NEXT_ACTIONS)):
+            event = self.ledger.append('improvement_completed', {'run_key': 'owned-queue-' + str(index), 'request': {'manifest': {}},
+                'next_step': {'id': 'owned-queue-' + str(index), 'state': 'queued', 'action': action}}, 'owned-queue-' + str(index))
+            before = len(self.ledger.events())
+            for path in (None, self.study['directory'] / 'missing-map-request.json'):
+                with self.subTest(action=action, path=path), self.assertRaises(ValueError):
+                    improvement.assess(self.ledger, EXAMPLES / 'policy.json', EXAMPLES / 'entities.json', 'reference', 'owned-generic-' + str(index),
+                        after_step=event['body']['next_step']['id'], completed_work='Owned no evidence refusal', decision_study_path=path)
+                self.assertEqual(len(self.ledger.events()), before)
+
+    def test_real_checked_failure_requires_relevant_change_before_repair(self):
+        from test_public_map_assessment import fixture_inputs, refresh_receipts, bind_inputs
+        inputs = fixture_inputs(); inputs['stdout:verifier'] = b''; refresh_receipts(inputs, {'verifier': {'returncode': 1}})
+        bind_inputs(self.study, inputs)
+        failed = self.assess('owned-map-negative')
+        self.assertEqual(failed['result'], 'assessed', failed.get('message'))
+        self.assertEqual(failed['next_step']['action'], 'repair_public_research_map_preparation')
+        parent = self.ledger.get('improvement:owned-map-negative:complete')
+        bind_inputs(self.study, fixture_inputs(), parent)
+        before = len(self.ledger.events())
+        with self.assertRaisesRegex(ValueError, 'Unchanged failed'): self.assess('owned-map-unchanged')
+        self.assertEqual(len(self.ledger.events()), before)
+        bind_inputs(self.study, fixture_inputs('Owned repaired evidence wording.'), parent)
+        repaired = self.assess('owned-map-repaired')
+        self.assertEqual(repaired['result'], 'assessed', repaired.get('message'))
+        self.assertEqual(repaired['next_step']['action'], 'prepare_evidence_navigation_evaluation')
+        self.assertEqual(repaired['report']['decision_pilot']['ancestry']['mode'], 'checked_repair')
+        self.assertIsNotNone(self.ledger.get('improvement:owned-map-negative:complete'))
+
+    def test_real_postclaim_failure_continues_original_semantic_request(self):
+        from test_public_map_assessment import bind_inputs
+        with patch.object(improvement.decision_assessment, 'assess_prepared_decision_study', side_effect=ValueError('Owned interrupted retained check')):
+            failed = self.assess('owned-map-interrupted')
+        self.assertEqual(failed['result'], 'failed')
+        self.assertEqual(failed['next_step']['action'], 'diagnose_failed_assessment')
+        parent = self.ledger.get('improvement:owned-map-interrupted:failed')
+        bind_inputs(self.study, parent=parent)
+        completed = self.assess('owned-map-corrected')
+        self.assertEqual(completed['result'], 'assessed', completed.get('message'))
+        self.assertEqual(completed['next_step']['action'], 'prepare_evidence_navigation_evaluation')
+        self.assertEqual(completed['report']['decision_pilot']['ancestry']['mode'], 'failed_attempt_continuation')
+        self.assertEqual(completed['report']['decision_pilot']['evidence_origin']['event_hash'], self.study['origin']['hash'])
+
+    def test_completion_refuses_new_scoped_evidence_under_lock(self):
+        real_append = self.ledger.append
+        injected = False
+        def append(kind, body, event_id, **kwargs):
+            nonlocal injected
+            if kind == 'improvement_completed' and body.get('run_key') == 'owned-map-race' and not injected:
+                injected = True
+                self.ledger.capture(improvement.public_map_assessment._scope(self.study['request']['study_id']) + 'stdout:later', b'new scoped evidence', event_id='owned-map:late-evidence')
+            return real_append(kind, body, event_id, **kwargs)
+        with patch.object(self.ledger, 'append', side_effect=append): result = self.assess('owned-map-race')
+        self.assertTrue(injected); self.assertEqual(result['result'], 'failed')
+        self.assertIn('Later scoped', result['message'])
+        with self.assertRaisesRegex(ValueError, 'Missing event'): self.ledger.get('improvement:owned-map-race:complete')
+        self.assertEqual(self.ledger.get('improvement:owned-map-race:input:decision-result:assessment_report')['kind'], 'observation')
+
+    def test_claim_refuses_competing_parent_before_capturing_request(self):
+        real_append = self.ledger.append
+        def append(kind, body, event_id, **kwargs):
+            if kind == 'improvement_started':
+                real_append('improvement_completed', {'run_key': 'owned-competing', 'request': {'manifest': {}},
+                    'next_step': {'id': 'owned-competing:next', 'state': 'queued', 'action': 'prepare_evidence_navigation_evaluation'}}, 'owned-competing')
+            return real_append(kind, body, event_id, **kwargs)
+        before = len(self.ledger.events())
+        with patch.object(self.ledger, 'append', side_effect=append), self.assertRaises(ValueError): self.assess('owned-map-stale')
+        self.assertEqual(len(self.ledger.events()), before + 1)
+        self.assertFalse(any(event['kind'] == 'improvement_started' for event in self.ledger.events()))
+
+    def test_degraded_enclosing_candidate_preserves_semantic_failure(self):
+        result = self.assess('owned-map-degraded', 'degraded')
+        self.assertEqual(result['result'], 'failed')
+        self.assertIn('cannot complete', result['message'])
+        self.assertEqual(result['next_step']['action'], 'diagnose_failed_assessment')
+        self.assertEqual(self.ledger.get('improvement:owned-map-degraded:input:decision-result:assessment_report')['kind'], 'observation')
+
+    def test_nested_retained_check_time_cannot_exceed_enclosing_assessment(self):
+        real = improvement.decision_assessment.assess_prepared_decision_study
+        def measure(prepared):
+            result = real(prepared); result['actual_resources']['retained_check_elapsed_seconds'] = 9.9; return result
+        with patch.object(improvement.decision_assessment, 'assess_prepared_decision_study', side_effect=measure):
+            result = self.assess('owned-map-time')
+        self.assertEqual(result['result'], 'failed')
+        self.assertIn('exceeds its enclosing', result['message'])
+
+
 if __name__ == "__main__":
     unittest.main()

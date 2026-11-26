@@ -384,6 +384,18 @@ The first captured submission remains the evaluated unit, including malformed or
 
 The assessment report separates artifact quality, claim agreement, availability, authority and time assurance. Local observation times have no external witness. First-verification elapsed time is nested within assessment time and is null when no verifier ran; completion revalidation is separate. Exact replay returns the retained result without another verification. No phase runs a producer, makes a model/network call or grants publication, payment or scale-change authority.
 
+### Check public research-map preparation
+
+`public_research_map_preparation` uses the same `--decision-study FILE` entry point. The [fixed contract](examples/research-map/public-map-contract.json) and [public protocol](../docs/experiments/public-research-map.md) describe retained validation of the page and its explicit public selection. The adapter does not run the exporter, tests, build or a browser.
+
+The request separates the accepted C10 evidence origin, the immediate queued parent and the final capture checkpoint. Its absolute `paths` identify `contract` and `packet`. The packet maps fixed roles to observations with source `improvement-input:public-research-map:<study_id>:<role>`: dataset, policy, source manifest, command/test selection, four catalog inputs, required source/document files, and each category's receipt and raw output/error. Keep these records in the private improvement store, not the public map.
+
+Six actual fixed invocations are required: exporter tests, map model/component tests, scoped typecheck, lint, production build and final public-data verification. The final verifier must follow the build and identify its generated content. Generated content is not an immutable source input. Receipts retain exact runtime and input identities, process times, exit/termination state and bounded raw streams; source changes or incomplete packets cannot be relabeled as a completed validation. Local process receipts and Git labels are attributed evidence, not an external execution or time witness.
+
+A valid failed process needs no success JSON. A malformed dataset or independently detected publication violation is a failed artifact criterion; invalid receipt bindings or stale lineage refuse before claim. A completed failed attempt requires changed relevant implementation, catalog/document, selection or public content before repair; changed timestamps, run IDs, commit labels or derived digests alone do not qualify. Generic fixture runs cannot consume a map-specific successor.
+
+Passing preparation selects `prepare_evidence_navigation_evaluation`; a measured failure selects `repair_public_research_map_preparation`. Page preparation does not establish browser accessibility, visual quality, human understanding, deployment, predictive gain or engagement. The proposed six-case textual navigation evaluation is a separate subsequent packet. See the [run record](../docs/planning/runs/2026-11-26-public-research-map.md) for current execution status rather than treating this interface documentation as an acceptance result.
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:

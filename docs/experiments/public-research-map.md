@@ -15,7 +15,7 @@ A research map should help a reader answer two ordinary questions: what is being
 
 The [first maintenance delivery](results/2026-11-26-first-dated-delivery.md) selected this work as its successor. The map connects a reviewed subset of the project's existing claims, sources, results, qualifications and proposed tests. It does not discover new entities or establish the truth of a claim by connecting it to other nodes.
 
-**Status: implementation and validation in progress.** The [map route](/research-map) has a claim browser, a readable relationship list and an optional diagram. Publication, real-browser behavior and user benefit are separate from implementation. This protocol defines what must be checked before the preparation step can be accepted.
+The [map route](/research-map) has a claim browser, a readable relationship list and an optional diagram. This is a local preparation protocol: publication, real-browser behavior and user benefit require separate evidence. The checks below define what the preparation step can establish and what it leaves unmeasured.
 
 ## Read the statement and its basis together
 
