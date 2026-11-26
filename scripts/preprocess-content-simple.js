@@ -54,6 +54,23 @@ function remarkResolveMdLinks(options) {
   };
 }
 
+// Rehype plugin to resolve relative image sources to absolute /docs/ URLs.
+// Images are served from public/docs/, so a path relative to the markdown file
+// does not resolve against the page URL in the browser.
+function rehypeResolveImageSrc(options) {
+  const { relativePath } = options;
+  const currentDir = path.dirname(relativePath).replace(/\\/g, '/');
+
+  return (tree) => {
+    walkTree(tree, 'element', (node) => {
+      const src = node.tagName === 'img' ? node.properties?.src : undefined;
+      // Leave URLs with a scheme, root-absolute paths and fragments untouched
+      if (!src || /^([a-z][a-z0-9+.-]*:|\/|#)/i.test(src)) return;
+      node.properties.src = path.posix.join('/docs', currentDir, src);
+    });
+  };
+}
+
 // Remark plugin to process Mermaid code blocks into renderable divs
 function remarkProcessMermaid() {
   return (tree) => {
@@ -117,6 +134,7 @@ async function markdownToHtml(markdown, relativePath) {
       .use(remarkResolveMdLinks, { relativePath: relativePath || '' })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
+      .use(rehypeResolveImageSrc, { relativePath: relativePath || '' })
       // Skip rehypeSanitize - this is our own trusted content
       .use(rehypeSlug)
       .use(rehypeKatex)
