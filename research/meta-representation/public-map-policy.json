@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "56899eef99972284e4dc933e99ed8de118d4ca83",
+  "catalogFiles": [
+    "registry.json",
+    "sources-control.json",
+    "sources-representation.json",
+    "sources-retrieval.json"
+  ],
+  "nodeIds": [
+    "beir",
+    "claim_concentration",
+    "claim_decision_information_result",
+    "claim_decision_late_rights",
+    "claim_decision_retention_result",
+    "claim_exchange",
+    "claim_exchange_quality_gap",
+    "claim_feedback",
+    "claim_first_dated_delivery",
+    "claim_fixed_clause_probe_result",
+    "claim_fresh_decision_retention",
+    "claim_graph_task",
+    "claim_historical_state_retrieval",
+    "claim_interchange",
+    "claim_meta",
+    "claim_newer",
+    "claim_portability",
+    "claim_support_bundle_definition",
+    "claim_temporal",
+    "claim_transparency_scope",
+    "claim_witness",
+    "doc_dated_delivery_protocol",
+    "doc_decision_information_result",
+    "doc_decision_pilot_protocol",
+    "doc_decision_pilot_result",
+    "doc_first_dated_delivery_result",
+    "doc_fixed_clause_probe_protocol",
+    "doc_fixed_clause_probe_run",
+    "doc_fresh_decision_protocol",
+    "doc_fresh_decision_result",
+    "doc_protocol",
+    "doc_research",
+    "doc_retrieval_coverage_protocol",
+    "erc8004",
+    "exp_complete_support",
+    "exp_control_exchange_decisions",
+    "exp_dated_evidence_quality",
+    "exp_decision_information_limits",
+    "exp_exchange",
+    "exp_fidelity",
+    "exp_fixed_clause_probe",
+    "exp_forecast",
+    "exp_fresh_decision_comparison",
+    "exp_retrieval",
+    "graphrag",
+    "magentic_marketplace",
+    "nanopublications",
+    "opentimestamps",
+    "performative_prediction",
+    "prov_o",
+    "rag_vs_graphrag",
+    "rdf11",
+    "rep_control",
+    "rfc3161_timestamp",
+    "rfc7089_memento",
+    "rfc9943_scitt",
+    "shacl",
+    "transform_encode",
+    "transform_revise",
+    "x402",
+    "zep"
+  ],
+  "documents": {
+    "doc_dated_delivery_protocol": {
+      "repoPath": "docs/experiments/dated-artifact-delivery.md",
+      "href": "/experiments/dated-artifact-delivery"
+    },
+    "doc_decision_information_result": {
+      "repoPath": "docs/experiments/results/2026-11-26-decision-information-limits.md",
+      "href": "/experiments/results/2026-11-26-decision-information-limits"
+    },
+    "doc_decision_pilot_protocol": {
+      "repoPath": "docs/experiments/control-exchange-decision-pilot.md",
+      "href": "/experiments/control-exchange-decision-pilot"
+    },
+    "doc_decision_pilot_result": {
+      "repoPath": "docs/experiments/results/2026-11-26-decision-pilot.md",
+      "href": "/experiments/results/2026-11-26-decision-pilot"
+    },
+    "doc_first_dated_delivery_result": {
+      "repoPath": "docs/experiments/results/2026-11-26-first-dated-delivery.md",
+      "href": "/experiments/results/2026-11-26-first-dated-delivery"
+    },
+    "doc_fixed_clause_probe_protocol": {
+      "repoPath": "docs/experiments/retrieval-fixed-clause-probe.md",
+      "href": "/experiments/retrieval-fixed-clause-probe"
+    },
+    "doc_fixed_clause_probe_run": {
+      "repoPath": "docs/experiments/results/2026-11-26-retrieval-probe.md",
+      "href": "/experiments/results/2026-11-26-retrieval-probe"
+    },
+    "doc_fresh_decision_protocol": {
+      "repoPath": "docs/experiments/control-exchange-fresh-comparison.md",
+      "href": "/experiments/control-exchange-fresh-comparison"
+    },
+    "doc_fresh_decision_result": {
+      "repoPath": "docs/experiments/results/2026-11-26-fresh-decision-comparison.md",
+      "href": "/experiments/results/2026-11-26-fresh-decision-comparison"
+    },
+    "doc_protocol": {
+      "repoPath": "docs/experiments/prospective-observatory.md",
+      "href": "/experiments/prospective-observatory"
+    },
+    "doc_research": {
+      "repoPath": "docs/research/recursive-research-program.md",
+      "href": "/research/recursive-research-program"
+    },
+    "doc_retrieval_coverage_protocol": {
+      "repoPath": "docs/experiments/retrieval-coverage.md",
+      "href": "/experiments/retrieval-coverage"
+    }
+  }
+}

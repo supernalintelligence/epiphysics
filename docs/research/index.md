@@ -20,6 +20,8 @@ tts:
 
 > **Status: Under active development.** Research notes and validation programs. Not peer-reviewed.
 
+[Explore the research map](/research-map) to find a claim, read its stated basis, and follow its citations, qualifications, and proposed next tests. The map is a curated view of the record; a connection is not a validation score.
+
 ## Current Focus
 
 ### Grounding & Validation
