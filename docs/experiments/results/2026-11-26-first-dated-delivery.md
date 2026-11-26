@@ -47,7 +47,7 @@ Quality, authority and time assurance remain separate. The recorded local produc
 
 Registration was accepted at 18:38:18 UTC on 26 November 2026. The first inventory was captured at 18:39:18 UTC, the verification receipt at 18:42:07 UTC, and adjudication at 18:44:32 UTC. Final acceptance followed at 18:44:59 UTC. The original deadlines remained 24 hours after registration for delivery and 48 hours after registration for adjudication.
 
-The producer process took 0.131 seconds. The standalone checker calculation took 0.00825 seconds within a 0.110-second enclosing process. The later assessment's first checker calculation took 0.00982 seconds within its 25.262-second assessment and 27.891-second enclosing dispatcher call. Nested intervals must not be added. Completion validation recomputes deterministic results; one producer attempt does not mean one checker computation across the whole lifecycle.
+The producer process took 0.131 seconds. The standalone checker calculation took 0.00825 seconds within a 0.110-second enclosing process. The later assessment's first checker calculation took 0.00982 seconds within its 25.262-second assessment and 27.891-second enclosing caller wall time. Nested intervals must not be added. Completion validation recomputes deterministic results; one producer attempt does not mean one checker computation across the whole lifecycle.
 
 These local programs made no model calls and recorded zero external spend. Builder, reviewer and coordination effort are separate and not fully measured. No live exchange, deployment or authority expansion followed. The assessment records zero producer executions because it checks retained evidence; the separate producer receipt records the one actual production run.
 
