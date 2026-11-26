@@ -30,8 +30,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# lock files
-package-lock.json
+# Keep the reviewed npm resolution reproducible; this project uses npm.
 bun.lockb
 
 # build
