@@ -7,7 +7,8 @@ Prioritized list of what needs to be done. Check this file when looking for work
 - [x] Build the local append-only evidence, snapshot, representation, forecast, resolution, and scoring slice.
 - [x] Add bounded collection cycles and synthetic demonstration data.
 - [x] Clarify the landing page and add a five-step interactive introduction and inspectable example.
-- [ ] Validate and land this slice through independent review; record actual checks and deployment state.
+- [x] Validate and integrate this slice on `ian-dev` through independent review; see the 26 November run record.
+- [ ] Promote through the required `ian-dev` → `main` → `production` pull requests after the separate site-loading fix is integrated; verify deployment and rendered layout.
 - [ ] Add an independent witness adapter and verification fixtures; distinguish receipt time from source time.
 - [ ] Add isolated model runners with explicit model/prompt/input manifests and enforced per-run budgets.
 - [ ] Compare a simple baseline, a direct language-model forecast, a fixed entity graph, and a learned representation on the same prospective questions.
