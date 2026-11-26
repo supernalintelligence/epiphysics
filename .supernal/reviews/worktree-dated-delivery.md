@@ -14,6 +14,8 @@ skip_reason: ""
 size: { files: 21, lines: 3137 }
 ---
 
+## Reviewer report
+
 # C10 final integration and publication review
 
 Disposition: ready for local landing. No open actionable findings remain in this reviewed packet. This is not a deployment, browser-quality, general verifier-reliability or public-map implementation approval.
