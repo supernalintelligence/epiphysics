@@ -21,17 +21,18 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, representation_checks, source_span_checks, store, transformation_checks, transforms
+from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
 from .manifest_checks import run_manifest_checks
 from .transformation_checks import run_transformation_checks
 from .graph_view_checks import run_graph_view_checks
+from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -43,6 +44,7 @@ _IMPLEMENTATIONS = {
                          "manifests": manifests, "manifest_probe": manifest_checks,
                          "transforms": transforms, "transformation_probe": transformation_checks,
                          "graph_views": graph_views, "graph_view_probe": graph_view_checks,
+                         "materialization": materialization, "materialization_probe": materialization_checks,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -134,8 +136,10 @@ def select_next(report, run_key):
          "The actual fixed graph operations failed or lack an execution, preservation, loss, or receipt probe; inspect transformation_checks diagnostics."),
         ("repair_graph_views", "split_merge_preservation", 1, "increase", m.get("split_merge_preservation") != 1,
          "Actual graph partition/merge operations failed or lack a preservation, conflict, ancestry, loss, or receipt check; inspect graph_view_checks diagnostics."),
-        ("build_transform_materialization", "output_manifest_materialization", 1, "increase", True,
-         "Representation and actual assertion, manifest, graph-operation, and partition/merge probes pass. Implement output materialization into new representations/manifests (Packet B2c); output_manifest_materialization remains unmeasured."),
+        ("repair_transform_materialization", "output_manifest_materialization", 1, "increase", m.get("output_manifest_materialization") != 1,
+         "Actual output materialization failed or lacks a binding, ancestry, forecast-consumer, atomicity or replay check; inspect materialization_checks diagnostics."),
+        ("build_retrieval_baseline", "retrieval_baseline_reproducibility", 1, "increase", True,
+         "Representation, assertion, manifest, graph-operation and output materialization probes pass. Build a source-backed reproducible retrieval baseline (Packet C); retrieval_baseline_reproducibility remains unmeasured."),
     ]
     ranked = [{"action": a, "metric": metric, "observed": m.get(metric), "target": target,
                "direction": direction, "eligible": eligible, "reason": reason,
@@ -144,7 +148,7 @@ def select_next(report, run_key):
     chosen = next(c for c in ranked if c["eligible"])
     return {"id": f"{run_key}:next", "state": "queued", **chosen,
             "family": worst if chosen["action"] == "repair_weakest_entity_family" else None,
-            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion, manifest and fixed graph/partition/merge probes, then missing capability",
+            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion, manifest and fixed graph/partition/merge and materialization probes, then missing capability",
             "forecast_kind": "target and directional hypothesis; probability and cost unestimated",
             "candidate_actions": ranked, "scale_change_allowed": False}
 
@@ -152,7 +156,7 @@ def select_next(report, run_key):
 def _forecast_result(previous, report, previous_manifest, current_manifest):
     metric = previous.get("metric")
     if previous_manifest is not None:
-        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe")
+        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe", "materialization", "materialization_probe")
                    if previous_manifest.get(name) != current_manifest.get(name)]
         if changed:
             return {"status": "incomparable_contract_change", "changed_inputs": changed,
@@ -267,6 +271,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         graph_view_probe = run_graph_view_checks()
         report["graph_view_checks"] = graph_view_probe
         report["metrics"].update(graph_view_probe["metrics"])
+        materialization_probe = run_materialization_checks()
+        report["materialization_checks"] = materialization_probe
+        report["metrics"].update(materialization_probe["metrics"])
         _implementation_inputs()
         elapsed = time.monotonic() - started
         if elapsed > policy["max_assessment_seconds"]:

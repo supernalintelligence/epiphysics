@@ -414,6 +414,48 @@
       "kind": "experiment",
       "title": "E6: Control and exchange mechanisms",
       "status": "proposed"
+    },
+    {
+      "id": "doc_graph_views_run",
+      "kind": "document",
+      "title": "Reviewed graph partition and merge execution record",
+      "repo_path": "docs/planning/runs/2026-11-25-graph-views.md"
+    },
+    {
+      "id": "claim_graph_view_conformance",
+      "kind": "claim",
+      "title": "Recorded graph partition and merge conformance",
+      "statement": "The committed B2b run records 45/45 actual synthetic API checks, independent review, and a repaired repeated-identifier resource bound. It preserves strict graph-record collisions, ancestry and explicit cross-partition losses. This does not establish semantic equivalence, physical entity fission, external witnessing or predictive advantage.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_control_source_capture",
+      "kind": "claim",
+      "title": "Fresh control and exchange evidence with preserved corrections",
+      "statement": "The B2b execution record describes four exact public-source captures and four current reported claims linked to byte spans. Two reviewed clarifications are superseding assertions, leaving earlier knowledge views intact. Captures use local collection time and do not reconstruct historical availability or establish source truth or market dominance. Raw external bytes are in a separate local store, not this bibliographic catalog.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "sqlite_fts5",
+      "kind": "source",
+      "title": "SQLite FTS5 extension documentation",
+      "url": "https://www.sqlite.org/fts5.html",
+      "date": null,
+      "date_type": "undated_live_documentation",
+      "claim_supported": "FTS5 provides full-text indexing, Unicode tokenization and built-in BM25 ranking, with numerically lower scores ranked first.",
+      "limitation": "Retrieval ranking is not answer correctness or citation entailment; results depend on corpus, query and tokenizer configuration. Runtime and configuration must be recorded.",
+      "bibliographic_only": true,
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "id": "claim_fts5_baseline",
+      "kind": "claim",
+      "title": "A maintained lexical baseline can use existing SQLite",
+      "statement": "SQLite FTS5 supplies an existing full-text index and BM25 ranking for a local lexical retrieval baseline. It does not supply an evidence-grounded answer evaluator, historical eligibility rules or a sealed final cohort.",
+      "status": "reported_result",
+      "basis": "reported"
     }
   ],
   "edges": [
@@ -941,6 +983,26 @@
       "source": "exp_exchange",
       "target": "exp_fidelity",
       "type": "depends_on"
+    },
+    {
+      "source": "claim_graph_view_conformance",
+      "target": "doc_graph_views_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_control_source_capture",
+      "target": "doc_graph_views_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fts5_baseline",
+      "target": "sqlite_fts5",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fts5_baseline",
+      "target": "exp_retrieval",
+      "type": "motivates"
     }
   ]
 }

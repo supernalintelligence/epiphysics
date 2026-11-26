@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from epiphysics import assertions, graph_views, improvement, manifests, transforms
+from epiphysics import assertions, graph_views, improvement, manifests, materialization, transforms
 from epiphysics.store import Ledger
 
 
@@ -44,7 +44,7 @@ class ImprovementTests(unittest.TestCase):
         events = self.ledger.events()
         self.assertEqual("improvement_completed", events[-1]["kind"])
         self.assertEqual(result["next_step"], events[-1]["body"]["next_step"])
-        self.assertEqual("build_transform_materialization", result["next_step"]["action"])
+        self.assertEqual("build_retrieval_baseline", result["next_step"]["action"])
         self.assertEqual(1, result["report"]["metrics"]["source_span_resolution"])
         self.assertEqual(1, result["report"]["metrics"]["assertion_history_preservation"])
         self.assertEqual(1, result["report"]["metrics"]["representation_manifest_preservation"])
@@ -62,9 +62,13 @@ class ImprovementTests(unittest.TestCase):
         self.assertEqual("graph-view-probes-v1", result["report"]["graph_view_checks"]["version"])
         self.assertEqual({"split_merge_preservation": {"passed": 45, "checks": 45}},
                          result["report"]["graph_view_checks"]["counts"])
-        self.assertNotIn("output_manifest_materialization", result["report"]["metrics"])
+        self.assertEqual(1, result["report"]["metrics"]["output_manifest_materialization"])
+        self.assertEqual("materialization-probes-v1", result["report"]["materialization_checks"]["version"])
+        self.assertEqual({"output_manifest_materialization": {"passed": 30, "checks": 30}},
+                         result["report"]["materialization_checks"]["counts"])
+        self.assertNotIn("retrieval_baseline_reproducibility", result["report"]["metrics"])
         self.assertIsNone(result["next_step"]["observed"])
-        self.assertTrue({"assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe"} <= result["request"]["manifest"].keys())
+        self.assertTrue({"assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe", "materialization", "materialization_probe"} <= result["request"]["manifest"].keys())
         self.assertFalse(result["next_step"]["scale_change_allowed"])
         self.assertEqual(0, result["actual_resources"]["external_spend"])
         self.assertEqual(result, self.run_assessment())
@@ -78,7 +82,7 @@ class ImprovementTests(unittest.TestCase):
     def test_measured_failure_selects_repair_and_next_assessment_records_outcome(self):
         first = self.run_assessment("degraded")
         self.assertLess(first["report"]["metrics"]["accuracy"], 1)
-        self.assertNotEqual("build_transform_materialization", first["next_step"]["action"])
+        self.assertNotEqual("build_retrieval_baseline", first["next_step"]["action"])
         second = self.run_assessment(run_key="second", after="first:next")
         self.assertEqual("measured", second["prior_action_outcome"]["status"])
         self.assertTrue(second["prior_action_outcome"]["target_met"])
@@ -117,8 +121,9 @@ class ImprovementTests(unittest.TestCase):
                     "assertions": "a-code", "source_span_probe": "probe-code", "store": "store-code",
                     "manifests": "manifest-code", "manifest_probe": "manifest-probe-code",
                     "transforms": "transform-code", "transformation_probe": "transform-probe-code",
-                    "graph_views": "view-code", "graph_view_probe": "view-probe-code"}
-        for key in ("policy", "evaluator", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe"):
+                    "graph_views": "view-code", "graph_view_probe": "view-probe-code",
+                    "materialization": "materialize-code", "materialization_probe": "materialize-probe-code"}
+        for key in ("policy", "evaluator", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe", "graph_views", "graph_view_probe", "materialization", "materialization_probe"):
             outcome = improvement._forecast_result(previous, report, manifest, {**manifest, key: "changed"})
             self.assertEqual("incomparable_contract_change", outcome["status"])
             self.assertEqual([key], outcome["changed_inputs"])
@@ -144,6 +149,10 @@ class ImprovementTests(unittest.TestCase):
         outcome = improvement._forecast_result(previous, report, prior_packet_b2a, manifest)
         self.assertEqual("incomparable_contract_change", outcome["status"])
         self.assertEqual(["graph_views", "graph_view_probe"], outcome["changed_inputs"])
+        prior_packet_b2b = {key: value for key, value in manifest.items() if key not in {"materialization", "materialization_probe"}}
+        outcome = improvement._forecast_result(previous, report, prior_packet_b2b, manifest)
+        self.assertEqual("incomparable_contract_change", outcome["status"])
+        self.assertEqual(["materialization", "materialization_probe"], outcome["changed_inputs"])
 
     def test_unauthorized_stage_budget_and_dropped_family_are_refused_before_claim(self):
         original = json.loads(self.policy.read_text())
@@ -163,7 +172,7 @@ class ImprovementTests(unittest.TestCase):
             result = self.run_assessment()
         self.assertEqual("failed", result["result"])
         self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
-        self.assertEqual(14, len(self.ledger.events("observation")))
+        self.assertEqual(16, len(self.ledger.events("observation")))
         self.assertEqual([], improvement.status(self.ledger)["unfinished_runs"])
         self.assertEqual(result, self.run_assessment())
 
@@ -276,7 +285,7 @@ class ImprovementTests(unittest.TestCase):
         self.assertIn("Probe interrupted", result["message"])
         self.assertEqual([], self.ledger.events("improvement_completed"))
 
-    def test_selector_requires_all_prior_and_graph_metrics_before_b2c(self):
+    def test_selector_requires_all_prior_and_materialization_metrics_before_retrieval(self):
         result = self.run_assessment()
         report = result["report"]
         cases = [("temporal_violations", 1, "repair_time_eligibility"),
@@ -287,7 +296,8 @@ class ImprovementTests(unittest.TestCase):
                  ("assertion_history_preservation", 0.9, "repair_source_span_assertions"),
                  ("representation_manifest_preservation", 0.9, "repair_representation_manifests"),
                  ("transformation_preservation", 0.9, "repair_graph_transformations"),
-                 ("split_merge_preservation", 0.9, "repair_graph_views")]
+                 ("split_merge_preservation", 0.9, "repair_graph_views"),
+                 ("output_manifest_materialization", 0.9, "repair_transform_materialization")]
         for metric, value, action in cases:
             with self.subTest(metric=metric):
                 changed = copy.deepcopy(report)
@@ -302,6 +312,9 @@ class ImprovementTests(unittest.TestCase):
         missing_views = copy.deepcopy(report)
         del missing_views["metrics"]["split_merge_preservation"]
         self.assertEqual("repair_graph_views", improvement.select_next(missing_views, "pre-views")["action"])
+        missing_materialization = copy.deepcopy(report)
+        del missing_materialization["metrics"]["output_manifest_materialization"]
+        self.assertEqual("repair_transform_materialization", improvement.select_next(missing_materialization, "pre-materialization")["action"])
 
     def test_broken_transformation_probe_records_failure_without_advancing(self):
         with patch.object(improvement, "run_transformation_checks", side_effect=ValueError("Transform probe interrupted")):
@@ -339,26 +352,49 @@ class ImprovementTests(unittest.TestCase):
         self.assertEqual("repair_graph_views", result["next_step"]["action"])
         self.assertTrue(all("diagnostic" in row for row in result["report"]["graph_view_checks"]["checks"]))
 
+    def test_broken_materialization_probe_records_failure_without_advancing(self):
+        with patch.object(improvement, "run_materialization_checks", side_effect=ValueError("Materialization probe interrupted")):
+            result = self.run_assessment()
+        self.assertEqual("failed", result["result"])
+        self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
+        self.assertIn("Materialization probe interrupted", result["message"])
+        self.assertEqual([], self.ledger.events("improvement_completed"))
+
+    def test_materialization_failure_blocks_retrieval_with_prior_gates_passing(self):
+        with patch.object(materialization, "materialize_graph_outputs", side_effect=ValueError("Materialization unavailable")):
+            result = self.run_assessment()
+        self.assertEqual("assessed", result["result"])
+        for metric in ("accuracy", "source_span_resolution", "assertion_history_preservation", "representation_manifest_preservation", "transformation_preservation", "split_merge_preservation"):
+            self.assertEqual(1, result["report"]["metrics"][metric])
+        self.assertEqual(0, result["report"]["metrics"]["output_manifest_materialization"])
+        self.assertEqual("repair_transform_materialization", result["next_step"]["action"])
+        self.assertTrue(all("diagnostic" in row for row in result["report"]["materialization_checks"]["checks"]))
+
     def _isolated_drift_check(self, mode, module_name="assertions", dependent_name=""):
         package_root = self.root / f"isolated-{mode}-{module_name}-{dependent_name}"
         shutil.copytree(Path(improvement.__file__).parent, package_root / "epiphysics",
                         ignore=shutil.ignore_patterns("__pycache__"))
         code = r'''
-import importlib,json,sys
+import ast,importlib,json,sys
 from pathlib import Path
 mode,name,dependent_name,policy,suite,store_path=sys.argv[1:]
 def alter(module):
     path=Path(module.__file__)
     if module.__name__.endswith('.store'):
         source=path.read_bytes()
-        target=b'        cutoff = cutoff or self.clock()'
-        assert target in source
-        path.write_bytes(source.replace(target,b'        raise ValueError("Changed snapshot is broken")\n'+target,1))
+        tree=ast.parse(source)
+        ledger=next(node for node in tree.body if isinstance(node,ast.ClassDef) and node.name=='Ledger')
+        snapshot=next(node for node in ledger.body if isinstance(node,ast.FunctionDef) and node.name=='snapshot')
+        first=snapshot.body[0]
+        lines=source.splitlines(keepends=True)
+        lines.insert(first.lineno-1,b' '*first.col_offset+b'raise ValueError("Changed snapshot is broken")\n')
+        path.write_bytes(b''.join(lines))
         return
     functions={'assertions':'resolve_span','representation_checks':'evaluate','source_span_checks':'run_source_span_checks',
                'manifests':'register_manifest','manifest_checks':'run_manifest_checks',
                'transforms':'execute_graph_transform','transformation_checks':'run_transformation_checks',
-               'graph_views':'execute_graph_views','graph_view_checks':'run_graph_view_checks'}
+               'graph_views':'execute_graph_views','graph_view_checks':'run_graph_view_checks',
+               'materialization':'materialize_graph_outputs','materialization_checks':'run_materialization_checks'}
     function=functions.get(module.__name__.rsplit('.',1)[-1])
     change=(("\ndef "+function+"(*args, **kwargs):\n    raise ValueError('Changed implementation on disk')\n").encode()
             if function else b"\n# Unreviewed source edit after import\n")
@@ -393,6 +429,17 @@ if mode == 'dependency_reload_before_controller':
             importlib.reload(importlib.import_module('epiphysics.transforms'))
         if dependent_name == 'graph_view_checks' and name in {'store','assertions','manifests','transforms'}:
             importlib.reload(importlib.import_module('epiphysics.graph_views'))
+    if dependent_name in {'materialization','materialization_checks'}:
+        if name == 'store':
+            importlib.reload(importlib.import_module('epiphysics.assertions'))
+        if name in {'store','assertions'}:
+            importlib.reload(importlib.import_module('epiphysics.manifests'))
+        if name in {'store','assertions','manifests'}:
+            importlib.reload(importlib.import_module('epiphysics.transforms'))
+        if name in {'store','assertions','manifests','transforms'}:
+            importlib.reload(importlib.import_module('epiphysics.graph_views'))
+        if dependent_name == 'materialization_checks' and name in {'store','assertions','manifests','transforms','graph_views'}:
+            importlib.reload(importlib.import_module('epiphysics.materialization'))
 from epiphysics import improvement
 from epiphysics.store import Ledger,digest
 module=importlib.import_module('epiphysics.'+name)
@@ -428,7 +475,7 @@ try:
                    captured_sha256=digest(captured),disk_sha256=digest(Path(module.__file__).read_bytes()))
     if mode == 'reload_after_controller':
         function={'representation_checks':'evaluate','source_span_checks':'run_source_span_checks','manifest_checks':'run_manifest_checks',
-                  'transformation_checks':'run_transformation_checks','graph_view_checks':'run_graph_view_checks'}[name]
+                  'transformation_checks':'run_transformation_checks','graph_view_checks':'run_graph_view_checks','materialization_checks':'run_materialization_checks'}[name]
         outcome['alias_is_current']=getattr(improvement,function) is getattr(module,function)
     if mode == 'dependency_reload_before_controller':
         outcome['dependency_code_changed']=old_dependency_code is not dependency.IMPLEMENTATION_CODE
@@ -446,7 +493,7 @@ finally:
         return json.loads(result.stdout)
 
     def test_preassessment_disk_drift_is_refused_without_claiming_queue(self):
-        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks"):
+        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks", "materialization", "materialization_checks"):
             with self.subTest(module=module):
                 outcome = self._isolated_drift_check("before_assessment", module)
                 self.assertEqual("refused", outcome["result"])
@@ -504,6 +551,17 @@ finally:
             ("graph_view_checks", "manifests", "graph_view_probe"),
             ("graph_view_checks", "transforms", "graph_view_probe"),
             ("graph_view_checks", "graph_views", "graph_view_probe"),
+            ("materialization", "store", "materialization"),
+            ("materialization", "assertions", "materialization"),
+            ("materialization", "manifests", "materialization"),
+            ("materialization", "transforms", "materialization"),
+            ("materialization", "graph_views", "materialization"),
+            ("materialization_checks", "store", "materialization_probe"),
+            ("materialization_checks", "assertions", "materialization_probe"),
+            ("materialization_checks", "manifests", "materialization_probe"),
+            ("materialization_checks", "transforms", "materialization_probe"),
+            ("materialization_checks", "graph_views", "materialization_probe"),
+            ("materialization_checks", "materialization", "materialization_probe"),
         ):
             with self.subTest(dependent=dependent, dependency=dependency):
                 outcome = self._isolated_drift_check("dependency_reload_before_controller", dependency, dependent)
@@ -514,7 +572,7 @@ finally:
                 self.assertEqual([], outcome["events"])
 
     def test_probe_reload_after_controller_refuses_stale_probe_alias(self):
-        for module in ("source_span_checks", "manifest_checks", "transformation_checks", "graph_view_checks"):
+        for module in ("source_span_checks", "manifest_checks", "transformation_checks", "graph_view_checks", "materialization_checks"):
             with self.subTest(module=module):
                 outcome = self._isolated_drift_check("reload_after_controller", module)
                 self.assertFalse(outcome["alias_is_current"])

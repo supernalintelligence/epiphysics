@@ -9,7 +9,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       PYTHONPATH: engine
       PYTHONDONTWRITEBYTECODE: '1'
@@ -88,6 +88,18 @@ jobs:
           assert report['metrics']['split_merge_preservation'] == 1
           print('Actual fixed graph views passed all 45 synthetic partition/merge contracts.')
           PY
+      - name: Verify atomic graph materialization capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.materialization_checks import run_materialization_checks
+
+          report = run_materialization_checks()
+          assert report['version'] == 'materialization-probes-v1'
+          assert len(report['checks']) == 30 and report['all_passed'] is True
+          assert report['counts']['output_manifest_materialization'] == {'passed': 30, 'checks': 30}
+          assert report['metrics']['output_manifest_materialization'] == 1
+          print('Actual graph materialization passed all 30 synthetic consumer and atomicity contracts.')
+          PY
       - name: Dispatch and inspect a real offline worker
         run: |
           python - <<'PY'
@@ -131,7 +143,11 @@ jobs:
               assert views['version'] == 'graph-view-probes-v1' and views['all_passed'] is True
               assert views['counts']['split_merge_preservation'] == {'passed': 45, 'checks': 45}
               assert result['assessment']['report']['metrics']['split_merge_preservation'] == 1
-              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe', 'transforms', 'transformation_probe', 'graph_views', 'graph_view_probe'} <= result['assessment']['request']['manifest'].keys()
+              materialization = result['assessment']['report']['materialization_checks']
+              assert materialization['version'] == 'materialization-probes-v1' and materialization['all_passed'] is True
+              assert materialization['counts']['output_manifest_materialization'] == {'passed': 30, 'checks': 30}
+              assert result['assessment']['report']['metrics']['output_manifest_materialization'] == 1
+              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe', 'transforms', 'transformation_probe', 'graph_views', 'graph_view_probe', 'materialization', 'materialization_probe'} <= result['assessment']['request']['manifest'].keys()
               receipts = Path(receipt['receipt_directory'])
               assert receipts.parent == store / 'dispatches'
               assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
@@ -139,8 +155,8 @@ jobs:
               status = json.loads(inspected.stdout)
               assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
               assert status['next_step']['id'] == 'smoke:next'
-              assert status['next_step']['action'] == 'build_transform_materialization'
-              assert status['next_step']['metric'] == 'output_manifest_materialization'
+              assert status['next_step']['action'] == 'build_retrieval_baseline'
+              assert status['next_step']['metric'] == 'retrieval_baseline_reproducibility'
               assert status['next_step']['observed'] is None
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')

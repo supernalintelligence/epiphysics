@@ -8,6 +8,7 @@ import math
 import sqlite3
 import sys
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -49,6 +50,9 @@ class Ledger:
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "blobs").mkdir(exist_ok=True)
         self.clock = clock
+        self._atomic_time = None
+        self._atomic_failed = False
+        self._append_active = False
         self.db = sqlite3.connect(self.root / "ledger.sqlite", timeout=10)
         self.db.row_factory = sqlite3.Row
         self.db.executescript("""
@@ -86,46 +90,121 @@ class Ledger:
             raise ValueError(f"Missing {kind or 'event'}: {event_id}")
         return self._decode(row)
 
+    @contextmanager
+    def atomic_write(self):
+        """Commit a group of event appends together, or roll back the whole group.
+
+        The yielded timestamp is shared by all new events and their validators.
+        Only this explicit, non-nested context owns a joinable transaction. An
+        append failure poisons the group even when its caller catches the error.
+        Groups are for derived records over pre-retained evidence. Observations,
+        questions and forecasts require live time outside the group; capture is
+        refused before writing blobs. Forecast derived manifests after commit.
+        """
+        if self._atomic_time is not None:
+            self._atomic_failed = True
+            raise ValueError("Nested atomic writes are not supported")
+        if self._append_active:
+            raise ValueError("Cannot begin an atomic write during append validation")
+        if self.db.in_transaction:
+            raise ValueError("Atomic write requires a transaction owned by this context")
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            now = self.clock()
+            instant(now)
+            last = self.db.execute("SELECT recorded_at FROM events ORDER BY seq DESC LIMIT 1").fetchone()
+            if last and instant(now) < instant(last["recorded_at"]):
+                raise ValueError("Clock moved backwards; cannot begin atomic write")
+            self._atomic_time = now
+            self._atomic_failed = False
+            yield now
+            if self._atomic_failed:
+                raise ValueError("Atomic write failed; the complete group must roll back")
+            if not self.db.in_transaction:
+                raise ValueError("Atomic write transaction ended outside its owner")
+            self.db.commit()
+        except BaseException:
+            self.db.rollback()
+            raise
+        finally:
+            self._atomic_time = None
+            self._atomic_failed = False
+
+    def _check_atomic_kind(self, kind):
+        if self._atomic_time is not None and kind in ("observation", "question", "forecast"):
+            self._atomic_failed = True
+            raise ValueError(f"{kind} writes are not allowed inside atomic_write")
+
     def append(self, kind: str, body: dict, event_id: str | None = None, *,
                validate: Callable[[str], None] | None = None, exclusive: bool = False) -> dict:
         """Validate new events under the write lock, using their recorded timestamp.
 
         Identical retries return the original event without revalidating time-sensitive
         constraints. Exclusive claims instead reject any existing event with that ID.
+        Inside atomic_write, the event stays provisional until the whole group commits.
         """
-        body_text = canonical(body)
-        event_id = event_id or str(uuid.uuid4())
-        self.db.execute("BEGIN IMMEDIATE")
+        grouped = self._atomic_time is not None
+        if self._append_active:
+            if grouped:
+                self._atomic_failed = True
+            raise ValueError("Reentrant append from validation is not supported")
+        if grouped and (self._atomic_failed or not self.db.in_transaction):
+            self._atomic_failed = True
+            raise ValueError("Atomic write is no longer available for appends")
+        if not grouped and self.db.in_transaction:
+            raise ValueError("Append cannot join a transaction without atomic_write")
+        self._check_atomic_kind(kind)
+        self._append_active = True
+        owns_transaction = False
         try:
+            body_text = canonical(body)
+            event_id = event_id or str(uuid.uuid4())
+            if not grouped:
+                self.db.execute("BEGIN IMMEDIATE")
+                owns_transaction = True
             existing = self.db.execute("SELECT * FROM events WHERE id=?", (event_id,)).fetchone()
             if existing:
                 if existing["kind"] != kind or existing["body"] != body_text:
                     raise ValueError("Idempotency key already has different content")
                 if exclusive:
                     raise ValueError("Event already exists; exclusive claim refused")
-                self.db.commit()
+                if owns_transaction:
+                    self.db.commit()
                 return self._decode(existing)
-            now = self.clock()
+            now = self._atomic_time if grouped else self.clock()
             instant(now)
             last = self.db.execute("SELECT hash,recorded_at FROM events ORDER BY seq DESC LIMIT 1").fetchone()
             if last and instant(now) < instant(last["recorded_at"]):
                 raise ValueError("Clock moved backwards; cannot append")
             if validate:
                 validate(now)
-            record = {"id": event_id, "kind": kind, "recorded_at": now, "body": body,
+            if grouped and self._atomic_failed:
+                raise ValueError("Atomic write failed during append validation")
+            if canonical(body) != body_text:
+                raise ValueError("Event body changed during append validation")
+            # Hash the same captured JSON that is stored, never the caller's
+            # still-mutable object after validation has returned.
+            record = {"id": event_id, "kind": kind, "recorded_at": now, "body": json.loads(body_text),
                       "previous_hash": last["hash"] if last else "0" * 64}
             record_hash = digest(canonical(record).encode())
             self.db.execute("INSERT INTO events(id,kind,recorded_at,body,previous_hash,hash) VALUES(?,?,?,?,?,?)",
                             (event_id, kind, now, body_text, record["previous_hash"], record_hash))
-            self.db.commit()
-        except Exception:
-            self.db.rollback()
+            if owns_transaction:
+                self.db.commit()
+            return self.get(event_id)
+        except BaseException:
+            if grouped:
+                self._atomic_failed = True
+            elif owns_transaction:
+                self.db.rollback()
             raise
-        return self.get(event_id)
+        finally:
+            self._append_active = False
 
     def capture(self, source: str, content: bytes, *, published_at: str | None = None,
                 event_at: str | None = None, media_type: str = "text/plain", revision_of: str | None = None,
                 event_id: str | None = None) -> dict:
+        self._check_atomic_kind("observation")
         if not source.strip():
             raise ValueError("Source is required")
         for timestamp in (published_at, event_at):
@@ -149,8 +228,11 @@ class Ledger:
             "timing_basis": "collector clock; source times are claims"}, event_id)
 
     def snapshot(self, cutoff: str | None = None, event_id: str | None = None) -> dict:
-        cutoff = cutoff or self.clock()
-        if instant(cutoff) > instant(self.clock()):
+        # A grouped snapshot cannot know a later state than its shared event time.
+        grouped_time = self._atomic_time
+        cutoff = cutoff or (grouped_time if grouped_time is not None else self.clock())
+        now = grouped_time if grouped_time is not None else self.clock()
+        if instant(cutoff) > instant(now):
             raise ValueError("Cannot snapshot a future information state")
         # First-observed time is the collection event's recorded_at, never publication time.
         observations = [r for r in self.events("observation") if instant(r["recorded_at"]) <= instant(cutoff)]
@@ -191,6 +273,7 @@ class Ledger:
 
     def question(self, text: str, deadline: str, resolve_after: str, resolution_rule: str,
                  family: str, event_id: str | None = None) -> dict:
+        self._check_atomic_kind("question")
         if not all(s.strip() for s in (text, resolution_rule, family)):
             raise ValueError("Question, resolution rule, and question family are required")
         def validate(now):
@@ -208,6 +291,7 @@ class Ledger:
         The callback receives the exact recorded_at after core forecast checks.
         Identical retries return the original event without rerunning validation.
         """
+        self._check_atomic_kind("forecast")
         if validate is not None and not callable(validate):
             raise ValueError("Forecast validate must be callable or None")
         q = self.get(question_id, "question")["body"]

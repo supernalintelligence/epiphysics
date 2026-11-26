@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "offline-contracts-graph-views-v5",
+  "version": "offline-contracts-materialization-v6",
   "stage": "offline_fixture",
   "allow_scale_change": false,
   "max_assessment_seconds": 30,

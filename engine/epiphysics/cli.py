@@ -14,6 +14,7 @@ from .assertions import record_assertion, assertions_as_of
 from .manifests import register_manifest, forecast_manifest
 from .transforms import execute_graph_transform
 from .graph_views import execute_graph_views
+from .materialization import materialize_graph_outputs
 
 
 def _record_input(path):
@@ -83,6 +84,8 @@ def main():
     transform.add_argument("file", help="Bounded JSON with parent_manifest_id, recipe_observation_id, and run_key")
     graph_views = sub.add_parser("graph-views", help="Execute retained graph partition or strict merge recipes")
     graph_views.add_argument("file", help="Bounded JSON with parent_manifest_ids, recipe_observation_id, and run_key")
+    materialize = sub.add_parser("materialize-graphs", help="Atomically materialize verified graph outputs into representations and manifests")
+    materialize.add_argument("file", help="Bounded JSON with completion_id and run_key")
     assertions = sub.add_parser("assertions", help="Query unsuperseded assertions at a recorded knowledge time")
     assertions.add_argument("--known-at", required=True)
     assertions.add_argument("--valid-at")
@@ -131,6 +134,8 @@ def main():
                 result = execute_graph_transform(ledger, **_record_input(args.file))
             elif args.command == "graph-views":
                 result = execute_graph_views(ledger, **_record_input(args.file))
+            elif args.command == "materialize-graphs":
+                result = materialize_graph_outputs(ledger, **_record_input(args.file))
             elif args.command == "score":
                 result = ledger.scores()
             elif args.command == "compare":
@@ -169,6 +174,8 @@ def main():
         if args.command == "graph-transform" and result["kind"] == "graph_transform_rejected":
             return 2
         if args.command == "graph-views" and result["kind"] == "graph_views_rejected":
+            return 2
+        if args.command == "materialize-graphs" and result["kind"] == "graph_materialization_rejected":
             return 2
         return 1 if args.command == "verify" and not result["valid"] else 0
     except (ValueError, OSError, TypeError, KeyError) as error:
