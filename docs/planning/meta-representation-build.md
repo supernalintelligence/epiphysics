@@ -1,7 +1,7 @@
 ---
 title: "Building a system that can revise its representations"
 description: "Components, ownership, dependencies, and acceptance gates for the next Epiphysics research layer."
-date: 2026-11-25T17:00:00-08:00
+date: 2026-11-25
 draft: false
 tts:
   enabled: true
@@ -16,6 +16,8 @@ This plan extends the [observatory implementation plan](2026-11-24-recursive-obs
 ## Current delivery and boundaries
 
 The existing engine implements local capture, snapshots, representation records, prospective forecasts, resolution, and scoring. This investigation adds a curated source/claim/representation catalog and an offline graph compiler. The compiler validates references and selected field/type rules, embeds explicitly selected **committed** repository documents, and emits a reproducible graph payload. It does not infer truth, browse, extract entities, call models, revise an ontology, or make forecasts.
+
+The [stepwise improvement controller](stepwise-improvement-loop.md) now provides a dedicated development queue, seven-family/thirty-check offline evaluator, hashed input records, atomic assessment-completion/successor transitions, and fixed subprocess assessment dispatch. The primary supervisor delegates builds and reviews their evidence; a completed assessment does not certify a build. The next-action rule is heuristic, with unestimated probability/cost. Source-span resolution, learned selection, protected final cohorts and live scale promotion remain unimplemented. See the [metric contracts](../experiments/representation-metrics.md) for exact scope.
 
 External source rows contain bibliographic metadata and research notes. They are **not archived article bytes** and must not be admitted as historical evidence snapshots. A compiled graph records its generation time; its Git commit and content hashes identify local inputs, not independently verified times of existence. The full evidence layer remains the existing ledger.
 
@@ -70,6 +72,8 @@ Phases 1 and witness design can proceed independently. Phases 4–5 require enfo
 
 **Packet A: source-backed assertions.** Add `Assertion` and `AssertionRevision` to the existing engine. Resolve byte spans against captured blobs; retain a span hash and extraction-run identity. Support reported facts, inferred claims, explicit negation and quantities with units. Store disputes and retractions as new events. Tests must cover late-arriving information, copied sources, mistaken identity, and source corrections. Acceptance: replay reconstructs identical historical views and exposes unresolved conflicts.
 
+Close A only after independent review, source-span evaluator fixtures and a new metric contract version. The current evaluator does not emit `source_span_resolution`, and its fallback always proposes A. Update the selector at the same time so it can recognize measured completion and advance to Packet B or another actual gap; a passing oracle or repeated A queue entry is not capability growth.
+
 **Packet B: representation manifests.** Bind each candidate to its evidence snapshot, typed ontology, state/units, task/horizon and executable construction. Introduce transformation runs with parent sets and preservation checks. Register candidate IDs as the engine's method identities so two encodings using one predictor do not collide with `(method, question)` uniqueness. Acceptance: an independent operator can reconstruct a candidate and determine exactly which evidence and costs it used.
 
 **Packet C: a small comparison corpus.** Build a public, reviewed corpus from committed repository documents and permitted external snapshots. Prepare questions for exact facts, relationships, global synthesis, temporal eligibility, contradiction and false premises. A curator writes evidence-based answers; a separate evaluator locks the final portion. Start with offline lexical retrieval and deterministic fixtures. Acceptance: reproducible baseline, explicit unanswered cases, and no future passages entering an earlier snapshot.
@@ -82,9 +86,9 @@ Defer a general vector database, autonomous ontology discovery, a universal caus
 
 ## Automation and knowledge growth
 
-The existing daily research automation reads `TODO.md` and the observatory plan. This change adds the next packets to that queue; it does not create another scheduler or alter its existing zero-paid-call budget. The current automation remains a bounded investigator, not an unrestricted research service.
+The existing supervisor automation reads `TODO.md`, the durable improvement queue, and current plans. Its cadence is hourly, with immediate follow-up during each active cycle of at most 30 minutes or three core steps. The primary supervises scoped builder subagents and fixed program workers; it does not leave a queued record to execute itself. The budget remains zero paid model calls and zero external spend. A configured schedule is not proof that a future wake or experiment occurred.
 
-For each future authorized run, the scheduler should select one unblocked packet, freeze relevant inputs, run the narrow checks, and produce a reviewed artifact or an explicit failure record. The proposed automation extensions are:
+For each eligible step, freeze relevant inputs, dispatch bounded work, review its checks, assess the actual candidate, and record a result plus successor. Dispatch that successor immediately when time and scope allow; otherwise the next wake resumes. The installed controller handles assessment completion and next-action records. These additional event-driven capabilities remain proposed:
 
 | Trigger | Action | Boundary and output |
 | --- | --- | --- |
@@ -95,13 +99,15 @@ For each future authorized run, the scheduler should select one unblocked packet
 | Candidate passes development gate | Freeze candidate and queue prospective evaluation | Evaluator and final cohort inaccessible to optimizer. |
 | Final evaluation and independent review complete | Draft a reproducible result page and updated research status | Publication follows repository review/deployment policy; no invented success claims. |
 
-These triggers beyond the existing daily loop are **planned**, not installed by this change. Use no paid model calls until a concrete provider/model and per-run ceiling are configured under the user's standing authorization and applicable controls. Stop work at the resource ceiling while preserving partial records; do not treat failure as an empty successful extraction.
+The source-change, conflict, cohort and promotion triggers in this table are **planned**; the assessment-completion controller and fixed child dispatcher are implemented. No generic autonomous code builder, learned optimizer, sealed final evaluator, or live deployment controller is implied. Use no paid model calls until a concrete provider/model and per-run ceiling are configured under the user's standing authorization and applicable controls. Stop work at the resource ceiling while preserving partial records; do not treat failure as an empty successful extraction.
 
 Knowledge growth should prioritize uncertainty reduction: an unresolved high-impact claim, a broken evidence link, a failed transform, or a missing control is more valuable than another thousand loosely connected entities. Each proposed research task should state what result would change a decision. Cap source expansion and candidate branching; preserve rejected proposals so the system does not repeatedly rediscover them.
 
 ## Scaling gates
 
 Measure a local workload at roughly 100, 1,000 and 10,000 documents before selecting distributed storage. At each scale, hold question families fixed and record input bytes, assertion count, ingest/update time, memory, storage, p50/p95 query latency, retrieval recall, citation precision, temporal violations and rebuild reproducibility. These are planned checkpoints, not capacities already demonstrated.
+
+Increase only one axis per trial: corpus size, model capability, concurrency, traffic, action scope, or spend. Freeze per-family quality floors, a practical improvement margin, side-effect ceilings, observation window and rollback before changing it. Shadow and canary evaluation precede wider service use; they remain planned stages with explicit authorization and implementation requirements. A passing fixture score cannot award new permissions or spending. The [stepwise loop](stepwise-improvement-loop.md) defines the stage gates.
 
 Partition by access scope and snapshot eligibility before retrieval; post-filtering an answer is insufficient if hidden material influenced candidate selection. Use incremental projections only after a full rebuild is correct. Cache keys include snapshot, schema, extractor and embedding versions. Backups must preserve source bytes as well as database references. Retention and deletion policies need explicit treatment before ingesting personal or restricted material.
 

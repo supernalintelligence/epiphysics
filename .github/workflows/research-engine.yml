@@ -9,10 +9,72 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: engine
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: PYTHONPATH=engine python -m unittest discover -s engine/tests -v
-      - run: PYTHONPATH=engine python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo
+      - name: Run engine tests
+        run: python -m unittest discover -s engine/tests -v
+      - name: Verify synthetic controls
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from epiphysics.representation_checks import evaluate, reference_candidate, degraded_candidate
+
+          suite = json.loads(Path('engine/examples/improvement/entities.json').read_text())
+          reference = evaluate(suite, reference_candidate(suite))['metrics']
+          degraded = evaluate(suite, degraded_candidate(suite))['metrics']
+          assert reference['checks'] == reference['correct'] == reference['answered'] == 30
+          assert reference['provenance_correct'] == 30
+          assert reference['macro_family_accuracy'] == reference['worst_family_accuracy'] == 1
+          assert reference['temporal_violations'] == degraded['temporal_violations'] == 0
+          assert degraded['correct'] == 18 and degraded['answered'] == 30
+          assert degraded['provenance_correct'] == 23 and degraded['worst_family_accuracy'] == 0.5
+          print('Synthetic oracle and degraded controls matched their declared results.')
+          PY
+      - name: Dispatch and inspect a real offline worker
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          import tempfile
+
+          with tempfile.TemporaryDirectory(prefix='epiphysics-worker-', dir=os.environ['RUNNER_TEMP']) as temporary:
+              store = (Path(temporary) / 'dedicated-store').resolve()
+              command = [sys.executable, '-m', 'epiphysics.improvement', '--store', str(store)]
+              child = subprocess.run(command + [
+                  'dispatch', '--policy', 'engine/examples/improvement/policy.json',
+                  '--suite', 'engine/examples/improvement/entities.json', '--candidate', 'reference',
+                  '--run-key', 'smoke', '--after-step', 'initial', '--timeout-seconds', '30',
+                  '--completed-work', 'Ran the synthetic oracle through a real assessment worker',
+              ], check=True, capture_output=True, text=True, timeout=45)
+              result = json.loads(child.stdout)
+              assert result['result'] == 'assessed'
+              receipt = result['dispatch']
+              assert receipt['program'] == 'epiphysics.improvement assess'
+              assert isinstance(receipt['pid'], int) and receipt['pid'] > 0
+              assert receipt['returncode'] == 0 and receipt['termination'] is None
+              assert receipt['model_calls'] == receipt['external_spend'] == 0
+              assert result['assessment']['report']['metrics']['correct'] == 30
+              receipts = Path(receipt['receipt_directory'])
+              assert receipts.parent == store / 'dispatches'
+              assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
+              inspected = subprocess.run(command + ['status'], check=True, capture_output=True, text=True, timeout=15)
+              status = json.loads(inspected.stdout)
+              assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
+              assert status['next_step']['id'] == 'smoke:next'
+              assert status['next_step']['action'] == 'build_source_span_assertions'
+              assert status['next_step']['scale_change_allowed'] is False
+          print('Real offline worker completed; its verified successor remains queued.')
+          PY
+      - name: Run synthetic ledger demo
+        run: python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo

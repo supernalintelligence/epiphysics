@@ -1,22 +1,39 @@
+---
+title: "Bounded autonomous research cadence"
+description: "Supervisor instructions for immediate measured follow-up within hourly research wakes."
+date: 2026-11-25
+tts:
+  enabled: false
+feedback:
+  enabled: false
+---
+
 # Bounded autonomous research cadence
 
-Run one bounded cycle per scheduled wake, then at most one ready research or engineering task. Use the active worktree until its reviewed changes are landed. Read the current build plan, queue, and latest decisions before editing; coordinate with SCI through the existing authorized project channel when scientific direction or file ownership overlaps.
+The supervisor cadence is hourly, with immediate continuation during each bounded wake. The filename is retained for existing links. Read the [stepwise loop](docs/planning/stepwise-improvement-loop.md), [metric contracts](docs/experiments/representation-metrics.md), `TODO.md`, the current build plan, and latest decisions. Coordinate overlapping scientific direction or file ownership with SCI through the existing authorized project channel.
 
-1. Verify the local ledger before adding evidence. On a failed integrity check, stop writes and preserve the store for diagnosis.
-2. Run `PYTHONPATH=engine python3 -m epiphysics --store .supernal-local/observatory cycle --config engine/examples/project-cycle.json --run-key YYYY-MM-DD-project`, using the current UTC date and running collection from the shared checkout after the slice is landed. Keep that persistent store outside disposable worktrees. Reusing the same completed key is a no-op. Never rewrite timestamps or resolve a missed window from memory.
-3. Refresh `src/components/home/observatory-status.json` with `publish-status`, selecting the canonical shared-checkout README and persistent store. Do this in the managed worktree for the status change; the collector always uses the shared source path. Publish only verified aggregate status through the normal reviewed site workflow. Never copy the private ledger or its raw contents into the website.
-4. Choose the highest-priority unblocked item in `TODO.md`. Work on one item, with a 30-minute active-work limit. Preserve an evidence-backed progress entry under `docs/planning/runs/`; record failures and incomplete work as well as success.
-5. Run checks relevant to that change. Keep final evaluation data separate from search and prompt tuning. A bad result creates a question for the next run, not permission to change an earlier prediction or outcome rule.
-6. Obtain independent review and use the repository's normal landing process for code. Keep public claims tied to actual test results. Draft posts and publication artifacts for review; no unsolicited outreach or automatic social posting.
-7. Report a meaningful completed change, failed run, or decision needed. The scheduler can wake the work; it cannot guarantee research progress or growth.
+An active cycle lasts at most **30 minutes or three core steps**, whichever comes first. Keep one core step in progress; delegate bounded construction to builder subagents and fixed assessments to program workers while the primary supervises. Support work can run in parallel with separate ownership and within that same budget. Do not wait for the next hourly wake when a reviewed successor is ready and time remains.
 
-Default limits: zero paid model calls, no purchases, at most ten explicitly configured sources, one collection attempt per source per run, one core task in progress. HTTPS source additions require documented provenance and a collection purpose; the local README monitor is the initial scheduling test. Expanding model use requires an explicit budget and an implemented budget guard.
+1. Read improvement status from its dedicated persistent store outside disposable worktrees. Verify integrity before writes; on failure, preserve the store and diagnose. Do not mix improvement and observatory events. Inspect unfinished claims and worker receipts before resuming; never blindly replay an interrupted worker.
+2. Dispatch the queued action to the appropriate worker. A program can run the fixed offline evaluator; a scoped builder implements a code packet. The current ordered rule is time integrity, provenance, coverage, weakest family, then missing source-span capability. Its success probability and cost estimates are null. Use the active worktree until reviewed changes land.
+3. Have the worker return actual changes, relevant checks, failures, and resource use. Obtain independent review before accepting a code packet. Do not treat an oracle fixture pass or the free-text `completed_work` field as proof that a build completed.
+4. Assess the candidate through `epiphysics.improvement dispatch`, using current `next_step.id` as `--after-step` and a new run key for changed inputs. Assessment completion and its successor are recorded atomically. Compare changes only when suite/evaluator/policy hashes match; `incomparable_contract_change` has no delta or target judgment. Candidate/controller changes alone can remain comparable, without implying causality. Read the new authoritative state and immediately dispatch the next eligible action while the cycle budget remains; otherwise preserve the handoff for the next wake.
+5. Close Packet A only with source-span implementation, new reviewed fixtures and metric contract version, and a selector update that can recognize the completed capability. The present evaluator does not measure `source_span_resolution`; its unconditional fallback would otherwise keep queuing A. Do not repeat a known control run simply to fill a wake.
+6. Maintain observatory collection separately when its daily window is due. Run `PYTHONPATH=engine python3 -m epiphysics --store .supernal-local/observatory cycle --config engine/examples/project-cycle.json --run-key YYYY-MM-DD-project` from the shared checkout, using the current UTC date and its canonical source paths. One attempt per configured source per run; the same completed key is a no-op. An hourly supervisor does not change this collector's daily key or invent missed windows.
+7. Refresh `src/components/home/observatory-status.json` with `publish-status` only when a new verified aggregate is available. Use the persistent observatory store and canonical shared-checkout README; write the artifact in the managed worktree. Keep private ledger contents, captured inputs, and process receipts out of public exports.
+8. Preserve an evidence-backed run entry under `docs/planning/runs/`, including incomplete work and failures, remaining queue, and the reason for stopping. Use normal repository checks, independent review, and landing policy. Report only a meaningful completed change, failure, or decision needed. Draft publication artifacts for review; no unsolicited outreach or automatic social posting.
 
-The local scheduling service depends on the host being available. Local evidence is not a historical archive until enough forward observations accumulate, and it is not independently timestamped until a witness adapter is implemented. Archive local data separately from Git.
+Program commands and receipt details are in the stepwise loop. `dispatch` allows only a fresh Python process running the offline assessment, with at most 60 seconds and 1 MB output. The example assessment policy is 30 seconds, offline fixtures only, zero external spend, and no scale change. This is trusted local process supervision, not a security sandbox. Its timeout requires the dispatcher to remain alive; a start receipt without a finish receipt requires process investigation after a crash.
+
+A nonzero exit does not always mean the assessment failed. For `assessment_completed_delivery_failed`, inspect `delivery_status`, `authoritative_transition_id`, the bounded `authoritative_transition`, and current status. Preserve that completion and consume its queued successor; do not rerun work because result output hit the cap. With no confirmed transition, inspect the receipts and ledger. Invalid JSON/policy can be refused before claiming a step, leaving the queue unchanged and the refusal in dispatched-child receipts/output. Dispatcher validation can fail even before receipts exist. Recovery may close only its own reaped child's unfinished claim, never an unrelated claim or completed result.
+
+Default research limits remain zero paid model calls, no purchases, and at most ten explicitly configured collection sources. HTTPS additions require documented provenance and a collection purpose. Expanded model use requires an explicit authorized budget and implemented guard. The controller cannot grant itself new access, spending, deployment, or settlement rights. Shadow, canary, and multiple-service stages remain gated future work.
+
+The heartbeat depends on host/session availability; the queue does not execute itself. Local evidence becomes a prospective archive through actual observations and remains without independent timestamp assurance until a witness adapter is implemented. Archive local data separately from Git. Keep final evaluation separate from search and tuning; a bad result creates a next question, not permission to revise an earlier forecast or outcome rule.
 
 ## Existing falsification cycle
 
-The following project protocol remains available for substantive theory experiments; its longer timeboxes do not override the bounded scheduler run above.
+The following project protocol remains available for substantive theory experiments. Its time estimates are cumulative work across bounded cycles, not permission to exceed the 30-minute/three-step supervisor window. Preserve the same experiment identity and stopping rule between wakes.
 
 ## Epiphysics falsification loop
 
@@ -97,9 +114,9 @@ Daily report format:
 2. What passed/failed
 3. What changed in assumptions
 4. What is next
-5. What needs review/escalation (e.g., FLUX/VERIFY)
+5. What needs independent review or an explicit decision
 
-**Output:** concise status update to Mission Control + `DECISIONS.md` entry.
+**Output:** concise local run record and `DECISIONS.md` entry. Send external status only through an authorized channel when requested.
 
 ---
 
@@ -114,6 +131,7 @@ Daily report format:
 
 ## Ownership
 
-- EPIPHYSICS: lead execution + synthesis
-- FLUX: optimization review / process tuning
-- VERIFY: rigor audits / anti-bias checks
+- Primary supervisor: selects and supervises work, maintains the queue and synthesis, dispatches the successor within the active window.
+- Builder subagents: perform scoped implementation or research and return checkable artifacts.
+- Allowlisted program workers: run fixed assessment programs and retain process receipts.
+- Independent reviewer/evaluator: reviews rigor and acceptance; preserves separation from candidate optimization. Historical role labels do not establish a currently running agent or grant extra authority.

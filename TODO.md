@@ -1,6 +1,33 @@
+---
+title: "Epiphysics work queue"
+description: "Prioritized implementation and research work, selected against current measured gaps."
+date: 2026-11-25
+tts:
+  enabled: false
+feedback:
+  enabled: false
+---
+
 # Epiphysics — Work Queue
 
 Prioritized list of what needs to be done. Check this file when looking for work.
+
+## Active measured improvement loop — first priority
+
+Read the durable improvement status before choosing a packet. The [loop protocol](docs/planning/stepwise-improvement-loop.md) and [metric contracts](docs/experiments/representation-metrics.md) govern this queue. During an active wake, the supervisor dispatches a successor immediately after accepted work and assessment, stopping at 30 minutes or three core steps. The hourly heartbeat resumes remaining work; the queue alone does not execute tasks.
+
+- [x] Implement offline conformance evaluation: seven entity families, thirty checks, per-case/dimension results, macro and worst-family accuracy, provenance, coverage and time eligibility.
+- [x] Implement dedicated improvement status, hashed inputs, atomic assessment-completion/successor events, stale-claim protection, and explicit failure diagnosis.
+- [x] Add fixed subprocess assessment dispatch with time/output limits and retained process receipts. It does not execute arbitrary build actions.
+- [x] Independently review the controller/evaluator, update the existing heartbeat to hourly, and verify a real two-process assessment continuation. See [the bootstrap record](docs/planning/runs/2026-11-25-improvement-bootstrap.md); this verifies controls and scheduling configuration, not a future autonomous run or learned improvement.
+- [ ] Follow the current measured gap in order: diagnose failed/interrupted runs, repair time eligibility, repair evidence ancestry, cover missing answers, then repair the weakest family. Keep all seven families and existing preservation checks.
+- [ ] **Packet A:** implement captured-source spans, typed assertions, units, world/knowledge time, revisions and unresolved conflicts. Add reviewed source-span fixtures and a versioned metric before claiming this capability is measured. Update the selector to recognize Packet A completion and choose the next eligible packet; its current fallback always queues A.
+- [ ] **Packet B:** register reproducible representation manifests, candidate identities, transformations, evidence mappings and declared loss; preserve split/merge and historical-view invariants.
+- [ ] **Packet C:** freeze a permitted corpus and source-grounded questions; implement an offline lexical baseline with explicit missing-answer treatment and separate development/final evaluation ownership.
+- [ ] Add measured action costs and outcome windows before estimating success probabilities or learning a next-action policy. Current cost/probability estimates are null, and observed changes are descriptive.
+- [ ] Implement protected final evaluation and new prospective cohorts before predictive-advantage claims; add shadow/canary gates before changing workload or action scope. Increase one axis at a time, with per-family floors, side-effect limits and exercised rollback.
+
+Preserve observatory collection when due, but do not let the older publication backlog displace an actionable integrity or representation gap. A completed assessment is not proof that an implementation packet passed its tests and review.
 
 ## Observatory sequence
 
@@ -24,13 +51,10 @@ The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-
 
 ### Representation and knowledge layer
 
-The [research assessment](docs/research/meta-representational-systems.md), [component plan](docs/planning/meta-representation-build.md), and [six proposed protocols](docs/experiments/representation-comparison.md) define the next dependency sequence. The existing bounded daily automation can select these packets; no additional scheduler is required.
+The [research assessment](docs/research/meta-representational-systems.md), [component plan](docs/planning/meta-representation-build.md), and [six proposed protocols](docs/experiments/representation-comparison.md) define the dependency sequence. The active queue above owns Packets A–C; the existing supervisor automation continues them without a second scheduler.
 
 - [x] Investigate primary literature and audit existing representation/graph implementations; seed a curated research map with source limitations and conflicting claims.
 - [x] Add an offline validator/compiler that embeds selected committed source documents and emits a reproducible graph artifact.
-- [ ] **Packet A:** extend ledger assertions with source spans, units, world/knowledge times, corrections and unresolved conflicts. Pass E1 preservation fixtures before model integration.
-- [ ] **Packet B:** add versioned representation manifests and transformation runs with declared loss, evidence mappings and registered candidate identities.
-- [ ] **Packet C:** prepare a frozen permitted corpus, source-grounded questions and an offline lexical baseline; separate curator/development/final evaluation roles.
 - [ ] Compare hybrid retrieval and graph challengers at matched reading and total construction costs; preserve shuffled/removed-edge controls.
 - [ ] Coordinate scientific revisions of prompt/Lagrangian and Lawvere claims; preserve hypothesis status until explicit constructions and discriminating tests exist.
 - [ ] Register a prospective representation tournament only after model budgets, evaluator separation and numerical acceptance rules are implemented.
