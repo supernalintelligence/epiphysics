@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Post } from '@/lib/content';
 import SafeImage from '../SafeImage';
+import { formatDate } from '@/lib/utils/dates';
 import { Clock, Star, TrendingUp, ArrowRight } from 'lucide-react';
 
 interface FeaturedPostsProps {
@@ -246,10 +247,7 @@ const PostCard = ({ post, getPostImage }: { post: Post, getPostImage: (post: Pos
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {post.metadata.date && new Date(post.metadata.date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                {formatDate(post.metadata.date, 'compact')}
               </span>
               <span className="text-primary-600 dark:text-primary-400 text-xs font-medium">
                 Read more

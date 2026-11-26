@@ -8,6 +8,7 @@ import { Post } from '@/lib/content';
 import { Suspense } from 'react';
 import { getBlogUrl } from '@/lib/urlUtils';
 import { Search } from 'lucide-react';
+import { formatDate } from '@/lib/utils/dates';
 
 function SearchContent() {
   const { posts } = React.useContext(BlogContext);
@@ -117,7 +118,7 @@ function SearchContent() {
                 <div className="text-sm text-gray-500">
                   {post.metadata.date && (
                     <time dateTime={post.metadata.date} className="text-xs sm:text-sm">
-                      {new Date(post.metadata.date).toLocaleDateString()}
+                      {formatDate(post.metadata.date)}
                     </time>
                   )}
                   {post.metadata.tags && post.metadata.tags.length > 0 && (
