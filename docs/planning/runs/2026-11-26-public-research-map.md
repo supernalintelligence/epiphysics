@@ -9,7 +9,7 @@ feedback:
   enabled: true
 ---
 
-C11 is in progress. The public selection and page are implemented; the first export has been checked independently. Final page validation and controller acceptance have not run. There is no browser, deployment, human-use or predictive-improvement result for this packet.
+C11 preparation is accepted. One actual six-category validation passed, its retained evidence was captured, and one controller invocation completed at event 1121. It selected evidence-navigation evaluation preparation. The public selection and first export were also independently checked. There is no browser, deployment, human-use or predictive-improvement result for this packet.
 
 The accepted C10 delivery selected `dated-delivery-check-20261126:next / prepare_public_research_map_view`. Its immutable evidence origin is `improvement:dated-delivery-check-20261126:complete`, sequence 885, hash `55208f847a68aa8c636b2136c70994c9e3e2668512334f4f239764f60ad92c2f`. C10 is already complete and must not be rerun. Its local landing is `56899eef99972284e4dc933e99ed8de118d4ca83`.
 
@@ -61,7 +61,36 @@ The next independent recheck closed the original defects but found two narrower 
 
 The final focused window passed 25 tests in 15.754 seconds (16.006 outer), with unchanged source/test bytes. Only the adapter and its tests changed after the broader run. An independent four-case recheck confirmed both original cases and both repair boundaries. Final adapter SHA-256: `b50017efd222b77faaff57613f10dd7dda3b22f692df4c5a7ed5ccddea0549b8`; tests: `29c23ce33bb59d128abc984a9bfbd72b1f18f18e17be9ab403d907d271c5c535`. No actual C11 invocation occurred during these controls.
 
-A passed preparation will select `prepare_evidence_navigation_evaluation`; a measured failure will select `repair_public_research_map_preparation`. The proposed next evaluation has six textual cases covering source lookup, qualifications and proposed follow-ups, with a separate answer key and fixed map version. It will measure information retrieval and interpretation, not browser usability or viral growth. Metric-based successors remain explicit rules; there is no calibrated prediction of the best action's return.
+A passed preparation selects `prepare_evidence_navigation_evaluation`; a measured failure selects `repair_public_research_map_preparation`. The proposed next evaluation has six textual cases covering source lookup, qualifications and proposed follow-ups, with a separate answer key and fixed map version. It will measure information retrieval and interpretation, not browser usability or viral growth. Metric-based successors remain explicit rules; there is no calibrated prediction of the best action's return.
+
+## Actual validation and acceptance
+
+The final adapter, helper and documentation were committed as `ce83f453768666ddbd83a84695350d011897966d`. The fixed caller is private and separately reviewed. Its initial environment set both npm configuration locations to `/dev/null`; an actual version preflight failed because npm refuses loading the same path twice. The original failure remains retained. Two distinct exclusively created empty configuration files repaired the environment; 25 owned caller controls and a real npm version check passed. Nine independent caller controls and the proposed configuration audit then passed. No actual page validation was attempted with the broken environment.
+
+The final caller SHA-256 is `95fcac15e37c513d03c90f24a60e4075d022d0826f0f95d6e3793e883fd3c481`; configuration file SHA-256 is `c580a5c9abca12961a256accde6f2dfe7b49ad3b11e00e3c593b8c43fe5a6b99`. It pins 47 base input roles totaling 1,107,609 bytes. Catalog/documents belong to `f01a44f2371b49658aef61759e22377363e46788`; required UI/build sources, policy and dataset belong to `ce83f453768666ddbd83a84695350d011897966d`. The caller retained 92 bounded Git process records substantiating 45 local committed/current file bindings. Runtime version receipts record Node v24.3.0, npm 11.8.0, Python 3.14.8 and Apple Git 2.39.5. These identify trusted local execution, not an independently witnessed environment.
+
+The first actual validation began at `2026-11-26T19:53:56.514240Z` and its enclosing process finished in 62.298144 seconds, exit 0. All fixed inputs remained unchanged. Each category ran once:
+
+| Category | Observed result | Process seconds |
+| --- | --- | ---: |
+| Exporter controls | 17 passed | 21.780028 |
+| Page model/component controls | 13 passed; zero failed or pending | 3.110703 |
+| Scoped typecheck | Eight entries, 11 local source files, zero diagnostics | 1.893700 |
+| Scoped lint | Exit 0 | 1.277834 |
+| Production build | Exit 0; 17 static pages emitted | 26.975791 |
+| Final public-data verifier | All seven checks passed; 61 nodes/70 edges/20 claims/12 public documents/16 sources | 0.713970 |
+
+The build reports compilation in 17.3 seconds, nested within its process duration. It explicitly skips global type/lint checks; the separate scoped checks above are the claims made here. Its multiple-lockfile tracing-root warning remains in stderr. Generated content has 65 records and all 12 selected document routes, 6,122,523 bytes, SHA-256 `b5d7f0e52916397922d70b6fc6785c5c6ded00ffe7d3539ed67eba1732f44905`. The final verifier consumed that exact build output. Thirteen emitted page/manifests/chunk artifacts were separately archived, totaling 514,719 bytes, including the 71,422-byte research-map HTML. Reading emitted bytes is not browser inspection.
+
+The independent actual-validation audit passed 32 grouped checks across 521 exact files, with no findings. JSON SHA-256: `b35d4f4b3da400439c5f2f56336b4806c6429b4766f89918422ca56986da6c48`; report: `f797b84d55ebf5621ba16ef341ffa4c141e9ee385ce053a171e59506f52e0b47`. The auditor did not replay any validator or prior study.
+
+One capture invocation completed in 5.799070 seconds. Sixty-five individually guarded observations advanced the ledger from event 885 through event 950, preserving the C10 queue parent separately from the new capture checkpoint. These appends are not a single atomic transaction. No dataset export, build or controller execution occurred during capture.
+
+The separate controller invocation completed once at `2026-11-26T19:57:28.356464Z`: `improvement:public-research-map-preparation-20261126:complete`, sequence 1121, hash `8cb76d1bfcfb6e172568246997e9c0168c6adbe246a094b61109eb87722a282d`. All seven retained criteria passed, with readiness `static_view_prepared`. The enclosing caller took 12.480889 seconds, the dispatcher subprocess 11.781651 seconds, the assessment 10.984737 seconds and its first retained-map check 0.113166 seconds. These nested intervals are not additive; completion revalidation is separate. The assessor made zero external program/model calls and incurred zero external spend; this is not a measurement of all supervisor/agent work.
+
+Read-only postflight verified local ledger integrity at 1,121 events, 20 completed assessments and no unfinished run. The accepted successor is `public-research-map-preparation-20261126:next / prepare_evidence_navigation_evaluation`. C10 and C11 completed operations must not be replayed. A separate worker has begun the successor's bounded design against the fixed accepted map; no new cohort, answer key or attempt has been created.
+
+The independent capture/acceptance audit passed 31 checks across 362 exact files, with no findings. It reconciled all 65 captures, the single new assessment, authoritative completion, source/output bindings, nested timings and all 13 selected emitted artifacts, and confirmed no C10 rerun or unfinished claim. JSON SHA-256: `902a1369fc23d83903f243b01e52d11809ba640f93dd806a99dfd3fb2a280e71`; report: `3d24107689c25387bec7bcf1d255c15f7ddd2eab4be4793480c48fb29703abe4`. This audit did not rerun the accepted controller or validation commands. Final local integration review follows; publication remains separate.
 
 ## Site coordination
 
