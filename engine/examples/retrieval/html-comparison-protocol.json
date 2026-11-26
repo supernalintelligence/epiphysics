@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "study_id": "control-development-html-comparison-v1",
+  "status": "pre-execution protocol; execution freeze is separately retained",
+  "scope": "retrospective builder-visible development; not sealed evaluation or forecasting",
+  "source_snapshot": {
+    "id": "control-sources-20261126:snapshot",
+    "hash": "572c92a0cad1f33a49a44a528ae2a1137fc3ad584ce64d777ebeb37c17f85f3f",
+    "manifest_hash": "e0340c56ea51fe17a009e981fefb54d80aa38c29644c6f02cd63a6ffa8eddc9c",
+    "cutoff": "2026-11-26T05:34:11.847641+00:00"
+  },
+  "corpus": {
+    "id": "retrieval-corpus:control-development-v1",
+    "hash": "8506a15404d9377abe3f05744be815711da9030e94a54ab9e5175cfa365fa3d5",
+    "sources_hash": "bf6924b47a5f2b69c4581bade52ad944656aa0039b9921827da38da62b4b17c6",
+    "passages_hash": "b28dadb616ee337e82be12abf7d6a9fde17e25377a18665581f21b7a743f3835",
+    "config_hash": "330c4b5f077d058a352c30633ccf961fc591c23c99592561242c04b701004a48",
+    "sources": 4,
+    "source_bytes": 144898,
+    "raw_windows": 82
+  },
+  "cohort": {
+    "file": "engine/examples/retrieval/control-development.json",
+    "file_sha256": "72068c3b370deda3f1158116229f826f58e692b99361b975ae6bb68ecac357fd",
+    "cohort_hash": "5d22925a1241a7f49fd227f5221f7283fdeadcf4c041da30d50d990f807efa35",
+    "gold_hash": "bb14a1f76e29ac083621b7d764ebf70f59657bd0c3a3a11a9c231a836627ec6f",
+    "query_hash": "c13334e2c30917d7ff626b385938955e30cf82935ec423ae2762f231b06cca4a",
+    "queries": 12,
+    "answerable": 8,
+    "unsupported": 4
+  },
+  "execution_order": [
+    {
+      "run_key": "control-html-comparison-v1-raw-a",
+      "indexing_recipe": "raw-window-text-v1"
+    },
+    {
+      "run_key": "control-html-comparison-v1-raw-b",
+      "indexing_recipe": "raw-window-text-v1"
+    },
+    {
+      "run_key": "control-html-comparison-v1-html-a",
+      "indexing_recipe": "static-html-text-nodes-v1"
+    },
+    {
+      "run_key": "control-html-comparison-v1-html-b",
+      "indexing_recipe": "static-html-text-nodes-v1"
+    }
+  ],
+  "bridge": {
+    "historical_results_hash": "e2b906b69f1dd285fb4968247b624034c542eb045a76a3d845bac6dcf6b1acf4",
+    "historical_runtime_hash": "bbd195a3ce3dbe621affa40c3e43147dbb4ed5d62624c67c19e34a7f1ce39c2f",
+    "require_exact_ordered_results": true,
+    "require_identical_numeric_evaluation": true,
+    "stop_before_html_on_mismatch": true,
+    "historical_measurement_contract_hash": "8d6ee041fbc84cd04ea3c3622546447e75d3dd1d08f8f73b0c80f8559741f083",
+    "measurement_migration": "Record old and new measurement identity; equality of numeric scores does not equate implementation contracts"
+  },
+  "limits": {
+    "run_cooperative_seconds": 30,
+    "fresh_process_timeout_seconds": 60,
+    "executions": 4,
+    "source_bytes_each": 1000000,
+    "source_bytes_total": 4000000,
+    "sources": 64,
+    "raw_windows": 4096,
+    "queries": 64,
+    "query_bytes": 2048,
+    "literal_terms": 64,
+    "top_k": 5,
+    "excluded_nesting": 256,
+    "entity_lexeme_bytes": 64,
+    "mapping_pieces": 65536,
+    "indexed_bytes_per_window": 8192,
+    "indexed_bytes_total": 8000000,
+    "map_metadata_bytes": 8000000,
+    "projection_bytes": 12000000,
+    "projection_chunk_bytes": 1000000,
+    "projection_chunks": 16,
+    "request_or_terminal_bytes": 1000000,
+    "study_artifacts": 128,
+    "study_bundle_bytes": 16000000,
+    "study_prefix_events": 256,
+    "study_prefix_bytes": 4000000,
+    "model_calls": 0,
+    "external_spend": 0
+  },
+  "cost_reporting": {
+    "per_run": [
+      "caller_wall_seconds_through_commit",
+      "receipt_elapsed_seconds_before_locked_revalidation",
+      "source_bytes",
+      "projection_bytes",
+      "indexed_bytes",
+      "mapping_pieces",
+      "empty_windows",
+      "output_bytes",
+      "model_calls",
+      "external_spend"
+    ],
+    "aggregate": "Sum four caller wall times; fixed order, no causal latency comparison",
+    "unmeasured": [
+      "separate projection/index/search/revalidation phases",
+      "peak process memory",
+      "builder/reviewer and coordination effort"
+    ]
+  },
+  "comparison_gate": [
+    "all four receipts and maps validate",
+    "same frozen new measurement identity across both arms",
+    "each arm has distinct execution claims and identical projection/results/counts/metrics/per-case values",
+    "non-HTML windows remain exact raw slices; all raw windows retained",
+    "publish descriptive delta only if both arms reproduce"
+  ],
+  "metric_reporting": [
+    "source_recall_at_1_3_5",
+    "gold_span_recall_at_1_3_5",
+    "source_mrr_at_5",
+    "gold_span_mrr_at_5",
+    "unsupported_query_retrieval_rate_at_5",
+    "counts_and_empty_reasons",
+    "per_query_raw_span_rank_changes"
+  ],
+  "successor": {
+    "valid_comparison": "prepare_retrieval_coverage_evaluation",
+    "valid_differing_repeats": "repair_retrieval_reproducibility",
+    "invalid_or_incomplete": "diagnose failure and preserve receipts",
+    "adoption": "Retain raw reference; no adoption threshold or production promotion is authorized by this comparison",
+    "retuning": "No recipe/gold/query changes or extra replacement runs after seeing actual output"
+  }
+}

@@ -149,6 +149,40 @@ class SpanAndRankScoringTests(unittest.TestCase):
 
 
 class EvaluatorImplementationIdentityTests(unittest.TestCase):
+    def test_measurement_import_and_identity_exclude_candidate_and_runner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(Path(evaluation.__file__).parent, root / "epiphysics",
+                            ignore=shutil.ignore_patterns("__pycache__"))
+            program = r'''
+import json,sys
+from pathlib import Path
+from epiphysics import retrieval_evaluation as evaluation
+before=evaluation._implementation_identity()
+assert 'epiphysics.retrieval' not in sys.modules
+assert 'epiphysics.retrieval_indexing' not in sys.modules
+for name in ('retrieval.py','retrieval_indexing.py'):
+    path=Path('epiphysics')/name
+    path.write_bytes(path.read_bytes()+b'\n# Candidate-only edit must not alter scoring identity.\n')
+assert evaluation._implementation_identity()==before
+path=Path('epiphysics/retrieval_contracts.py')
+path.write_bytes(path.read_bytes()+b'\n# Changed neutral contract must refuse the stale process.\n')
+try:
+    evaluation._implementation_identity()
+    raise AssertionError('Changed neutral contract was accepted')
+except ValueError as error:
+    print(json.dumps({'dependencies':before['dependencies'],'diagnostic':str(error)}))
+'''
+            result = subprocess.run([sys.executable, "-s", "-c", program], cwd=root,
+                env={**os.environ, "PYTHONPATH": str(root), "PYTHONDONTWRITEBYTECODE": "1"},
+                capture_output=True, text=True, timeout=10)
+            self.assertEqual(0, result.returncode, result.stderr)
+            outcome = json.loads(result.stdout)
+            self.assertIn("epiphysics.retrieval_contracts", outcome["dependencies"])
+            self.assertNotIn("epiphysics.retrieval", outcome["dependencies"])
+            self.assertNotIn("epiphysics.retrieval_indexing", outcome["dependencies"])
+            self.assertIn("source changed", outcome["diagnostic"])
+
     def isolated_check(self, mode):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

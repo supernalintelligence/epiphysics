@@ -102,6 +102,41 @@ class RetrievalCLITests(unittest.TestCase):
         self.assertIn("unexpected keyword", result.stderr)
         self.assertEqual(before, len(self.ledger.events()))
 
+    def test_explicit_html_recipe_retains_raw_citations_and_refuses_changed_replay(self):
+        raw = b'<head>hiddenreceipt</head><main title="attributeonly">cobalt &amp; archive</main>'
+        source = self.ledger.capture("https://example.invalid/owned-html", raw,
+            media_type="text/html; charset=UTF-8", event_id="owned-html")
+        snapshot = self.ledger.snapshot(event_id="owned-html-snapshot")
+        frozen = self.cli("freeze-retrieval", {"snapshot_id": snapshot["id"],
+            "observation_ids": [source["id"]], "event_id": "owned-html-corpus"})
+        self.assertEqual(0, frozen.returncode, frozen.stderr)
+        request = {"corpus_id": "owned-html-corpus", "run_key": "html-cli",
+            "indexing_recipe": "static-html-text-nodes-v1", "queries": [
+                {"query_id": "body", "query": "cobalt archive"},
+                {"query_id": "attribute", "query": "attributeonly"},
+                {"query_id": "head", "query": "hiddenreceipt"}]}
+        executed = self.cli("run-retrieval", request)
+        self.assertEqual(0, executed.returncode, executed.stderr)
+        terminal = json.loads(executed.stdout)
+        body = terminal["body"]
+        self.assertEqual(2, body["schema_version"])
+        self.assertEqual(request["indexing_recipe"], body["indexing_recipe"])
+        self.assertEqual(["matched", "empty", "empty"], [row["status"] for row in body["results"]])
+        hit = body["results"][0]["hits"][0]
+        self.assertEqual(raw, raw[hit["start"]:hit["end"]])
+        self.assertEqual(digest(raw), hit["sha256"])
+        self.assertGreater(body["resources"]["projection_bytes"], 0)
+        self.assertLess(body["resources"]["indexed_bytes"], len(raw))
+        count = len(self.ledger.events())
+        replay = self.cli("run-retrieval", request)
+        self.assertEqual(terminal, json.loads(replay.stdout))
+        changed = self.cli("run-retrieval", {**request, "indexing_recipe": "raw-window-text-v1"})
+        self.assertEqual(2, changed.returncode)
+        unknown = self.cli("run-retrieval", {**request, "run_key": "unknown", "indexing_recipe": "dynamic"})
+        self.assertEqual(2, unknown.returncode)
+        self.assertEqual(count, len(self.ledger.events()))
+        self.assertTrue(self.ledger.verify()["valid"])
+
     def test_tampered_source_records_rejection_and_replays_it(self):
         corpus = self.freeze()
         (self.ledger.root / "blobs" / self.observation["body"]["content_hash"]).write_bytes(b"changed")

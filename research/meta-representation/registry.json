@@ -500,6 +500,74 @@
       "statement": "The C1 record reports five of eight supported questions missing full gold support at rank one, one still missing at rank five, and all four unsupported questions returning related passages. No answers were generated. A post-hoc HTML text-node comparator is proposed; markup as a cause has not been experimentally established.",
       "status": "implementation_finding",
       "basis": "observed"
+    },
+    {
+      "id": "doc_retrieval_controller_run",
+      "kind": "document",
+      "title": "Measured retrieval controller handoff",
+      "repo_path": "docs/planning/runs/2026-11-25-retrieval-controller.md"
+    },
+    {
+      "id": "claim_retrieval_measured_handoff",
+      "kind": "claim",
+      "title": "Actual retrieval evidence selects a bounded successor",
+      "statement": "C2 validated and rescored both preserved C1 executions read-only, retained their exact inputs and metrics, and atomically selected a fixed representation comparison from the support-ranking gap. The run record reports 417 passing tests and independent review. This is a transparent priority rule, not a learned next-action policy or measured return on builder effort.",
+      "status": "implementation_finding",
+      "basis": "observed"
+    },
+    {
+      "id": "doc_retrieval_comparison_protocol",
+      "kind": "document",
+      "title": "Fixed raw and HTML retrieval comparison protocol",
+      "repo_path": "docs/experiments/retrieval-html-comparison.md"
+    },
+    {
+      "id": "exp_html_projection",
+      "kind": "experiment",
+      "title": "Compare two fixed indexes under unchanged raw-span scoring",
+      "status": "proposed"
+    },
+    {
+      "id": "source_python_html_parser",
+      "kind": "source",
+      "title": "Python HTMLParser: callbacks, source positions and matching limits",
+      "bibliographic_only": true,
+      "url": "https://docs.python.org/3.14/library/html.parser.html",
+      "date": null,
+      "date_type": "undated_live_documentation",
+      "reviewed_on": "2026-11-25",
+      "claim_supported": "The parser exposes callback positions and does not validate matching end tags; a static extractor must declare its own exclusion and source-mapping rules.",
+      "limitation": "Mutable live documentation; this catalog entry is bibliographic, not an archived historical parser implementation or proof of browser visibility."
+    },
+    {
+      "id": "claim_static_parser_scope",
+      "kind": "claim",
+      "title": "Static text extraction needs an explicit mapping contract",
+      "statement": "HTMLParser callbacks and source positions support a declared static text projection, but matching-tag behavior and browser visibility are not supplied by that interface. The C3 protocol therefore fixes exclusions, entity handling, raw byte maps and empty-row preservation; it does not claim rendered visibility or semantic answerability.",
+      "status": "implementation_finding",
+      "basis": "reported"
+    },
+    {
+      "id": "doc_retrieval_comparison_run",
+      "kind": "document",
+      "title": "Measured raw/HTML representation comparison and coverage handoff",
+      "repo_path": "docs/planning/runs/2026-11-26-retrieval-comparison.md"
+    },
+    {
+      "id": "claim_html_comparison_result",
+      "kind": "claim",
+      "title": "Fixed HTML projection did not improve supporting-passage recall",
+      "statement": "The C3 record reports four fresh reproduced runs over the frozen four-source development corpus. HTML text projection preserved span recall at 1/3/5 but reduced source recall at 1 from 8/8 to 7/8 and worsened source/span reciprocal rank. All four unsupported requests still returned passages. Raw remains the baseline and the controller selected fresh coverage. This is a development-specific result, not a general verdict on extraction or representation theory.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_runtime_gate",
+      "kind": "claim",
+      "title": "An exact runtime gate refused the wrong interpreter before search",
+      "statement": "C3 preflight detected that an unqualified Python command selected a different Python/Unicode/SQLite runtime. It refused before creating an evidence fork or executing retrieval. The preserved original interpreter was verified, the complete suite rerun, and a new freeze linked to the retained refusal. This is a local recovery observation, not independent execution or timestamp assurance.",
+      "status": "implementation_finding",
+      "basis": "observed"
     }
   ],
   "edges": [
@@ -1080,6 +1148,61 @@
     },
     {
       "source": "claim_retrieval_support_gap",
+      "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_retrieval_measured_handoff",
+      "target": "doc_retrieval_controller_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_retrieval_measured_handoff",
+      "target": "exp_html_projection",
+      "type": "motivates"
+    },
+    {
+      "source": "exp_html_projection",
+      "target": "doc_retrieval_comparison_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_retrieval_support_gap",
+      "target": "exp_html_projection",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_static_parser_scope",
+      "target": "source_python_html_parser",
+      "type": "cites"
+    },
+    {
+      "source": "claim_static_parser_scope",
+      "target": "doc_retrieval_comparison_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_static_parser_scope",
+      "target": "exp_html_projection",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_html_comparison_result",
+      "target": "doc_retrieval_comparison_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_html_comparison_result",
+      "target": "exp_html_projection",
+      "type": "cites"
+    },
+    {
+      "source": "claim_runtime_gate",
+      "target": "doc_retrieval_comparison_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_runtime_gate",
       "target": "exp_retrieval",
       "type": "motivates"
     }

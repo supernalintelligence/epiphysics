@@ -79,6 +79,12 @@ class RetrievalTests(unittest.TestCase):
             self.assertEqual(corpus[field + "_hash"], digest(canonical(corpus[field]).encode()))
         event = self.completed()
         body = event["body"]
+        self.assertEqual(body["schema_version"], 2)
+        self.assertEqual(body["indexing_recipe"], retrieval.RAW_RECIPE)
+        self.assertEqual(body["request"]["indexing_recipe"], retrieval.RAW_RECIPE)
+        self.assertEqual(body["projection_hash"], body["artifacts"]["projection"]["sha256"])
+        self.assertIn("epiphysics.retrieval_indexing", body["artifacts"]["dependencies"])
+        self.assertIn("html.entities.html5", body["artifacts"]["stdlib"])
         for role, raw in (("config", canonical(corpus["config"]).encode()),
                           ("queries", canonical(self.queries).encode()),
                           ("implementation", Path(retrieval.__file__).read_bytes())):

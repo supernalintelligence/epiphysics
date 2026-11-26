@@ -89,7 +89,7 @@ def main():
     freeze_retrieval = sub.add_parser("freeze-retrieval", help="Freeze explicitly selected snapshot sources for lexical retrieval")
     freeze_retrieval.add_argument("file", help="Bounded JSON with snapshot_id, observation_ids, optional config and event_id")
     retrieve = sub.add_parser("run-retrieval", help="Run fixed lexical search over a frozen eligible corpus")
-    retrieve.add_argument("file", help="Bounded JSON with corpus_id, queries and run_key; no gold labels")
+    retrieve.add_argument("file", help="Bounded JSON with corpus_id, queries, run_key and optional indexing_recipe (raw-window-text-v1 or static-html-text-nodes-v1); no gold labels")
     evaluate_retrieval = sub.add_parser("evaluate-retrieval", help="Score a completed retrieval against a separate development cohort")
     evaluate_retrieval.add_argument("file", help="Bounded JSON with cohort and run_terminal_id")
     evaluate_retrieval.add_argument("--output", help="Write a new report file; existing files are never replaced")

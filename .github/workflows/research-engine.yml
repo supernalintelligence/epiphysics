@@ -161,7 +161,7 @@ jobs:
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')
           PY
-      - name: Verify actual retrieval and measured controller handoff
+      - name: Verify fixed representation comparison and measured coverage handoff
         run: |
           python - <<'PYTHON'
           import json
@@ -172,14 +172,15 @@ jobs:
           import tempfile
           from epiphysics.store import Ledger, canonical, digest
           from epiphysics.assertions import resolve_span
-          from epiphysics.retrieval import freeze_retrieval_corpus, run_lexical_retrieval
+          from epiphysics.retrieval import freeze_retrieval_corpus
           from epiphysics.retrieval_evaluation import evaluate_retrieval, project_queries
 
           with tempfile.TemporaryDirectory(prefix='epiphysics-retrieval-', dir=os.environ['RUNNER_TEMP']) as directory:
+              root = Path(directory)
               ledger = Ledger(directory)
               try:
-                  raw = b'An invented team keeps its receipts in a cobalt archive.'
-                  source = ledger.capture('synthetic:receipt-book', raw)
+                  raw = b'<main title="attributeonly">An invented team keeps its receipts in a cobalt archive.</main>'
+                  source = ledger.capture('synthetic:receipt-book', raw, media_type='text/html')
                   snapshot = ledger.snapshot()
                   corpus = freeze_retrieval_corpus(ledger, snapshot['id'], [source['id']])
                   start = raw.index(b'cobalt archive')
@@ -187,68 +188,90 @@ jobs:
                       {'question_id': 'supported', 'query': 'cobalt archive', 'answerability': 'answerable',
                        'gold_spans': [{'observation_id': source['id'], 'start': start,
                                       'end': start + len(b'cobalt archive'), 'sha256': digest(b'cobalt archive')}]},
-                      {'question_id': 'unsupported', 'query': 'zygomaticnebula', 'answerability': 'unanswerable', 'gold_spans': []},
+                      {'question_id': 'unsupported', 'query': 'attributeonly', 'answerability': 'unanswerable', 'gold_spans': []},
                   ]}
                   queries = project_queries(cohort)
                   assert all(set(row) == {'query_id', 'query'} for row in queries)
-                  first = run_lexical_retrieval(ledger, corpus['id'], queries, run_key='fresh-a')
-                  second = run_lexical_retrieval(ledger, corpus['id'], queries, run_key='fresh-b')
-                  assert first['kind'] == second['kind'] == 'retrieval_completed'
-                  assert first['body']['results_hash'] == second['body']['results_hash']
-                  for row in first['body']['results']:
-                      for hit in row['hits']:
-                          resolve_span(ledger, snapshot['id'], {key: hit[key] for key in ('observation_id', 'start', 'end', 'sha256')})
-                  report = evaluate_retrieval(ledger, cohort, first['id'])
-                  assert report['metrics']['source_recall_at_k']['5']['value'] == 1
-                  assert report['metrics']['gold_span_recall_at_k']['5']['value'] == 1
-                  assert report['metrics']['unsupported_query_retrieval_rate_at_5']['value'] == 0
-                  assert ledger.verify()['valid']
               finally:
                   ledger.close()
-              root = Path(directory)
-              identity = report['identity']
+              runs, reports = {}, {}
+              recipes = {'raw': 'raw-window-text-v1', 'html': 'static-html-text-nodes-v1'}
+              for arm, recipe in recipes.items():
+                  runs[arm], reports[arm] = [], []
+                  for repeat in ('a', 'b'):
+                      request = {'corpus_id': corpus['id'], 'queries': queries,
+                                 'run_key': arm + '-' + repeat, 'indexing_recipe': recipe}
+                      request_path = root / (arm + '-' + repeat + '.json')
+                      request_path.write_text(canonical(request))
+                      process = subprocess.run([sys.executable, '-m', 'epiphysics', '--store', str(root),
+                          'run-retrieval', str(request_path)], check=True, capture_output=True, text=True, timeout=60)
+                      run = json.loads(process.stdout)
+                      assert run['kind'] == 'retrieval_completed' and run['body']['schema_version'] == 2
+                      ledger = Ledger.open_readonly(root)
+                      try:
+                          for row in run['body']['results']:
+                              for hit in row['hits']:
+                                  resolve_span(ledger, snapshot['id'], {key: hit[key] for key in ('observation_id', 'start', 'end', 'sha256')})
+                          report = evaluate_retrieval(ledger, cohort, run['id'])
+                      finally:
+                          ledger.close()
+                      assert report['metrics']['source_recall_at_k']['5']['value'] == 1
+                      assert report['metrics']['gold_span_recall_at_k']['5']['value'] == 1
+                      assert report['metrics']['unsupported_query_retrieval_rate_at_5']['value'] == (1 if arm == 'raw' else 0)
+                      runs[arm].append(run)
+                      reports[arm].append(report)
+                  assert runs[arm][0]['body']['results_hash'] == runs[arm][1]['body']['results_hash']
+                  assert runs[arm][0]['body']['projection_hash'] == runs[arm][1]['body']['projection_hash']
+              identity = reports['raw'][0]['identity']
+              protocol = {'schema_version': 1, 'study_id': 'owned-ci-comparison',
+                          'scope': 'Owned synthetic integration fixture; no real retrieval-quality claim'}
+              protocol_raw = canonical(protocol).encode()
+              (root / 'protocol.json').write_bytes(protocol_raw)
               declaration = {
-                  'schema_version': 1, 'study_id': 'owned-ci-study',
+                  'schema_version': 2, 'study_id': 'owned-ci-comparison', 'protocol_hash': digest(protocol_raw),
                   **{key: identity[key] for key in ('snapshot_id', 'snapshot_hash', 'snapshot_manifest_hash',
                       'corpus_id', 'corpus_hash', 'cohort_hash', 'gold_hash', 'query_hash',
                       'sources_hash', 'passages_hash', 'config_hash')},
-                  'implementation_hash': identity['retriever_implementation_hash'],
-                  'dependency_hashes': {name: ref['content_hash'] for name, ref in first['body']['artifacts']['dependencies'].items()},
-                  'runtime_hash': first['body']['runtime_hash'],
-                  'run_terminal_hashes': {run['id']: run['hash'] for run in (first, second)},
+                  'arms': {arm: {'indexing_recipe': recipes[arm],
+                      'candidate_algorithm_hash': reports[arm][0]['identity']['candidate']['algorithm_hash'],
+                      'projection_hashes': {run['id']: run['body']['projection_hash'] for run in runs[arm]},
+                      'run_terminal_hashes': {run['id']: run['hash'] for run in runs[arm]}} for arm in recipes},
               }
               policy = json.loads(Path('engine/examples/improvement/policy.json').read_text())
               policy['retrieval_study'] = declaration
               (root / 'cohort.json').write_text(canonical(cohort))
               (root / 'policy.json').write_text(canonical(policy))
               (root / 'study.json').write_text(canonical({
-                  'schema_version': 1, 'study_id': declaration['study_id'],
+                  'schema_version': 2, 'study_id': declaration['study_id'],
                   'evidence_store': str(root), 'cohort_file': str(root / 'cohort.json'),
-                  'corpus_id': corpus['id'], 'run_terminal_ids': [first['id'], second['id']],
+                  'protocol_file': str(root / 'protocol.json'), 'corpus_id': corpus['id'],
+                  'arms': {arm: {'indexing_recipe': recipes[arm],
+                                'run_terminal_ids': [run['id'] for run in runs[arm]]} for arm in recipes},
               }))
               child = subprocess.run([
                   sys.executable, '-m', 'epiphysics.improvement', '--store', str(root / 'improvement'),
                   'dispatch', '--policy', str(root / 'policy.json'),
                   '--suite', str(Path('engine/examples/improvement/entities.json').resolve()),
-                  '--candidate', 'reference', '--run-key', 'actual-study-smoke', '--after-step', 'initial',
+                  '--candidate', 'reference', '--run-key', 'actual-comparison-smoke', '--after-step', 'initial',
                   '--retrieval-study', str(root / 'study.json'), '--timeout-seconds', '60',
-                  '--completed-work', 'Validated two actual searches on owned synthetic source bytes',
+                  '--completed-work', 'Validated four fresh raw/HTML processes on owned synthetic source bytes',
               ], check=True, capture_output=True, text=True, timeout=75)
               assessment = json.loads(child.stdout)['assessment']
               actual = assessment['report']['actual_retrieval']
-              assert actual['reproducibility']['value'] == 1
-              assert len(actual['quality']['runs']) == 2
-              assert actual['quality']['runs'][0]['metrics'] == report['metrics']
-              assert assessment['report']['metrics']['retrieval_baseline_reproducibility'] == 1
+              assert actual['schema_version'] == 2 and actual['reproducibility']['value'] == 1
+              assert len(actual['quality']['runs']) == 4
+              assert actual['quality']['runs'][0]['metrics'] == reports['raw'][0]['metrics']
+              assert actual['comparison']['delta'] is not None
+              assert actual['comparison']['operational_baseline'] == 'raw'
               assert assessment['next_step']['action'] == 'prepare_retrieval_coverage_evaluation'
               assert assessment['next_step']['target'] is None
               readonly = Ledger.open_readonly(root)
               try:
-                  assert readonly.events()[-1]['id'] == second['id']
+                  assert readonly.events()[-1]['id'] == runs['html'][-1]['id']
                   assert readonly.verify()['valid']
               finally:
                   readonly.close()
-          print('Fresh retrieval, separate scoring and real controller handoff passed on owned synthetic evidence.')
+          print('Four fresh raw/HTML processes, separate scoring and measured coverage handoff passed on owned evidence.')
           PYTHON
       - name: Run synthetic ledger demo
         run: python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo

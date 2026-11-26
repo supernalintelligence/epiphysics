@@ -19,7 +19,7 @@ import tempfile
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, manifests, retrieval, retrieval_evaluation, store
+from . import assertions, manifests, retrieval_contracts as retrieval, retrieval_evaluation, store
 from .store import Ledger, canonical, digest, instant
 
 IMPLEMENTATION_DEPENDENCIES = tuple((m.__name__, m.IMPLEMENTATION_CODE)
@@ -34,6 +34,10 @@ REQUEST_FIELDS = {"schema_version", "study_id", "evidence_store", "cohort_file",
 CONTRACT_FIELDS = {"schema_version", "study_id", "snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
     "corpus_id", "corpus_hash", "cohort_hash", "gold_hash", "query_hash", "sources_hash", "passages_hash",
     "config_hash", "implementation_hash", "dependency_hashes", "runtime_hash", "run_terminal_hashes"}
+COMMON_CONTRACT_FIELDS = CONTRACT_FIELDS - {"implementation_hash", "dependency_hashes", "runtime_hash", "run_terminal_hashes"}
+REQUEST_FIELDS_V2 = (REQUEST_FIELDS - {"run_terminal_ids"}) | {"arms", "protocol_file"}
+CONTRACT_FIELDS_V2 = COMMON_CONTRACT_FIELDS | {"arms", "protocol_hash"}
+ARM_RECIPES = {"raw": retrieval.RAW_RECIPE, "html": retrieval.HTML_RECIPE}
 _SELF = (Path(__file__), IMPLEMENTATION_SOURCE, IMPLEMENTATION_CODE)
 
 
@@ -61,7 +65,7 @@ def _json(raw):
 
 
 def _keys(value, fields, label):
-    if type(value) is not dict or set(value) != fields:
+    if type(value) is not dict or set(value) != set(fields):
         raise ValueError(f"Invalid {label} fields")
 
 
@@ -80,37 +84,77 @@ def _hash(value):
         raise ValueError("Expected SHA-256 digest")
 
 
+def _request_fields(request):
+    if type(request) is not dict or type(request.get("schema_version")) is not int or request["schema_version"] not in (1, 2):
+        raise ValueError("Assessment schema_version must be 1 or 2")
+    _keys(request, REQUEST_FIELDS if request["schema_version"] == 1 else REQUEST_FIELDS_V2, "study request")
+
+
+def _run_ids(request):
+    return request["run_terminal_ids"] if request["schema_version"] == 1 else [
+        terminal_id for arm in ARM_RECIPES for terminal_id in request["arms"][arm]["run_terminal_ids"]]
+
+
 def _inputs(request, cohort, declared_contract):
-    _keys(request, REQUEST_FIELDS, "study request")
-    _keys(declared_contract, CONTRACT_FIELDS, "declared retrieval contract")
+    _request_fields(request)
+    version = request["schema_version"]
+    _keys(declared_contract, CONTRACT_FIELDS if version == 1 else CONTRACT_FIELDS_V2, "declared retrieval contract")
     for item in (request, declared_contract):
-        if type(item["schema_version"]) is not int or item["schema_version"] != 1:
-            raise ValueError("Assessment schema_version must be 1")
+        if type(item["schema_version"]) is not int or item["schema_version"] != version:
+            raise ValueError("Request and declaration schema versions must match")
         for key in ("study_id", "corpus_id"):
             _id(item[key], key)
         if len(_raw(item)) > MAX_INPUT_BYTES:
             raise ValueError("Assessment input exceeds 1 MB")
-    for key in ("evidence_store", "cohort_file"):
+    for key in ("evidence_store", "cohort_file", *(("protocol_file",) if version == 2 else ())):
         _id(request[key], key)
         if not Path(request[key]).is_absolute():
             raise ValueError("Study paths must be absolute")
-    runs = request["run_terminal_ids"]
-    if type(runs) is not list or len(runs) != 2:
-        raise ValueError("Exactly two terminal IDs are required")
+    if version == 2:
+        _keys(request["arms"], ARM_RECIPES, "comparison request arms")
+        _keys(declared_contract["arms"], ARM_RECIPES, "declared comparison arms")
+        for arm, recipe in ARM_RECIPES.items():
+            item, declaration = request["arms"][arm], declared_contract["arms"][arm]
+            _keys(item, {"indexing_recipe", "run_terminal_ids"}, "comparison arm")
+            _keys(declaration, {"indexing_recipe", "candidate_algorithm_hash", "projection_hashes", "run_terminal_hashes"}, "declared comparison arm")
+            if item["indexing_recipe"] != recipe or declaration["indexing_recipe"] != recipe:
+                raise ValueError("Comparison requires the fixed raw and HTML recipes in their declared arms")
+            ids = item["run_terminal_ids"]
+            if type(ids) is not list or len(ids) != 2:
+                raise ValueError("Each fixed comparison arm requires two terminal IDs")
+            for terminal_id in ids:
+                _id(terminal_id, "terminal ID")
+            _hash(declaration["candidate_algorithm_hash"])
+            for field in ("projection_hashes", "run_terminal_hashes"):
+                _keys(declaration[field], set(ids), "declared arm output hashes")
+                for value in declaration[field].values():
+                    _hash(value)
+        _hash(declared_contract["protocol_hash"])
+    else:
+        if type(request["run_terminal_ids"]) is not list or len(request["run_terminal_ids"]) != 2:
+            raise ValueError("Exactly two terminal IDs are required")
+        deps = declared_contract["dependency_hashes"]
+        if type(deps) is not dict or set(deps) not in (set(retrieval.DEPENDENCY_NAMES), set(retrieval.DEPENDENCY_NAMES_V2)):
+            raise ValueError("Invalid declared dependency hashes")
+        for value in deps.values():
+            _hash(value)
+        for field in ("implementation_hash", "runtime_hash"):
+            _hash(declared_contract[field])
+    runs = _run_ids(request)
     for terminal_id in runs:
         _id(terminal_id, "terminal ID")
-    if len(set(runs)) != 2:
-        raise ValueError("Two distinct terminal IDs are required")
+    if len(set(runs)) != (2 if version == 1 else 4):
+        raise ValueError("Require distinct terminal IDs for every execution")
+    if version == 1:
+        _keys(declared_contract["run_terminal_hashes"], set(runs), "terminal hashes")
+        for value in declared_contract["run_terminal_hashes"].values():
+            _hash(value)
     for key in ("study_id", "corpus_id"):
         if request[key] != declared_contract[key]:
             raise ValueError(f"Study differs from declared {key}")
     _id(declared_contract["snapshot_id"], "snapshot ID")
-    for key in CONTRACT_FIELDS - {"schema_version", "study_id", "snapshot_id", "corpus_id", "dependency_hashes", "run_terminal_hashes"}:
+    for key in COMMON_CONTRACT_FIELDS - {"schema_version", "study_id", "snapshot_id", "corpus_id"}:
         _hash(declared_contract[key])
-    _keys(declared_contract["dependency_hashes"], set(retrieval.DEPENDENCY_NAMES), "dependency hashes")
-    _keys(declared_contract["run_terminal_hashes"], set(runs), "terminal hashes")
-    for value in [*declared_contract["dependency_hashes"].values(), *declared_contract["run_terminal_hashes"].values()]:
-        _hash(value)
     if len(_raw(cohort)) > MAX_INPUT_BYTES:
         raise ValueError("Cohort exceeds 1 MB")
     retrieval_evaluation.project_queries(cohort)
@@ -133,7 +177,7 @@ def _current_sources():
     sources = retrieval._runtime_sources()
     sources[retrieval_evaluation.__name__] = retrieval_evaluation.IMPLEMENTATION_SOURCE
     sources[__name__] = source
-    return {"code:" + name: raw for name, raw in sources.items()}
+    return {("data:" if name == "html.entities.html5" else "code:") + name: raw for name, raw in sources.items()}
 
 
 def _read_file(path, maximum):
@@ -201,7 +245,40 @@ def _chain(events):
     return {"seq": events[-1]["seq"], "id": events[-1]["id"], "hash": events[-1]["hash"]}
 
 
-def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw=None, cohort_raw=None):
+def _run_artifact_refs(terminal):
+    body = terminal["body"]
+    if type(body) is not dict or type(body.get("schema_version")) is not int or body["schema_version"] not in (1, 2):
+        raise ValueError("Unsupported captured receipt schema")
+    version = body["schema_version"]
+    artifacts = body["artifacts"]
+    fields = {"config", "queries", "implementation", "dependencies"}
+    _keys(artifacts, fields if version == 1 else fields | {"recipe", "projection", "stdlib"}, "retained run artifacts")
+    _keys(artifacts["dependencies"], retrieval.DEPENDENCY_NAMES if version == 1 else retrieval.DEPENDENCY_NAMES_V2, "retained dependencies")
+    refs = [artifacts["config"], artifacts["queries"], artifacts["implementation"], *artifacts["dependencies"].values()]
+    if version == 2:
+        _keys(artifacts["stdlib"], retrieval.STDLIB_NAMES, "retained stdlib")
+        descriptor = artifacts["projection"]
+        _keys(descriptor, {"schema_version", "sha256", "size", "chunks"}, "captured projection descriptor")
+        if (type(descriptor["schema_version"]) is not int or descriptor["schema_version"] != 1
+                or type(descriptor["size"]) is not int or not 1 <= descriptor["size"] <= retrieval.MAX_PROJECTION_BYTES
+                or type(descriptor["chunks"]) is not list or not 1 <= len(descriptor["chunks"]) <= retrieval.MAX_PROJECTION_CHUNKS):
+            raise ValueError("Invalid bounded captured projection descriptor")
+        _hash(descriptor["sha256"])
+        total = 0
+        for ref in descriptor["chunks"]:
+            _keys(ref, retrieval.REF_FIELDS, "captured projection chunk")
+            if type(ref["size"]) is not int or not 1 <= ref["size"] <= MAX_INPUT_BYTES:
+                raise ValueError("Captured projection chunk exceeds byte bound")
+            total += ref["size"]
+            if total > descriptor["size"]:
+                raise ValueError("Captured projection exceeds aggregate bound")
+        if total != descriptor["size"]:
+            raise ValueError("Captured projection chunk size mismatch")
+        refs.extend([artifacts["recipe"], *artifacts["stdlib"].values(), *descriptor["chunks"]])
+    return refs
+
+
+def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw=None, cohort_raw=None, protocol_raw=None):
     _inputs(request, cohort, declared_contract)
     if type(evidence_ledger) is not Ledger or Ledger is not store.Ledger:
         raise ValueError("Assessment requires the current Ledger class")
@@ -212,10 +289,15 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
     artifacts = {"request": _raw(request) if request_raw is None else request_raw,
                  "cohort": _raw(cohort) if cohort_raw is None else cohort_raw,
                  "declared_contract": _raw(declared_contract), **_current_sources()}
+    if request["schema_version"] == 2:
+        protocol_raw = _read_file(request["protocol_file"], MAX_INPUT_BYTES) if protocol_raw is None else protocol_raw
+        if type(protocol_raw) is not bytes or len(protocol_raw) > MAX_INPUT_BYTES or digest(protocol_raw) != declared_contract["protocol_hash"]:
+            raise ValueError("Comparison protocol differs from declared bytes")
+        artifacts["comparison_protocol"] = protocol_raw
     if _json(artifacts["request"]) != request or _json(artifacts["cohort"]) != cohort:
         raise ValueError("Captured file bytes differ from parsed input")
     with assertions._read_transaction(evidence_ledger):
-        selected = [request["corpus_id"], *request["run_terminal_ids"]]
+        selected = [request["corpus_id"], *_run_ids(request)]
         seqs = []
         for event_id in selected:
             row = evidence_ledger.db.execute("SELECT seq FROM events WHERE id=?", (event_id,)).fetchone()
@@ -244,12 +326,9 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
             if sum(ref["size"] for ref in refs) > retrieval.MAX_TOTAL_BYTES:
                 raise ValueError("Selected source bytes exceed 4 MB")
             refs = list(refs)
-            for terminal_id in request["run_terminal_ids"]:
+            for terminal_id in _run_ids(request):
                 terminal = by_id[terminal_id]
-                retained = terminal["body"]["artifacts"]
-                _keys(retained, {"config", "queries", "implementation", "dependencies"}, "retained run artifacts")
-                _keys(retained["dependencies"], set(retrieval.DEPENDENCY_NAMES), "retained dependencies")
-                refs.extend([retained["config"], retained["queries"], retained["implementation"], *retained["dependencies"].values()])
+                refs.extend(_run_artifact_refs(terminal))
             blobs = {}
             total = sum(len(raw) for raw in artifacts.values()) + len(_raw(events))
             for ref in refs:
@@ -264,6 +343,8 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
                     raise ValueError("Captured observation binding mismatch")
                 name = "blob:" + ref["content_hash"]
                 if name not in artifacts:
+                    if len(artifacts) + 2 > MAX_ARTIFACTS:  # also reserve the evidence-bundle role
+                        raise ValueError("Too many captured assessment artifacts")
                     total += ref["size"]
                     if total > MAX_BUNDLE_BYTES:
                         raise ValueError("Assessment bundle exceeds aggregate byte bound")
@@ -284,7 +365,7 @@ def prepare_retrieval_study(study_path, *, declared_contract, forbidden_store=No
     """Capture bounded files and one coherent evidence prefix for later assessment."""
     request_raw = _read_file(study_path, MAX_INPUT_BYTES)
     request = _json(request_raw)
-    _keys(request, REQUEST_FIELDS, "study request")
+    _request_fields(request)
     _id(request["cohort_file"], "cohort file")
     _id(request["evidence_store"], "evidence store")
     evidence_root = Path(request["evidence_store"])
@@ -311,28 +392,91 @@ def _identity(value):
 
 
 def _candidate(report):
+    return deepcopy(report["identity"]["candidate"])
+
+
+def _measurement(report):
     identity = report["identity"]
-    artifacts = identity["retriever_artifacts"]
-    def normalized(ref):
-        return {key: ref[key] for key in ("content_hash", "size")}
-    return _identity({"implementation": normalized(artifacts["implementation"]),
-        "dependencies": {name: normalized(ref) for name, ref in artifacts["dependencies"].items()},
-        "config": normalized(artifacts["config"]), "runtime": identity["retriever_runtime"],
-        "runtime_hash": identity["retriever_runtime_hash"]})
+    return _identity({key: identity[key] for key in ("snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
+        "corpus_id", "corpus_hash", "sources_hash", "passages_hash", "cohort_hash", "gold_hash", "query_hash", "config_hash", "evaluator")}
+        | {"citation_semantics": "complete-raw-source-window-v1",
+           "comparison_rule": "Current neutral validation/scoring identity; historical reports retain their original implementation identity."})
 
 
-def _declared(report, contract):
+def _declared(report, contract, *, arm=None):
     identity = report["identity"]
     for key in ("snapshot_id", "snapshot_hash", "snapshot_manifest_hash", "corpus_id", "corpus_hash",
                 "cohort_hash", "gold_hash", "query_hash", "sources_hash", "passages_hash", "config_hash"):
         if identity[key] != contract[key]:
             raise ValueError(f"Retrieval evidence differs from declared {key}")
-    if (identity["retriever_implementation_hash"] != contract["implementation_hash"]
-            or identity["retriever_runtime_hash"] != contract["runtime_hash"]
-            or {name: ref["content_hash"] for name, ref in identity["retriever_artifacts"]["dependencies"].items()} != contract["dependency_hashes"]):
-        raise ValueError("Historical candidate differs from declared implementation, dependencies or runtime")
-    if contract["run_terminal_hashes"].get(identity["run_terminal_id"]) != identity["run_terminal_hash"]:
+    if contract["schema_version"] == 1:
+        if (identity["retriever_implementation_hash"] != contract["implementation_hash"]
+                or identity["retriever_runtime_hash"] != contract["runtime_hash"]
+                or {name: ref["content_hash"] for name, ref in identity["retriever_artifacts"]["dependencies"].items()} != contract["dependency_hashes"]):
+            raise ValueError("Historical candidate differs from declared implementation, dependencies or runtime")
+        terminal_hashes = contract["run_terminal_hashes"]
+    else:
+        declaration = contract["arms"][arm]
+        candidate = identity["candidate"]
+        if (identity["receipt_schema_version"] != 2
+                or candidate["algorithm"]["indexing_recipe"] != declaration["indexing_recipe"]
+                or candidate["algorithm_hash"] != declaration["candidate_algorithm_hash"]):
+            raise ValueError("Comparison arm differs from declared v2 candidate algorithm")
+        if declaration["projection_hashes"][identity["run_terminal_id"]] != candidate["projection"]["sha256"]:
+            raise ValueError("Comparison projection differs from declared observed hash")
+        terminal_hashes = declaration["run_terminal_hashes"]
+    if terminal_hashes.get(identity["run_terminal_id"]) != identity["run_terminal_hash"]:
         raise ValueError("Run terminal differs from declared hash")
+
+
+def _pair(runs, reports):
+    candidates = [_candidate(report) for report in reports]
+    if candidates[0]["algorithm"] != candidates[1]["algorithm"]:
+        raise ValueError("Retrieval pair has different candidate identities")
+    if _measurement(reports[0]) != _measurement(reports[1]):
+        raise ValueError("Retrieval pair has different measurement contracts")
+    equal_results = _raw(runs[0]["body"]["results"]) == _raw(runs[1]["body"]["results"])
+    equal_evaluations = all(reports[0][key] == reports[1][key] for key in ("counts", "metrics", "per_case"))
+    equal_projection = candidates[0]["projection"] == candidates[1]["projection"]
+    return {"required_runs": 2, "valid_runs": 2, "ordered_results_equal": equal_results,
+            "evaluations_equal": equal_evaluations, "projections_equal": equal_projection,
+            "value": int(equal_results and equal_evaluations and equal_projection),
+            "assurance": "Two distinct locally retained execution claims; historical receipt validation, not a new search, process isolation proof or independent witness."}
+
+
+def _quality_delta(raw, html):
+    def compare(a, b):
+        return {"raw": deepcopy(a), "html": deepcopy(b),
+                "change": None if a["value"] is None or b["value"] is None else b["value"] - a["value"]}
+    metrics = {}
+    for name in ("source_recall_at_k", "gold_span_recall_at_k"):
+        metrics[name] = {cutoff: compare(raw["metrics"][name][cutoff], html["metrics"][name][cutoff]) for cutoff in ("1", "3", "5")}
+    for name in ("source_mrr_at_5", "gold_span_mrr_at_5", "unsupported_query_retrieval_rate_at_5", "empty_query_rate"):
+        metrics[name] = compare(raw["metrics"][name], html["metrics"][name])
+    return {"metrics": metrics, "interpretation": "Descriptive builder-visible development changes; unsupported retrieval is not answer hallucination and BM25 magnitudes are not cross-arm confidence."}
+
+
+def _case_changes(raw_run, html_run, raw_report, html_report):
+    rows = []
+    for raw, html, raw_score, html_score in zip(raw_run["body"]["results"], html_run["body"]["results"], raw_report["per_case"], html_report["per_case"]):
+        def arm(result, score):
+            return {"status": result["status"], "reason": result["reason"],
+                    "ranked_windows": [{key: hit[key] for key in ("rank", "observation_id", "start", "end", "sha256")} for hit in result["hits"]],
+                    "source_recall_at_k": deepcopy(score["source_recall_at_k"]),
+                    "gold_span_recall_at_k": deepcopy(score["gold_span_recall_at_k"]),
+                    "gold_span_first_covered_prefix_at_5": score["gold_span_first_covered_prefix_at_5"]}
+        rows.append({"query_id": raw["query_id"], "answerability": raw_score["answerability"],
+                     "raw": arm(raw, raw_score), "html": arm(html, html_score)})
+    return rows
+
+
+def _costs(runs):
+    return {"runs": [{"run_terminal_id": run["id"], "resources": deepcopy(run["body"]["resources"])} for run in runs],
+            "reported_inner_elapsed_seconds_sum": sum(run["body"]["resources"]["elapsed_seconds"] for run in runs),
+            "model_calls": sum(run["body"]["resources"]["model_calls"] for run in runs),
+            "external_spend": sum(run["body"]["resources"]["external_spend"] for run in runs),
+            "outer_wall_seconds": None, "whole_step_cost": None,
+            "scope": "Receipt-reported inner times exclude locked revalidation and commit; outer caller records are separate. Builder/reviewer and whole-step costs are unmeasured."}
 
 
 def assess_prepared_retrieval_study(prepared):
@@ -351,10 +495,15 @@ def assess_prepared_retrieval_study(prepared):
     if type(bundle["blobs"]) is not dict or len(bundle["blobs"]) > MAX_ARTIFACTS:
         raise ValueError("Invalid captured blob manifest")
     expected_roles = {"request", "cohort", "declared_contract", "evidence_bundle", *_current_sources()}
+    if request["schema_version"] == 2:
+        expected_roles.add("comparison_protocol")
+        protocol = artifacts.get("comparison_protocol")
+        if type(protocol) is not bytes or len(protocol) > MAX_INPUT_BYTES or digest(protocol) != contract["protocol_hash"]:
+            raise ValueError("Captured comparison protocol differs from declared bytes")
     expected_roles.update("blob:" + h for h in bundle["blobs"])
     if set(artifacts) != expected_roles:
         raise ValueError("Unexpected or missing captured artifacts")
-    reports, runs = [], []
+    reports, runs, starts = [], [], []
     with tempfile.TemporaryDirectory(prefix="epiphysics-retrieval-assessment-") as directory:
         ledger = Ledger(directory)
         try:
@@ -368,35 +517,70 @@ def assess_prepared_retrieval_study(prepared):
                 [(e["seq"], e["id"], e["kind"], e["recorded_at"], canonical(e["body"]), e["previous_hash"], e["hash"]) for e in bundle["events"]])
             ledger.db.commit()
             ledger.db.execute("PRAGMA query_only=ON")
-            for terminal_id in request["run_terminal_ids"]:
+            for terminal_id in _run_ids(request):
                 run = retrieval.get_retrieval_run(ledger, terminal_id, verify_bytes=True)
                 report = retrieval_evaluation.evaluate_retrieval(ledger, cohort, terminal_id)
-                _declared(report, contract)
+                arm = None if request["schema_version"] == 1 else next(name for name in ARM_RECIPES if terminal_id in request["arms"][name]["run_terminal_ids"])
+                _declared(report, contract, arm=arm)
                 runs.append(run)
+                starts.append(ledger.get(f"retrieval:{run['body']['run_key']}:started", "retrieval_started"))
                 reports.append(report)
         finally:
             ledger.close()
-    if len({run["body"]["run_key"] for run in runs}) != 2:
-        raise ValueError("Two distinct execution claims are required")
+    required = 2 if request["schema_version"] == 1 else 4
+    if len({run["body"]["run_key"] for run in runs}) != required:
+        raise ValueError("Distinct execution claims are required for every retained run")
     candidates = [_candidate(report) for report in reports]
-    if candidates[0] != candidates[1]:
-        raise ValueError("Retrieval pair has different candidate identities")
-    identity = reports[0]["identity"]
-    measurement = _identity({key: identity[key] for key in ("snapshot_id", "snapshot_hash", "snapshot_manifest_hash",
-        "corpus_id", "corpus_hash", "sources_hash", "passages_hash", "cohort_hash", "gold_hash", "query_hash", "config_hash", "evaluator")}
-        | {"coupled_candidate_hash": candidates[0]["hash"], "comparison_rule": "Current retrieval code/config couples candidate and measurement; changes are conservatively incomparable."})
-    equal_results = _raw(runs[0]["body"]["results"]) == _raw(runs[1]["body"]["results"])
-    equal_evaluations = all(reports[0][key] == reports[1][key] for key in ("counts", "metrics", "per_case"))
-    report = {"schema_version": 1, "status": "completed", "scope": "retrospective_development", "study_id": request["study_id"],
-        "reproducibility": {"required_runs": 2, "valid_runs": 2, "ordered_results_equal": equal_results,
-            "evaluations_equal": equal_evaluations, "value": int(equal_results and equal_evaluations),
-            "assurance": "Two distinct locally retained execution claims; historical receipt validation, not a new search, process isolation proof or independent witness."},
-        "quality": {"runs": reports}, "candidate_identity": candidates[0], "measurement_contract_identity": measurement,
-        "assessment_identity": _identity({"adapter_hash": digest(IMPLEMENTATION_SOURCE), "prepared_manifest": prepared["manifest"],
-            "declared_contract_hash": digest(artifacts["declared_contract"])}),
-        "input_bindings": {"prefix_head": bundle["prefix_head"], "run_terminal_ids": request["run_terminal_ids"],
+    measurements = [_measurement(report) for report in reports]
+    if any(value != measurements[0] for value in measurements[1:]):
+        raise ValueError("All retained runs must share the current measurement contract")
+    assessment_identity = {"adapter_hash": digest(IMPLEMENTATION_SOURCE), "prepared_manifest": prepared["manifest"],
+                           "declared_contract_hash": digest(artifacts["declared_contract"])}
+    if request["schema_version"] == 1:
+        reproduction = _pair(runs, reports)
+        candidate = candidates[0]
+        comparison = None
+    else:
+        if any(starts[index]["seq"] <= runs[index - 1]["seq"] for index in range(1, 4)):
+            raise ValueError("Comparison executions must follow the fixed raw A/B then HTML A/B order")
+        # Indexing recipe is the only changed algorithm input. Parser, query,
+        # tokenizer/runtime, source-validation closure and runner stay frozen.
+        algorithms = [{key: value for key, value in candidates[index]["algorithm"].items()
+                       if key not in {"indexing_recipe", "recipe"}} for index in (0, 2)]
+        if algorithms[0] != algorithms[1]:
+            raise ValueError("Comparison arms changed more than the fixed indexing recipe")
+        if len({run["body"]["implementation_hash"] for run in runs}) != 1:
+            raise ValueError("Comparison execution runner differs across arms")
+        arms = {}
+        for index, name in ((0, "raw"), (2, "html")):
+            arms[name] = {"indexing_recipe": ARM_RECIPES[name], "run_terminal_ids": _run_ids(request)[index:index+2],
+                          "reproducibility": _pair(runs[index:index+2], reports[index:index+2]),
+                          "candidate_identities": candidates[index:index+2]}
+        passed = all(arm["reproducibility"]["value"] == 1 for arm in arms.values())
+        reproduction = {"required_runs": 4, "valid_runs": 4,
+            "ordered_results_equal": all(arm["reproducibility"]["ordered_results_equal"] for arm in arms.values()),
+            "evaluations_equal": all(arm["reproducibility"]["evaluations_equal"] for arm in arms.values()),
+            "projections_equal": all(arm["reproducibility"]["projections_equal"] for arm in arms.values()),
+            "value": int(passed), "assurance": "Two distinct local repeats per fixed arm under one current measurement contract; no independent execution witness or holdout claim."}
+        candidate = _identity({"raw": candidates[0], "html": candidates[2]})
+        comparison = {"kind": "fixed-raw-html-v1", "arms": arms, "status": "reproduced" if passed else "reproduction_failed",
+                      "delta": _quality_delta(reports[0], reports[2]) if passed else None,
+                      "per_case_changes": _case_changes(runs[0], runs[2], reports[0], reports[2]) if passed else None,
+                      "operational_baseline": "raw", "adoption": "not_authorized",
+                      "continuation": "fresh_question_coverage_after_valid_comparison"}
+        assessment_identity["protocol_hash"] = contract["protocol_hash"]
+    report = {"schema_version": request["schema_version"], "status": "completed", "scope": "retrospective_development", "study_id": request["study_id"],
+        "reproducibility": reproduction, "quality": {"runs": reports}, "candidate_identity": candidate,
+        "measurement_contract_identity": measurements[0], "assessment_identity": _identity(assessment_identity),
+        "costs": _costs(runs),
+        "input_bindings": {"prefix_head": bundle["prefix_head"], "run_terminal_ids": _run_ids(request),
             "request_hash": digest(artifacts["request"]), "cohort_file_hash": digest(artifacts["cohort"]),
-            "declared_contract_hash": digest(artifacts["declared_contract"]), "corpus_id": request["corpus_id"]}}
+            "declared_contract_hash": digest(artifacts["declared_contract"]), "corpus_id": request["corpus_id"]},
+        "limitations": ["Current neutral validation/scoring identity does not replace the original identity of historical reports.",
+                        "Builder-visible development data; recipe proposal followed inspection of baseline errors.",
+                        "Returned raw-window support does not imply every gold byte survived projection or that an answer was generated."]}
+    if comparison is not None:
+        report["comparison"] = comparison
     check_prepared_retrieval_study(prepared)
     for index, evaluated in enumerate(reports, 1):
         artifacts[f"evaluation:{index}"] = _raw(evaluated)

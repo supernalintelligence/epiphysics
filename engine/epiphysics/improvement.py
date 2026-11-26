@@ -23,7 +23,7 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_evaluation, source_span_checks, store, transformation_checks, transforms
+from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_evaluation, retrieval_indexing, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
@@ -34,7 +34,7 @@ from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -49,6 +49,7 @@ _IMPLEMENTATIONS = {
                          "materialization": materialization, "materialization_probe": materialization_checks,
                          "retrieval": retrieval, "retrieval_evaluator": retrieval_evaluation,
                          "retrieval_assessment": retrieval_assessment,
+                         "retrieval_contracts": retrieval_contracts, "retrieval_indexing": retrieval_indexing,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -246,14 +247,17 @@ def select_next(report, run_key):
         at_one = quality["metrics"]["gold_span_recall_at_k"]["1"]["value"]
         at_five = quality["metrics"]["gold_span_recall_at_k"]["5"]["value"]
         gap = at_one is not None and at_five is not None and (at_one < 1 or at_five < 1)
+        comparison = actual.get("comparison")
+        completed_comparison = actual.get("schema_version") == 2 and comparison is not None and comparison.get("kind") == "fixed-raw-html-v1"
         metric = "retrieval_gold_span_recall_at_5" if at_five is not None and at_five < 1 else "retrieval_gold_span_recall_at_1"
         choices.extend([
             ("repair_retrieval_reproducibility", "retrieval_baseline_reproducibility", 1, "increase",
              actual["reproducibility"]["value"] != 1,
-             "Two valid completed retrieval runs disagree; inspect ordered results and per-query evaluation before comparing representations."),
-            ("prepare_retrieval_representation_comparison", metric, None, "increase", gap,
+             "Valid repeated retrieval runs disagree within an arm; inspect projections, ordered results and per-query evaluation before reporting a comparison delta."),
+            ("prepare_retrieval_representation_comparison", metric, None, "increase", gap and not completed_comparison,
              "Actual development retrieval misses required support or ranks it below first place. Separate indexing recipe from source/gold/scoring identity, then predeclare a bounded source-span-preserving representation comparator. No quality floor is inferred."),
             ("prepare_retrieval_coverage_evaluation", "retrieval_unsupported_query_retrieval_rate_at_5", None, "decrease", True,
+             "The fixed representation comparison is complete; retain the raw baseline and predeclare fresh-question coverage/answerability evaluation regardless of gain, tie or regression. Do not repeat recipe tuning on visible gold." if completed_comparison else
              "The reproduced development baseline has no measured support-ranking gap. Predeclare unseen-query coverage and answerability evaluation; unsupported lexical matches are not generated-answer hallucinations."),
         ])
     ranked = [{"action": a, "metric": metric, "observed": _metric_value(report, metric), "target": target,
@@ -276,6 +280,9 @@ def select_next(report, run_key):
             "support_gap_query_ids": [row["query_id"] for row in quality["per_case"]
                 if row["answerability"] == "answerable" and row["gold_span_recall_at_k"]["1"]["value"] < 1],
         }
+        if actual.get("comparison") is not None:
+            decision["evidence"]["comparison"] = {key: actual["comparison"][key] for key in
+                ("kind", "status", "delta", "operational_baseline", "adoption", "continuation")}
     return decision
 
 

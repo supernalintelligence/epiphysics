@@ -17,19 +17,19 @@ import unicodedata
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, retrieval, store
+from . import assertions, retrieval_contracts, store
 from .assertions import _read_transaction, resolve_span
 from .store import canonical, digest
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
-    (module.__name__, module.IMPLEMENTATION_CODE) for module in (store, assertions, retrieval)
+    (module.__name__, module.IMPLEMENTATION_CODE) for module in (store, assertions, retrieval_contracts)
 )
-_DEPENDENCIES = (store, assertions, retrieval)
+_DEPENDENCIES = (store, assertions, retrieval_contracts)
 _MODULE = sys.modules[__name__]
 _PINNED_SELF = (Path(__file__), IMPLEMENTATION_SOURCE, IMPLEMENTATION_CODE)
 _PINNED_DEPENDENCIES = tuple((module, module.IMPLEMENTATION_CODE) for module in _DEPENDENCIES)
 _LEDGER_CLASS = store.Ledger
-_RETRIEVAL_RUNTIME_SOURCES = retrieval._runtime_sources
+_RETRIEVAL_RUNTIME_SOURCES = retrieval_contracts._runtime_sources
 MAX_CASES = 64
 MAX_GOLD_PER_CASE = 64
 MAX_COHORT_BYTES = 1_000_000
@@ -224,7 +224,7 @@ def _implementation_identity():
             raise ValueError(f"Fixed evaluator callable changed: {name}; use a fresh reviewed process")
     if (resolve_span is not assertions.resolve_span or _read_transaction is not assertions._read_transaction
             or canonical is not store.canonical or digest is not store.digest
-            or _RETRIEVAL_RUNTIME_SOURCES is not retrieval._runtime_sources):
+            or _RETRIEVAL_RUNTIME_SOURCES is not retrieval_contracts._runtime_sources):
         raise ValueError("Evaluator dependency callable changed; use a fresh reviewed process")
     hashes = {name: digest(raw) for name, raw in _RETRIEVAL_RUNTIME_SOURCES().items()}
     runtime = {"python_implementation": platform.python_implementation(), "python_version": sys.version,
@@ -233,6 +233,29 @@ def _implementation_identity():
     return {"source_hash": digest(source), "dependencies": hashes,
             "dependencies_hash": _sha(hashes), "runtime": runtime, "runtime_hash": _sha(runtime),
             "contract": deepcopy(CONTRACT), "contract_hash": _sha(CONTRACT)}
+
+
+def _candidate_identity(body):
+    """Historical candidate metadata is data, separate from the scorer closure."""
+    artifacts = body["artifacts"]
+    def content(ref):
+        return {key: ref[key] for key in ("content_hash", "size")}
+    if body["schema_version"] == 1:
+        algorithm = {"kind": "legacy-coupled-v1", "implementation": content(artifacts["implementation"]),
+                     "dependencies": {name: content(ref) for name, ref in artifacts["dependencies"].items()},
+                     "config_hash": body["config_hash"], "runtime": deepcopy(body["runtime"])}
+        value = {"algorithm": algorithm, "algorithm_hash": _sha(algorithm), "projection": None}
+    else:
+        algorithm = {"kind": "fixed-indexing-v2", "indexing_recipe": body["indexing_recipe"],
+                     "recipe": content(artifacts["recipe"]),
+                     "indexing": content(artifacts["dependencies"]["epiphysics.retrieval_indexing"]),
+                     "dependencies": {name: content(ref) for name, ref in artifacts["dependencies"].items()
+                                      if name != "epiphysics.retrieval_indexing"},
+                     "stdlib": {name: content(ref) for name, ref in artifacts["stdlib"].items()},
+                     "config_hash": body["config_hash"], "runtime": deepcopy(body["runtime"])}
+        value = {"algorithm": algorithm, "algorithm_hash": _sha(algorithm),
+                 "projection": {"sha256": body["projection_hash"], "size": artifacts["projection"]["size"]}}
+    return {**value, "hash": _sha(value)}
 
 
 def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
@@ -252,7 +275,7 @@ def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
     queries = project_queries(checked)
     _text(run_terminal_id, "Run terminal ID", MAX_ID_BYTES)
     with _read_transaction(ledger):
-        run = retrieval.get_retrieval_run(ledger, run_terminal_id, verify_bytes=True)
+        run = retrieval_contracts.get_retrieval_run(ledger, run_terminal_id, verify_bytes=True)
         body = run["body"]
         if run["kind"] != "retrieval_completed" or body.get("result") != "completed":
             raise ValueError("Evaluation requires a completed retrieval execution")
@@ -314,6 +337,10 @@ def evaluate_retrieval(ledger, cohort, run_terminal_id) -> dict:
         "retriever_runtime": deepcopy(body["runtime"]), "retriever_runtime_hash": body["runtime_hash"],
         "evaluator": evaluator, "run_terminal_id": run["id"], "run_terminal_hash": run["hash"],
         "results_hash": body["results_hash"],
+        "receipt_schema_version": body["schema_version"], "candidate": _candidate_identity(body),
+        "execution": {"schema_version": body["schema_version"], "runner_implementation_hash": body["implementation_hash"],
+                      "runner_artifact": deepcopy(body["artifacts"]["implementation"]),
+                      "run_terminal_id": run["id"], "run_terminal_hash": run["hash"]},
     }
     if _implementation_identity() != evaluator:
         raise ValueError("Evaluator implementation or runtime changed during evaluation")

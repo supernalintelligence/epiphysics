@@ -396,6 +396,7 @@ def alter(module):
                'graph_views':'execute_graph_views','graph_view_checks':'run_graph_view_checks',
                'materialization':'materialize_graph_outputs','materialization_checks':'run_materialization_checks',
                'retrieval':'run_lexical_retrieval','retrieval_evaluation':'evaluate_retrieval',
+               'retrieval_contracts':'get_retrieval_run','retrieval_indexing':'project_index',
                'retrieval_assessment':'assess_prepared_retrieval_study'}
     function=functions.get(module.__name__.rsplit('.',1)[-1])
     change=(("\ndef "+function+"(*args, **kwargs):\n    raise ValueError('Changed implementation on disk')\n").encode()
@@ -495,7 +496,7 @@ finally:
         return json.loads(result.stdout)
 
     def test_preassessment_disk_drift_is_refused_without_claiming_queue(self):
-        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks", "materialization", "materialization_checks", "retrieval", "retrieval_evaluation", "retrieval_assessment"):
+        for module in ("assertions", "source_span_checks", "representation_checks", "store", "improvement", "manifests", "manifest_checks", "transforms", "transformation_checks", "graph_views", "graph_view_checks", "materialization", "materialization_checks", "retrieval", "retrieval_evaluation", "retrieval_assessment", "retrieval_contracts", "retrieval_indexing"):
             with self.subTest(module=module):
                 outcome = self._isolated_drift_check("before_assessment", module)
                 self.assertEqual("refused", outcome["result"])

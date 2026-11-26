@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from epiphysics import improvement, retrieval, retrieval_assessment, retrieval_evaluation
 from epiphysics.store import Ledger, canonical, digest
+from test_retrieval_assessment import make_comparison_study, diverge_html_repeat
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "improvement"
 
@@ -374,6 +375,87 @@ class RetrievalImprovementTests(unittest.TestCase):
         self.assertIn("dispatcher's prepared request", failure["message"])
         self.assertEqual([], self.ledger.events("improvement_completed"))
         self.assertEqual([], improvement.status(self.ledger)["unfinished_runs"])
+
+
+class ComparisonImprovementTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        evidence = Ledger(self.root / "evidence")
+        try:
+            self.study = make_comparison_study(self.root, evidence)
+        finally:
+            evidence.close()
+        self.ledger = Ledger(self.root / "improvement")
+        self.addCleanup(self.ledger.close)
+        self.policy = json.loads((EXAMPLES / "policy.json").read_text())
+        self.policy["retrieval_study"] = self.study["contract"]
+        self.policy_path = self.root / "policy.json"
+        self.policy_path.write_text(canonical(self.policy))
+
+    def assess(self, key="comparison", after="initial"):
+        return improvement.assess(self.ledger, self.policy_path, EXAMPLES / "entities.json", "reference", key,
+            after_step=after, completed_work="Complete the fixed owned comparison", retrieval_study_path=self.study["path"])
+
+    def test_completed_comparison_advances_coverage_even_with_remaining_gaps(self):
+        with fast_contracts():
+            result = self.assess()
+        self.assertEqual("assessed", result["result"], result)
+        actual = result["report"]["actual_retrieval"]
+        self.assertGreater(actual["comparison"]["delta"]["metrics"]["gold_span_recall_at_k"]["1"]["change"], 0)
+        self.assertLess(actual["quality"]["runs"][2]["metrics"]["gold_span_recall_at_k"]["5"]["value"], 1)
+        self.assertEqual("prepare_retrieval_coverage_evaluation", result["next_step"]["action"])
+        self.assertIsNone(result["next_step"]["target"])
+        self.assertEqual("raw", result["next_step"]["evidence"]["comparison"]["operational_baseline"])
+        count = len(self.ledger.events())
+        self.assertEqual(result, self.assess())
+        self.assertEqual(count, len(self.ledger.events()))
+        # Selection is deliberately independent of the observed development
+        # gain: controlled tie/regression reports must consume the same task.
+        for change in (-1.0, 0.0, 1.0):
+            report = deepcopy(result["report"])
+            report["actual_retrieval"]["comparison"]["delta"]["metrics"]["gold_span_recall_at_k"]["1"]["change"] = change
+            self.assertEqual("prepare_retrieval_coverage_evaluation", improvement.select_next(report, "next")["action"])
+        for metric, action in (("source_span_resolution", "repair_source_span_assertions"),
+                               ("representation_manifest_preservation", "repair_representation_manifests"),
+                               ("output_manifest_materialization", "repair_transform_materialization")):
+            report = deepcopy(result["report"])
+            report["metrics"][metric] = 0
+            self.assertEqual(action, improvement.select_next(report, "priority")["action"])
+
+    def test_valid_unreproduced_comparison_queues_repair_without_delta(self):
+        evidence = Ledger(self.root / "evidence")
+        try:
+            diverge_html_repeat(self.study, evidence)
+        finally:
+            evidence.close()
+        self.policy_path.write_text(canonical(self.policy))
+        with fast_contracts():
+            result = self.assess()
+        self.assertEqual("assessed", result["result"], result)
+        self.assertEqual(0, result["report"]["metrics"]["retrieval_baseline_reproducibility"])
+        self.assertEqual("repair_retrieval_reproducibility", result["next_step"]["action"])
+        self.assertIsNone(result["report"]["actual_retrieval"]["comparison"]["delta"])
+        self.assertEqual(4, len(result["report"]["actual_retrieval"]["quality"]["runs"]))
+
+    def test_protocol_mismatch_is_durable_failure_without_quality(self):
+        self.study["protocol"].write_bytes(b"changed protocol")
+        result = self.assess()
+        self.assertEqual("failed", result["result"])
+        self.assertNotIn("report", result)
+        self.assertEqual("diagnose_failed_assessment", result["next_step"]["action"])
+        self.assertEqual([], self.ledger.events("improvement_completed"))
+
+    def test_real_fixed_dispatch_retains_protocol_and_all_four_runs(self):
+        result = improvement.dispatch(self.ledger.root, self.policy_path, EXAMPLES / "entities.json", "reference", "dispatched-comparison",
+            completed_work="Dispatch the fixed owned comparison", retrieval_study_path=self.study["path"], timeout_seconds=40)
+        self.assertEqual("assessed", result["result"], result["dispatch"])
+        actual = result["assessment"]["report"]["actual_retrieval"]
+        self.assertEqual(4, actual["reproducibility"]["valid_runs"])
+        self.assertEqual("prepare_retrieval_coverage_evaluation", result["assessment"]["next_step"]["action"])
+        self.assertEqual(self.study["contract"]["protocol_hash"], actual["assessment_identity"]["protocol_hash"])
+        self.assertIn("retrieval-study:comparison_protocol", result["assessment"]["input_observations"])
 
 
 if __name__ == "__main__":

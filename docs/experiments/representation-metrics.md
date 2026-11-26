@@ -160,6 +160,14 @@ Candidate identity describes the historical retriever, dependency content, index
 
 See the [C2 execution record](../planning/runs/2026-11-25-retrieval-controller.md) for test/review status, the persistent handoff and remaining limitations. The example policy permits no higher spending or workload scope.
 
+## Fixed representation comparison: C3
+
+The [raw/HTML protocol](retrieval-html-comparison.md) preserves every C1 scoring definition and raw-window denominator while making the candidate/measurement dependency boundary explicit. Moving validation creates a new measurement implementation identity; matching old numerical scores is a migration bridge, not identity equivalence. A representation change can receive a paired descriptive delta only under the same frozen new measurement contract and after two distinct executions of each arm reproduce their maps, ordered results and evaluations.
+
+New candidate identity separates algorithm/recipe from the constructed projection. Execution IDs and the runner remain lineage; the shared mapping decoder remains a measurement dependency. A raw gold interval is still scored against returned raw windows, even where extraction removed bytes from the indexed text. Projected-text coverage would require a separate metric contract.
+
+Report all four run evaluations, supported/unsupported counts, empty reasons, per-question window/rank changes and the declared cost scopes. BM25 values across different indexed corpora are not comparable confidence scores. A valid differing repeat reports reproduction failure with no paired delta; invalid/incomplete evidence produces no quality summary. A valid completed comparison advances to fresh coverage for a gain, tie or regression. The simpler raw reference remains in use; no quality threshold or adoption rule is inferred from these twelve visible questions.
+
 ## Prediction, calibration and coverage
 
 For binary outcomes, use mean Brier loss `(p − y)²` or log loss `−[y log p + (1−y) log(1−p)]`, lower being better. CRPS compares a predictive cumulative distribution with a realized scalar outcome; its units follow the outcome. Proper scores reward truthful probabilities in expectation. Calibration compares probabilities with observed frequencies; interval coverage needs interval width alongside it. [Gneiting and Raftery (2007)](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)
