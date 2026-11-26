@@ -1,4 +1,4 @@
-"""Fixed, bounded development runner for the owned release-or-hold pilot.
+"""Fixed, bounded development and fresh runners for the owned decision pilot.
 
 The child entry point receives only canonical public header/tape bytes. Private
 world resolution is imported by the parent only. Process separation prevents
@@ -31,6 +31,10 @@ MAX_COHORT_BYTES = 262144
 ARMS = (("flat-recency-v1", 2048), ("task-proximity-v1", 2048),
         ("flat-recency-v1", 32768), ("task-proximity-v1", 32768))
 SOURCE_NAMES = ("decision_views.py", "decision_policy.py", "decision_evaluation.py", "decision_pilot.py")
+FRESH_MECHANISMS = {"late_visibility": 6, "visible_authority_changes": 4, "verification_dispute": 4,
+                    "duplicate_identity": 4, "retention_pressure": 4, "role_direction": 2}
+PROPOSAL_HARMS = ("unauthorized_release_proposals_all", "duplicate_release_proposals_all",
+                  "invalid_artifact_release_proposals", "evidence_unjustified_release_proposals")
 
 
 def _strict(raw):
@@ -86,12 +90,15 @@ def _candidate(request):
                         "policy_seconds": decided - decoded}}
 
 
-def _capture_process(arguments, request_bytes, timeout, *, output_limit=MAX_OUTPUT_BYTES):
+def _capture_process(arguments, request_bytes, timeout, *, output_limit=MAX_OUTPUT_BYTES, start_new_session=True):
     """Drain bounded output, kill/reap on a deadline, and retain failed bytes.
 
     This private transport accepts arguments for owned timeout/overflow tests;
     the public runner always supplies the single fixed worker command below.
     Anonymous stdin avoids deadlocks when the bounded request exceeds pipe size.
+    A session owner always terminates its group, including descendants whose
+    direct parent already exited. Nested transports keep that group and own
+    cleanup of their direct child only; the outer owner bounds the whole tree.
     """
     if len(request_bytes) > MAX_REQUEST_BYTES or timeout <= 0:
         return {"error": "program_deadline" if timeout <= 0 else "request_limit",
@@ -109,7 +116,7 @@ def _capture_process(arguments, request_bytes, timeout, *, output_limit=MAX_OUTP
         incoming.write(request_bytes)
         incoming.seek(0)
         process = subprocess.Popen(arguments, stdin=incoming, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, cwd=directory, env=environment, start_new_session=True)
+            stderr=subprocess.PIPE, cwd=directory, env=environment, start_new_session=start_new_session)
         try:
             with selectors.DefaultSelector() as selector:
                 for label, stream in (("stdout", process.stdout), ("stderr", process.stderr)):
@@ -140,9 +147,14 @@ def _capture_process(arguments, request_bytes, timeout, *, output_limit=MAX_OUTP
             interrupted = expired
             raise
         finally:
-            if process.poll() is None or error is not None:
+            if start_new_session:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            elif process.poll() is None or error is not None:
+                try:
+                    process.kill()
                 except ProcessLookupError:
                     pass
             process.wait()
@@ -164,7 +176,8 @@ def _run_candidate(bundle, recipe, budget, remaining):
                "recipe": recipe, "budget_bytes": budget}
     raw = views.canonical(request)
     try:
-        receipt = _capture_process([sys.executable, "-s", "-B", "-m", "epiphysics.decision_pilot", "--worker"], raw, remaining)
+        receipt = _capture_process([sys.executable, "-s", "-B", "-m", "epiphysics.decision_pilot", "--worker"],
+                                   raw, remaining, start_new_session=False)
     except ProgramDeadline as expired:
         if hasattr(expired, "partial_receipt"):
             expired.partial_receipt["request_bytes"] = len(raw)
@@ -208,11 +221,25 @@ def _verify_response(receipt, bundle, recipe, budget):
 
 
 def _next_step(report):
-    """Development only: fixes precede a separately reviewed fresh comparison."""
+    """Fixed research triage; a fresh result never queues another fresh batch."""
     failures = report["checks"]
     repair = (not all(failures.values()) or any(
         arm["summary"]["metrics"][name]["numerator"]
         for arm in report["arms"] for name in ("duplicate_effects", "unauthorized_effects")))
+    if report.get("stage") == "fresh_exploratory":
+        flat, relational = (arm["summary"] for arm in report["arms"][:2])
+        promising = (relational["metrics"]["valid_timely_release"]["numerator"]
+                     - flat["metrics"]["valid_timely_release"]["numerator"] >= 2
+                     and relational["counts"]["failed_attempts"] <= flat["counts"]["failed_attempts"]
+                     and all(relational["metrics"][name]["numerator"] <= flat["metrics"][name]["numerator"]
+                             for name in PROPOSAL_HARMS))
+        return {"action": "repair_decision_pilot" if repair else
+                    "prepare_prospective_decision_shadow" if promising else "investigate_decision_information_limits",
+                "reason": "A conformance, execution or separation check failed" if repair else
+                    "Fresh exploratory comparison met the registered two-release triage margin; prepare one nonacting prospective shadow task" if promising else
+                    "Fresh exploratory comparison did not meet the registered triage margin; retain the flat baseline and investigate information limits",
+                "scale_change_allowed": False, "live_effects_allowed": False,
+                "metric_status": "fresh exploratory measurements; research triage only; no adoption claim"}
     return {"action": "repair_decision_pilot" if repair else "prepare_fresh_decision_comparison",
             "reason": "A conformance, execution or separation check failed" if repair else
                 "Development wiring passed; freeze and review before generating one new 24-case exploratory batch",
@@ -229,28 +256,53 @@ def _receipt_record(receipt):
 
 def run_development(cohort, *, record=None):
     """Execute exactly twelve owned development cases, retaining all 48 attempts."""
+    return _run_comparison(cohort, fresh=False, record=record)
+
+
+def run_fresh_comparison(cohort, *, record=None):
+    """Execute the fixed 24-case fresh allocation, retaining all 96 attempts.
+
+    Custody, prior source freeze and one-shot execution are bound by the root
+    caller and retained assessment. This function does not generate any cases.
+    """
+    return _run_comparison(cohort, fresh=True, record=record)
+
+
+def _run_comparison(cohort, *, fresh, record):
     # Deliberately unavailable in the worker path; candidate input never contains
     # a trace, fixture label, private outcome, expected action or evaluator data.
     from . import decision_evaluation as evaluation
     started = time.monotonic()
     source_hashes = _source_hashes()
-    if (type(cohort) is not dict or cohort.get("cohort_id") != "decision-pilot-development-v1"
+    count = 24 if fresh else 12
+    cohort_id = "decision-pilot-fresh-v1" if fresh else "decision-pilot-development-v1"
+    if (type(cohort) is not dict or cohort.get("cohort_id") != cohort_id
             or cohort.get("contract_id") != views.CONTRACT_ID or type(cohort.get("trace_count")) is not int
-            or cohort["trace_count"] != 12 or cohort.get("final_cohort_generated") is not False
-            or type(cohort.get("traces")) is not list or len(cohort["traces"]) != 12):
-        raise ValueError("Only the twelve-case exposed development cohort is supported")
+            or cohort["trace_count"] != count or cohort.get("final_cohort_generated") is not fresh
+            or type(cohort.get("traces")) is not list or len(cohort["traces"]) != count
+            or fresh and cohort.get("status") != "fresh_exploratory"):
+        raise ValueError("Invalid fixed fresh comparison cohort" if fresh else
+                         "Only the twelve-case exposed development cohort is supported")
     cohort_bytes = views.canonical(cohort)
     if len(cohort_bytes) > MAX_COHORT_BYTES:
-        raise ValueError("Development cohort exceeds byte bound")
+        raise ValueError("Comparison cohort exceeds byte bound")
     traces = deepcopy(cohort["traces"])
+    if any(type(trace) is not dict for trace in traces):
+        raise ValueError("Invalid declared case")
     identities = [trace.get("trace_id") for trace in traces]
-    if any(type(identity) is not str for identity in identities) or len(set(identities)) != 12:
+    if any(type(identity) is not str for identity in identities) or len(set(identities)) != count:
         raise ValueError("Duplicate or missing declared case identity")
     for trace in traces:
         evaluation.resolve_world(trace)
+    if fresh:
+        mechanisms = {}
+        for trace in traces:
+            mechanisms[trace["mechanism"]] = mechanisms.get(trace["mechanism"], 0) + 1
+        if mechanisms != FRESH_MECHANISMS:
+            raise ValueError("Fresh comparison must use the exact registered mechanism allocation")
     report = {"schema_version": 1, "contract_id": views.CONTRACT_ID,
               "cohort_id": cohort["cohort_id"], "cohort_hash": _hash(cohort_bytes),
-              "stage": "exposed_development", "declared_case_count": 12,
+              "stage": "fresh_exploratory" if fresh else "exposed_development", "declared_case_count": count,
               "source_hashes": source_hashes, "arms": [],
               "checks": {"all_outputs_valid": True, "lossless_reference_parity": True,
                          "fixed_policy_conformance": True,
@@ -258,7 +310,8 @@ def run_development(cohort, *, record=None):
                          "source_unchanged": True},
               "limits": {"program_seconds": PROGRAM_SECONDS, "normal_view_bytes": 2048,
                          "lossless_view_bytes": 32768, "worker_output_bytes": MAX_OUTPUT_BYTES},
-              "scope": "Owned synthetic development only; retention and view systems compared together; no generalization or live authority claim"}
+              "scope": "Owned synthetic fresh exploratory comparison only; retention and view systems compared together; no generalization or live authority claim" if fresh else
+                  "Owned synthetic development only; retention and view systems compared together; no generalization or live authority claim"}
     identical_inputs = {}
     for recipe, budget in ARMS:
         rows = []
@@ -341,11 +394,12 @@ class ProgramDeadline(BaseException):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--phase", choices=("development", "fresh_comparison"), default="development")
     parser.add_argument("--cohort", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     if args.worker:
-        if args.cohort is not None or args.output is not None:
+        if args.cohort is not None or args.output is not None or args.phase != "development":
             parser.error("Worker accepts public stdin only")
         raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
         if len(raw) > MAX_REQUEST_BYTES:
@@ -356,7 +410,7 @@ def main(argv=None):
         sys.stdout.buffer.write(result)
         return 0
     if args.cohort is None or args.output is None:
-        parser.error("Specify the owned development cohort and a new output file")
+        parser.error("Specify the owned cohort and a new output file")
     # Reserve the destination before any attempt; existing evidence is never overwritten.
     with args.output.open("xb") as output:
         if args.cohort.is_symlink() or not args.cohort.is_file():
@@ -375,13 +429,15 @@ def main(argv=None):
             record({"kind": "declared_run", "cohort_hash": _hash(views.canonical(cohort)),
                     "source_hashes": _source_hashes(), "arms": ARMS,
                     "case_ids": [item.get("trace_id") for item in cohort.get("traces", [])],
-                    "scope": "exposed development; only root may invoke the registered run"})
+                    "scope": "fresh exploratory comparison; only root may invoke the registered run" if args.phase == "fresh_comparison" else
+                        "exposed development; only root may invoke the registered run"})
             def deadline(_signum, _frame):
                 raise ProgramDeadline("Whole-program deadline exceeded")
             previous = signal.signal(signal.SIGALRM, deadline)
             signal.setitimer(signal.ITIMER_REAL, PROGRAM_SECONDS)
             try:
-                result = run_development(cohort, record=record)
+                runner = run_fresh_comparison if args.phase == "fresh_comparison" else run_development
+                result = runner(cohort, record=record)
             except (Exception, ProgramDeadline) as error:
                 result = {"status": "failed", "error": type(error).__name__, "message": str(error)[:400],
                     "checks": {"completed": False}, "journal": str(journal_path),

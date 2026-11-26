@@ -107,7 +107,8 @@ class DecisionControllerTests(unittest.TestCase):
                 improvement._check_decision_origin({"prepared": self.prepared, "error": None}, events, self.origin)
 
     def test_missing_decision_evidence_cannot_consume_decision_steps(self):
-        for action in ("prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison"):
+        for action in ("prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison",
+                       "prepare_prospective_decision_shadow", "investigate_decision_information_limits"):
             self.ledger.append("improvement_completed", {"run_key": "owned-" + action, "request": {"manifest": {}},
                 "next_step": {"id": self.origin, "state": "queued", "action": action}}, "owned-" + action)
             before = len(self.ledger.events())
@@ -117,6 +118,104 @@ class DecisionControllerTests(unittest.TestCase):
                         after_step=self.origin, completed_work="Owned omission control; no decision evidence")
             self.assertEqual(len(self.ledger.events()), before)
             self.assertEqual(improvement.status(self.ledger)["next_step"]["action"], action)
+
+    def fresh_origin(self, action="investigate_decision_information_limits"):
+        # A real local ledger envelope with synthetic study contents. These are
+        # wiring controls, not a reproduction or replacement of the C7 receipt.
+        prior = deepcopy(self.compact)
+        self.ledger.append("improvement_completed", {"run_key": "owned-development", "request": {"manifest": {}},
+            "report": {"decision_pilot": prior}, "assessment_identity": {"hash": "b" * 64},
+            "next_step": {"id": self.origin, "state": "queued", "action": "prepare_fresh_decision_comparison"}},
+            "owned-development-complete")
+        event = self.ledger.events()[-1]
+        self.compact.update(phase="fresh_comparison", stage="fresh_exploratory",
+            next_step={"action": action}, origin_transition={"event_id": event["id"], "event_hash": event["hash"],
+                "assessment_hash": "b" * 64, "decision_assessment_hash": "a" * 64})
+        self.prepared["artifacts"]["origin_transition"] = canonical(event).encode()
+        return event
+
+    def test_fresh_comparison_advances_from_exact_retained_predecessor(self):
+        self.fresh_origin()
+        with patch.object(improvement, "_check_decision_origin", wraps=improvement._check_decision_origin) as origins:
+            result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
+        self.assertGreaterEqual(origins.call_count, 4)
+        self.assertEqual(result["next_step"]["action"], "investigate_decision_information_limits")
+        self.assertIn("fresh exploratory", result["scope"])
+        self.assertNotIn("exposed decision-development", result["scope"])
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+        before = len(self.ledger.events())
+        self.assertEqual(self.run_assessment(), result)
+        self.assertEqual(len(self.ledger.events()), before)
+        self.assertTrue(self.ledger.verify()["valid"])
+
+    def test_fresh_signal_only_prepares_prospective_shadow(self):
+        self.fresh_origin("prepare_prospective_decision_shadow")
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "assessed")
+        self.assertEqual(result["next_step"]["action"], "prepare_prospective_decision_shadow")
+        self.assertFalse(result["next_step"]["scale_change_allowed"])
+
+    def test_fresh_origin_compares_full_event_not_only_identifiers(self):
+        event = self.fresh_origin()
+        event["body"]["request"]["manifest"]["forged-historical-source"] = "c" * 64
+        self.prepared["artifacts"]["origin_transition"] = canonical(event).encode()
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertIn("actual accepted development predecessor", result["message"])
+        self.measured.assert_not_called()
+
+    def test_fresh_origin_refuses_forged_identity_fields(self):
+        self.fresh_origin()
+        for field in ("event_id", "event_hash", "assessment_hash", "decision_assessment_hash"):
+            with self.subTest(field=field):
+                altered = deepcopy(self.prepared)
+                altered["report"]["origin_transition"][field] = "forged"
+                with self.assertRaisesRegex(ValueError, "actual accepted development predecessor"):
+                    improvement._check_decision_origin({"prepared": altered, "error": None}, self.ledger.events(), self.origin)
+
+    def test_fresh_origin_refuses_nonaccepted_or_failed_predecessor(self):
+        self.fresh_origin()
+        for change in ("failed-kind", "failed-check", "fresh-phase", "wrong-action"):
+            events = deepcopy(self.ledger.events())
+            event = events[-1]
+            if change == "failed-kind":
+                event["kind"] = "improvement_failed"
+            elif change == "failed-check":
+                event["body"]["report"]["decision_pilot"]["checks"]["owned_control"] = False
+            elif change == "fresh-phase":
+                event["body"]["report"]["decision_pilot"]["phase"] = "fresh_comparison"
+            else:
+                event["body"]["next_step"]["action"] = "investigate_decision_information_limits"
+            prepared = deepcopy(self.prepared)
+            prepared["artifacts"]["origin_transition"] = canonical(event).encode()
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "actual accepted development predecessor"):
+                improvement._check_decision_origin({"prepared": prepared, "error": None}, events, self.origin)
+
+    def test_fresh_historical_bytes_changed_before_completion_fail_durably(self):
+        event = self.fresh_origin()
+        def measure(prepared):
+            result = {"report": deepcopy(prepared["report"]), "artifacts": dict(prepared["artifacts"])}
+            changed = deepcopy(event)
+            changed["body"]["request"]["manifest"]["late-forgery"] = "e" * 64
+            prepared["artifacts"]["origin_transition"] = canonical(changed).encode()
+            return result
+        self.measured.side_effect = measure
+        result = self.run_assessment()
+        self.assertEqual(result["result"], "failed")
+        self.assertNotEqual(result["next_step"]["action"], "investigate_decision_information_limits")
+        self.assertEqual(improvement.status(self.ledger)["unfinished_runs"], [])
+
+    def test_development_cannot_consume_fresh_or_fresh_repair(self):
+        self.fresh_origin()
+        self.compact.update(phase="development", stage="exposed_development")
+        for action in ("prepare_fresh_decision_comparison", "repair_decision_pilot",
+                       "prepare_prospective_decision_shadow", "investigate_decision_information_limits"):
+            events = deepcopy(self.ledger.events())
+            events[-1]["body"]["next_step"]["action"] = action
+            events[-1]["body"]["report"]["decision_pilot"]["phase"] = "fresh_comparison"
+            with self.subTest(action=action), self.assertRaisesRegex(ValueError, "Development"):
+                improvement._check_decision_origin({"prepared": self.prepared, "error": None}, events, self.origin)
 
     def test_result_change_at_completion_is_not_accepted(self):
         altered = deepcopy(self.compact)

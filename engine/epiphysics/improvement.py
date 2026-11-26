@@ -118,16 +118,41 @@ def _check_decision_origin(preparation, events, after_step):
     previous = transitions[-1]["body"]["next_step"] if transitions else None
     if preparation is None:
         if (previous is not None and previous["id"] == after_step and previous["action"] in {
-                "prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison"}):
+                "prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison",
+                "prepare_prospective_decision_shadow", "investigate_decision_information_limits"}):
             raise ValueError("This queued decision step requires its decision evidence; a generic assessment cannot complete it")
         return
     if preparation["error"] is not None:
         return
     report = preparation["prepared"]["report"]
     if (report["origin"]["step_id"] != after_step or previous is None or previous["id"] != after_step
-            or previous.get("state") != "queued"
-            or previous["action"] not in {"prepare_control_exchange_decision_pilot", "repair_decision_pilot"}):
+            or previous.get("state") != "queued"):
         raise ValueError("Decision study must bind the currently queued decision-pilot step")
+    if report.get("phase") == "development":
+        if previous["action"] not in {"prepare_control_exchange_decision_pilot", "repair_decision_pilot"}:
+            raise ValueError("Development evidence cannot consume a fresh comparison or its successor")
+        if previous["action"] == "repair_decision_pilot" and transitions[-1]["body"].get(
+                "report", {}).get("decision_pilot", {}).get("phase") != "development":
+            raise ValueError("Development repair requires a development predecessor")
+        return
+    if report.get("phase") != "fresh_comparison":
+        raise ValueError("Unsupported checked decision phase")
+    try:
+        current = transitions[-1]
+        supplied = decision_assessment._json(preparation["prepared"]["artifacts"]["origin_transition"])
+        prior_pilot = current["body"]["report"]["decision_pilot"]
+        binding = report["origin_transition"]
+        if (current["kind"] != "improvement_completed" or canonical(current) != canonical(supplied)
+                or previous["action"] != "prepare_fresh_decision_comparison"
+                or prior_pilot.get("phase") != "development" or prior_pilot.get("status") != "checked"
+                or prior_pilot.get("stage") != "exposed_development"
+                or not prior_pilot.get("checks") or not all(prior_pilot["checks"].values())
+                or binding["event_id"] != current["id"] or binding["event_hash"] != current["hash"]
+                or binding["assessment_hash"] != current["body"]["assessment_identity"]["hash"]
+                or binding["decision_assessment_hash"] != prior_pilot["assessment_identity"]["hash"]):
+            raise ValueError("Fresh comparison must bind the actual accepted development predecessor")
+    except (KeyError, TypeError, IndexError) as error:
+        raise ValueError("Invalid historical decision origin binding") from error
 
 
 def _failed_retrieval_preparation(path, error):
@@ -298,10 +323,14 @@ def select_next(report, run_key):
     """Version-one transparent priority rule, not a calibrated utility predictor."""
     m = report["metrics"]
     pilot = report.get("decision_pilot")
-    if pilot is not None and (pilot.get("schema_version") != 1 or pilot.get("status") != "checked"
-            or pilot.get("phase") != "development" or pilot.get("stage") != "exposed_development"
-            or pilot.get("next_step", {}).get("action") not in {"repair_decision_pilot", "prepare_fresh_decision_comparison"}):
-        raise ValueError("Decision pilot must be independently checked before selecting its successor")
+    if pilot is not None:
+        phases = {"development": ("exposed_development", {"repair_decision_pilot", "prepare_fresh_decision_comparison"}),
+                  "fresh_comparison": ("fresh_exploratory", {"repair_decision_pilot",
+                      "prepare_prospective_decision_shadow", "investigate_decision_information_limits"})}
+        expected = phases.get(pilot.get("phase"))
+        if (pilot.get("schema_version") != 1 or pilot.get("status") != "checked" or expected is None
+                or pilot.get("stage") != expected[0] or pilot.get("next_step", {}).get("action") not in expected[1]):
+            raise ValueError("Decision pilot must be independently checked before selecting its successor")
     ready = report.get("coverage_preparation")
     if ready is not None and (ready.get("schema_version") != 3 or ready.get("phase") != "preparation" or ready.get("status") != "ready"):
         raise ValueError("Coverage readiness must be validated before choosing a successor")
@@ -341,9 +370,13 @@ def select_next(report, run_key):
         ("repair_transform_materialization", "output_manifest_materialization", 1, "increase", m.get("output_manifest_materialization") != 1,
          "Actual output materialization failed or lacks a binding, ancestry, forecast-consumer, atomicity or replay check; inspect materialization_checks diagnostics."),
         ("repair_decision_pilot", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_decision_pilot",
-         "Retained development attempts failed a decision conformance or execution check. Repair before interpreting representation quality."),
+         "Retained decision attempts failed a conformance or execution check. Preserve the evidence and diagnose before another separately reviewed protocol; no automatic rerun."),
         ("prepare_fresh_decision_comparison", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_fresh_decision_comparison",
          "The exposed development comparison is validated. Freeze and independently review the next protocol before one new exploratory cohort; no live effects or scale change."),
+        ("prepare_prospective_decision_shadow", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_prospective_decision_shadow",
+         "The one fresh scripted comparison met its descriptive triage rule. Prepare one nonacting prospective question with new dated receipts; this authorizes no live action, spending or scale change."),
+        ("investigate_decision_information_limits", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "investigate_decision_information_limits",
+         "Retain the simpler baseline. Explain the paired losses and information limits, then specify a new informative question; do not tune or rerun these exposed cases."),
         ("execute_fresh_coverage_baseline", None, None, "increase", ready is not None,
          "Reviewed fresh coverage inputs are frozen. Execute the two declared raw-baseline runs; retrieval quality remains unmeasured."),
         ("prepare_focused_support_followup", None, None, "increase", followup,
@@ -414,10 +447,14 @@ def select_next(report, run_key):
             "bindings": support_probe["bindings"], "reproducibility": support_probe["reproducibility"],
             "assessment_identity": support_probe["assessment_identity"],
             "scope": "Fixed visible-case diagnostic with two top-five selections; no cohort quality or adoption claim"}
-    if pilot is not None and chosen["action"] in {"repair_decision_pilot", "prepare_fresh_decision_comparison"}:
+    if pilot is not None and chosen["action"] in {"repair_decision_pilot", "prepare_fresh_decision_comparison",
+                                                "prepare_prospective_decision_shadow", "investigate_decision_information_limits"}:
         decision["evidence"] = {"study_id": pilot["study_id"], "origin": pilot["origin"],
             "assessment_identity": pilot["assessment_identity"], "checks": pilot["checks"],
-            "scope": "Twelve exposed synthetic cases; useful development evidence, not representative capability or live authority"}
+            "phase": pilot["phase"],
+            "scope": ("One fixed24-case exploratory batch; descriptive research triage only, no adoption, live authority or automatic repeat"
+                      if pilot["phase"] == "fresh_comparison" else
+                      "Twelve exposed synthetic cases; useful development evidence, not representative capability or live authority")}
     if actual is not None and chosen["metric"] is not None and chosen["metric"].startswith("retrieval_"):
         decision["measurement_contract_hash"] = actual["measurement_contract_identity"]["hash"]
         decision["candidate_hash"] = actual["candidate_identity"]["hash"]
@@ -698,7 +735,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": ("Synthetic conformance checks plus one validated exposed decision-development comparison; no representative capability or live control claim. "
+                  "scope": ("Synthetic conformance checks plus one validated fixed24-case fresh exploratory comparison; no automatic repeat, representative capability or live control claim. "
+                            if decision_actual is not None and decision_actual.get("phase") == "fresh_comparison" else
+                            "Synthetic conformance checks plus one validated exposed decision-development comparison; no representative capability or live control claim. "
                             if decision_actual is not None else
                             "Synthetic conformance checks plus one checked two-clause development diagnostic; no new cohort quality, adoption or control-action claim. "
                             if actual is not None and actual.get("phase") == "support_probe" else
@@ -727,7 +766,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                 _check_decision_origin(decision_preparation, _checked_events(ledger), after_step)
                 checked_decision = decision_assessment.assess_prepared_decision_study(decision_preparation["prepared"])["report"]
                 if canonical(checked_decision) != canonical(decision_actual):
-                    raise ValueError("Decision development evidence changed before completion")
+                    raise ValueError("Decision evidence changed before completion")
                 if time.monotonic() - started > policy["max_assessment_seconds"]:
                     raise ValueError("Decision revalidation exceeded the assessment elapsed-time budget")
             if actual is not None and actual.get("phase") in ("support_diagnosis", "support_probe"):
