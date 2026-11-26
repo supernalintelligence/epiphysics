@@ -15,7 +15,7 @@ A delivered file and a claim that it is correct are different things. In the [re
 
 The next test uses a real, small maintenance task: inventory the links in one committed theory document. Its purpose is to determine whether a delivered inventory can be checked against fixed source bytes and criteria. It does not test the scientific truth of the document or establish a reliable verifier for every kind of artifact.
 
-**Status: protocol under implementation.** Protocol preparation, task registration and delivery evaluation are separate steps. No real delivery result is reported here.
+**Status: the first registered delivery passed its separate check and independent review.** The [delivery result](results/2026-11-26-first-dated-delivery.md) covers one inventory with 20 supported links and 28 exclusions. Preparation, registration and delivery evaluation have separate records; the result establishes conformance to these criteria for one artifact, not general verifier reliability. The protocol below remains the fixed basis of that evaluation.
 
 ## An ordinary task with a checkable result
 

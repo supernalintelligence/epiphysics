@@ -1,27 +1,27 @@
 {
   "recordDate": "2026-11-25",
-  "heading": "Three invalid deliveries had passed verification.",
-  "scope": "A diagnosis of 96 saved simulated attempts separates missing evidence from incorrect quality claims. Keeping more information recovered missed opportunities, but did not make the verification claims reliable.",
+  "heading": "A real delivery, checked against its source.",
+  "scope": "One program produced a link inventory. A separately implemented checker and independent review assessed its original submission against the frozen document.",
   "evidence": [
     {
       "id": "coverage",
-      "href": "/experiments/results/2026-11-26-decision-information-limits",
+      "href": "/experiments/results/2026-11-26-first-dated-delivery",
       "requiredText": [
-        "Each compact method lost two observable opportunities through bounded retention."
+        "The first registered inventory accounted for all 20 supported links and 28 excluded constructs in one committed theory document."
       ]
     },
     {
       "id": "diagnosis",
-      "href": "/experiments/results/2026-11-26-decision-information-limits",
+      "href": "/experiments/results/2026-11-26-first-dated-delivery",
       "requiredText": [
-        "Four of 22 eligible verification claims disagreed with stipulated artifact validity."
+        "Its original submission passed the separate checker and independent review."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/results/2026-11-26-decision-information-limits",
+      "href": "/experiments/results/2026-11-26-first-dated-delivery",
       "requiredText": [
-        "The accepted diagnosis selects preparation of a dated evidence-quality protocol."
+        "The completed delivery selected preparation of the public research map as its next step."
       ]
     }
   ],
@@ -29,29 +29,29 @@
     {
       "id": "coverage",
       "status": "completed",
-      "label": "Information lost in storage",
-      "value": "2 missed by each",
-      "measure": "observable opportunities in either compact method",
-      "summary": "The two methods missed different opportunities. Both complete-record controls recovered them; the original comparison remains tied.",
-      "linkLabel": "Read the retention diagnosis"
+      "label": "Coverage of the source",
+      "value": "20 links",
+      "measure": "supported local links accounted for",
+      "summary": "The inventory also identified 28 excluded constructs. All 20 local targets exist in the retained repository tree; rendered links and headings remain untested.",
+      "linkLabel": "Inspect the scope and evidence"
     },
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "Verification and outcome",
-      "value": "4 of 22",
-      "measure": "eligible claims disagreed with stipulated validity",
-      "summary": "Three positive claims accompanied invalid artifacts. Every method accepted those three simulated deliveries. An authenticated claim did not establish quality.",
-      "linkLabel": "Inspect the verification evidence"
+      "label": "The first submission",
+      "value": "1 artifact",
+      "measure": "passed the separate check and independent review",
+      "summary": "The original bytes and producer claim were preserved before checking. This is one scoped result, not an estimate of general reliability.",
+      "linkLabel": "Read the first-delivery result"
     }
   ],
-  "limits": "One hand-designed synthetic batch, diagnosed from retained evidence without rerunning a candidate. These frequencies do not estimate real verifier performance. Local hashes establish consistency, not an independent witness of time or truth.",
+  "limits": "One document, one artifact, limited Markdown syntax. Quality, authority and time assurance are separate: verifier and adjudicator authority remain unmeasured, and no independent timestamp witness was recorded.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "What evidence makes a delivery checkable?",
-    "description": "Prepare one future artifact delivery with fixed acceptance criteria, exact contents, and a separately implemented quality check.",
-    "budget": "Retain who made each claim, what it concerned, and when it was available. Preparation does not establish predictive benefit or authorize live exchange.",
-    "linkLabel": "Read the result and next question"
+    "question": "What supports each research claim?",
+    "description": "Build a public map that connects claims to their sources, results, qualifications and open questions. Make every displayed relationship readable without using the graph.",
+    "budget": "Start with reviewed public records, accurate links and keyboard access. Measure useful evidence exploration before optimizing reach.",
+    "linkLabel": "See why this comes next"
   }
 }
