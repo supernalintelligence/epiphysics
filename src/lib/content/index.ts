@@ -1,6 +1,8 @@
 import path from 'path';
 import { logger } from '../logger';
 import { cache } from 'react';
+// Next's App Router supplies React's canary cache API on the server.
+import type {} from 'react/canary';
 import NodeCache from 'node-cache';
 import fs from 'fs';
 
@@ -245,4 +247,4 @@ export const getCachedSections = cache(getSections);
 // Function to clear cache when content changes
 export function clearContentCache() {
   contentCache.flushAll();
-} 
+}
