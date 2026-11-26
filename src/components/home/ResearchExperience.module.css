@@ -21,6 +21,26 @@
 .caption { font-size: .8125rem; color: var(--muted); padding: 0 22px 20px; margin: 0; line-height: 1.5; }
 .status { display: flex; gap: 16px 38px; flex-wrap: wrap; padding: 20px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: .875rem; color: var(--muted); }
 .status strong { color: var(--ink); font-weight: 500; }
+.evidence { padding: 28px 0 38px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); scroll-margin-top: 90px; }
+.evidenceTop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; color: var(--muted); font-size: .875rem; margin-bottom: 28px; }
+.evidenceTop p { margin: 0; }
+.evidence h2 { max-width: 850px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.875rem, 2.8vw, 2.5rem); font-weight: 400; line-height: 1.2; letter-spacing: -.025em; margin: 0 0 18px; }
+.resultRows { margin-top: 30px; }
+.resultRow { display: grid; grid-template-columns: 150px 1fr 1.55fr; gap: 24px 36px; align-items: start; padding: 28px 0; border-top: 1px solid var(--rule); }
+.resultLabel h3 { margin: 0 0 4px; font-size: 1rem; line-height: 1.5; font-weight: 500; }
+.resultLabel span { color: var(--muted); font-size: .875rem; }
+.resultMeasure strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 2rem; font-weight: 400; line-height: 1.2; margin-bottom: 10px; }
+.resultMeasure p, .resultDetail p { margin: 0; }
+.resultMeasure p { max-width: 260px; line-height: 1.5; }
+.resultDetail p, .nextQuestion p { color: var(--muted); }
+.resultDetail a, .nextQuestion a { display: inline-block; color: var(--accent); margin-top: 12px; }
+.evidenceLimits { max-width: 900px; border-top: 1px solid var(--rule); padding-top: 20px; margin: 0; color: var(--muted); font-size: .9375rem; }
+.nextQuestion { display: grid; grid-template-columns: 150px 1fr; gap: 24px 36px; padding: 28px 30px; margin-top: 30px; background: #f5f7f3; }
+.nextQuestion .nextLabel { font-size: .875rem; line-height: 1.6; color: var(--accent); margin: 0; }
+.nextQuestion h3 { font-size: 1.25rem; line-height: 1.4; font-weight: 500; margin: 0 0 12px; }
+.nextQuestion p { margin: 0 0 12px; }
+.nextQuestion a { margin-top: 0; }
+.workStatus { font-size: .875rem; color: var(--muted); }
 .section { padding: 58px 0; }
 .section h2, .dark h2, .closing h2 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.875rem, 2.6vw, 2.5rem); line-height: 1.2; letter-spacing: -.025em; font-weight: 400; margin: 0 0 20px; }
 .steps { display: flex; flex-wrap: wrap; gap: 0 24px; margin: 28px 0; border-bottom: 1px solid var(--rule); }
@@ -82,6 +102,9 @@
   .hero { grid-template-columns: 1fr; padding: 40px 0; gap: 28px; }
   .canvas { height: 300px; }
   .section { padding: 42px 0; }
+  .resultRow { grid-template-columns: 130px 1fr; gap: 14px 24px; }
+  .resultDetail { grid-column: 2; }
+  .nextQuestion { grid-template-columns: 1fr; gap: 12px; padding: 24px; }
   .steps { gap: 0 18px; }
   .split, .presentationGrid { grid-template-columns: 1fr; gap: 28px; }
   .presentationGrid { min-height: 0; }
@@ -92,6 +115,12 @@
 }
 @media(max-width: 480px) {
   .entry, .card { grid-template-columns: 1fr; gap: 12px; }
+  .resultRow { grid-template-columns: 1fr; gap: 16px; }
+  .resultLabel { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+  .resultLabel h3 { margin: 0; }
+  .resultDetail { grid-column: auto; }
+  .resultMeasure p { max-width: none; }
+  .nextQuestion { padding: 22px 20px; }
   .card p { grid-column: auto; }
   .entryTime span { display: inline; padding-left: 12px; }
   .entry dl { grid-template-columns: 1fr; gap: 2px; }
