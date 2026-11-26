@@ -64,6 +64,18 @@ jobs:
           assert report['metrics']['representation_manifest_preservation'] == 1
           print('Actual manifest API passed all 22 synthetic metadata and forecast-binding contracts.')
           PY
+      - name: Verify executed graph transformation capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.transformation_checks import run_transformation_checks
+
+          report = run_transformation_checks()
+          assert report['version'] == 'graph-transformation-probes-v2'
+          assert len(report['checks']) == 26 and report['all_passed'] is True
+          assert report['counts']['transformation_preservation'] == {'passed': 26, 'checks': 26}
+          assert report['metrics']['transformation_preservation'] == 1
+          print('Actual fixed graph operations passed all 26 synthetic transformation contracts.')
+          PY
       - name: Dispatch and inspect a real offline worker
         run: |
           python - <<'PY'
@@ -99,7 +111,11 @@ jobs:
               assert manifests['version'] == 'representation-manifest-probes-v2' and manifests['all_passed'] is True
               assert manifests['counts']['representation_manifest_preservation'] == {'passed': 22, 'checks': 22}
               assert result['assessment']['report']['metrics']['representation_manifest_preservation'] == 1
-              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe'} <= result['assessment']['request']['manifest'].keys()
+              transforms = result['assessment']['report']['transformation_checks']
+              assert transforms['version'] == 'graph-transformation-probes-v2' and transforms['all_passed'] is True
+              assert transforms['counts']['transformation_preservation'] == {'passed': 26, 'checks': 26}
+              assert result['assessment']['report']['metrics']['transformation_preservation'] == 1
+              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe', 'transforms', 'transformation_probe'} <= result['assessment']['request']['manifest'].keys()
               receipts = Path(receipt['receipt_directory'])
               assert receipts.parent == store / 'dispatches'
               assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
@@ -107,8 +123,8 @@ jobs:
               status = json.loads(inspected.stdout)
               assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
               assert status['next_step']['id'] == 'smoke:next'
-              assert status['next_step']['action'] == 'build_representation_transformations'
-              assert status['next_step']['metric'] == 'transformation_preservation'
+              assert status['next_step']['action'] == 'build_split_merge_transformations'
+              assert status['next_step']['metric'] == 'split_merge_preservation'
               assert status['next_step']['observed'] is None
               assert status['next_step']['scale_change_allowed'] is False
           print('Real offline worker completed; its verified successor remains queued.')

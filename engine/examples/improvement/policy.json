@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "offline-contracts-manifests-v3",
+  "version": "offline-contracts-graph-transforms-v4",
   "stage": "offline_fixture",
   "allow_scale_change": false,
   "max_assessment_seconds": 30,

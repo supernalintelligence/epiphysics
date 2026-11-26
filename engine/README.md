@@ -124,7 +124,50 @@ PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store
 PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store record manifest-forecast forecast.json
 ```
 
-Use the required/optional fields in the table above and existing ledger IDs. The generated manifest schema version and hashes are not caller-supplied fields. `epiphysics.manifest_checks.run_manifest_checks()` runs 22 actual-API checks on temporary synthetic ledgers under `representation-manifest-probes-v2`. `representation_manifest_preservation` is passed checks / 22; rows and counts appear in `report.manifest_checks`. They cover stable/distinct identity, retained inputs/cost claims, rejected late/corrupt/missing evidence, forecast binding and duplicate prevention. B2 transformations, declared loss and split/merge preservation remain separate work. Verified artifact execution and its receipts are also outside B1; this metric does not measure them.
+Use the required/optional fields in the table above and existing ledger IDs. The generated manifest schema version and hashes are not caller-supplied fields. `epiphysics.manifest_checks.run_manifest_checks()` runs 22 actual-API checks on temporary synthetic ledgers under `representation-manifest-probes-v2`. `representation_manifest_preservation` is passed checks / 22; rows and counts appear in `report.manifest_checks`. They cover stable/distinct identity, retained inputs/cost claims, rejected late/corrupt/missing evidence, forecast binding and duplicate prevention. This B1 metric does not measure executed transformations; the separate B2a contract below covers only fixed graph identity/projection. Split/merge and arbitrary artifact execution remain outside these slices.
+
+## B2a: executed graph identity and projection
+
+`epiphysics.transforms.execute_graph_transform(ledger, parent_manifest_id, recipe_observation_id, *, run_key)` executes one fixed local operation. It accepts no caller-supplied output and never evaluates retained code bytes. The parent must have B1 encoding `directed-graph` and schema `epiphysics.graph.v1`. Its model must contain explicit `entities` and `relations` arrays, with valid IDs, typed directed endpoints, epistemic basis and eligible evidence. Limits are 1 MB for the graph, 1,000 entities and 5,000 relations. Cycles, self-loops, opposite directions and different relation types between the same endpoints are allowed.
+
+The retained recipe has exactly these fields:
+
+```json
+{
+  "schema_version": 1,
+  "operation": "identity",
+  "config_observation_id": "CONFIG_OBSERVATION_ID",
+  "implementation_observation_id": "TRANSFORM_SOURCE_OBSERVATION_ID",
+  "implementation_sha256": "SHA256_OF_RETAINED_TRANSFORM_SOURCE",
+  "dependency_observations": {
+    "epiphysics.store": "STORE_SOURCE_OBSERVATION_ID",
+    "epiphysics.assertions": "ASSERTION_SOURCE_OBSERVATION_ID",
+    "epiphysics.manifests": "MANIFEST_SOURCE_OBSERVATION_ID"
+  },
+  "output_schema": "epiphysics.graph.v1"
+}
+```
+
+These placeholders must be replaced with actual observation IDs and a lowercase SHA-256 digest. Identity configuration is `{}`. Projection uses `operation: "project_entities"` with configuration `{"entity_ids":["existing-id"]}`; IDs must be unique and present in the parent, and an empty selection is allowed. Recipe, configuration, implementation and dependency observations must all belong to the parent snapshot. Retained implementation/dependency bytes must match the actual loaded fixed implementation; captures made after the cutoff cannot be backdated by a publication claim. Capture required artifacts before freezing the snapshot. Missing artifacts require a new eligible snapshot and parent, not a retrofit of old evidence.
+
+Identity copies the complete graph. Projection keeps selected entity records and edges whose two endpoints remain, preserving retained payload fields and parent array order. Other graph metadata is copied unchanged; this is not semantic reconciliation of metadata references. Unit labels and entity IDs are not converted or merged. The generated result contains:
+
+- `output_model`, `output_model_hash`, and `canonical_exact` (canonical JSON equality with the parent, not semantic equivalence).
+- `losses.removed_entities` and `removed_relations` with full removed records; `removed_evidence_ids` is the reference set absent from the entire output.
+- `source_to_output.entities`, mapping every parent ID to itself or null; relation mappings use directed typed `source_key`/`output_key` triples, or null for removal.
+- A stable `recipe_id` from operation, exact configuration/implementation/dependency content hashes and output schema. Parent instance IDs and observation IDs remain separately bound in request/input records.
+
+The operation appends `graph_transform_started`, then one `graph_transform_completed` or `graph_transform_rejected` event. Completion embeds the generated output and losses together; it does not create a new representation, manifest or forecast. Before completion, the implementation rechecks inputs and recomputes the result under the ledger write lock. The terminal record is capped at 10 MB, and each retained recipe/code/configuration artifact at 1 MB. Model calls and external spend are zero.
+
+An addressable invalid recipe/input produces a retained rejection with bounded diagnostics. Missing IDs, malformed invocation or incompatible runtime state can refuse before a claim; not every error produces a terminal record. An identical completed or rejected request replays its historical terminal event without rerunning, including after blob loss; this does not certify current blob integrity. Changed requests cannot reuse a run key. An unfinished start requires diagnosis, and concurrent identical keys cannot claim twice.
+
+```sh
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/path/to/evidence-store graph-transform transform.json
+```
+
+The bounded input JSON contains only `parent_manifest_id`, `recipe_observation_id` and `run_key`. Run keys use 1–100 letters, digits, dots, underscores or hyphens. Completed results/replays exit 0; recorded rejections print their event and exit 2. Use an evidence store, not the dedicated improvement store.
+
+`epiphysics.transformation_checks.run_transformation_checks()` runs `graph-transformation-probes-v2`: `transformation_preservation` is passed checks / 26. Rows, counts and diagnostics appear in `report.transformation_checks`. These checks execute the fixed API on fresh synthetic ledgers and include loss/mapping checks, immutable inputs, receipts, replay, rejected late/tampered inputs concurrent/interrupted claims, completion-boundary input changes and UTF-8-safe malformed-input rejection. The implementation trusts the local Python process, ledger and filesystem; it is not a security sandbox. It does not measure split/merge, arbitrary encodings, semantic/causal equivalence, model inference or independent execution attestation. B2b remains the separate split/merge capability.
 
 ## Assurance limits
 
@@ -204,15 +247,15 @@ PYTHONPATH=engine python3 -m epiphysics.improvement --store engine/.data/improve
 
 `--candidate` also accepts a local JSON answer file. The Python entry points are `assess(ledger, policy_path, suite_path, candidate, run_key, after_step="initial", completed_work="...")` with the last two arguments keyword-only, and `status(ledger)`. A completed-work description records the operator's claim; an assessment is not proof that a queued implementation task was performed. Switching from the degraded control to the oracle is not a demonstrated improvement in a learned system.
 
-Assessment records preserve input bytes, evaluator, assertion/manifest implementations, both capability probes, store and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
+Assessment records preserve input bytes, evaluator, assertion/manifest/transform implementations, all capability probes, store and controller bytes, their hashes, metrics, actual elapsed time, and the previous decision's subsequently observed metric. A single completion event contains both the result and its queued successor. Exclusive predecessor claims prevent two assessments from consuming the same step. Identical completed requests replay without new events; changed inputs cannot reuse a run key. Failures caught after an assessment claim retain any captured inputs and queue diagnosis. Invalid JSON or policy can be refused before claiming a step: no ledger transition is created and the queue is unchanged. When invoked through `dispatch`, that child refusal appears in its process receipts/output. Interrupted claims require inspection rather than blind replay.
 
 Each implementation module retains its source bytes and executing code object when imported. The controller pins those identities, checks the retained internal dependency bindings, and compares the loaded code with a fresh compilation of the retained source, without executing it. Assessments refuse module reloads, mismatched cached bytecode, and on-disk source drift before claiming work and before recording a passing completion. Use a fresh process after reviewed changes; discard a stale bytecode cache when the diagnostic identifies one. These checks detect accidental identity changes, not deliberate tampering by an operator who controls the process.
 
-The action selector is a transparent priority rule: repair temporal eligibility, evidence mapping, missing coverage, or the weakest family, then failing assertion or manifest probes. Assertion failures select `repair_source_span_assertions`; manifest failures select `repair_representation_manifests`. Only passing the 30 representation checks, both assertion metrics and `representation_manifest_preservation` advances to `build_representation_transformations` (Packet B2). `transformation_preservation` remains unmeasured; a B2 queue entry does not certify transformations or complete all of Packet B. Success probabilities and costs remain unestimated.
+The action selector is a transparent priority rule: repair temporal eligibility, evidence mapping, missing coverage, or the weakest family, then failing assertion, manifest or fixed-transform probes. Failures select `repair_source_span_assertions`, `repair_representation_manifests` or `repair_graph_transformations`. Only passing the 30 representation checks, assertion metrics, manifest metric and B2a transform metric advances to `build_split_merge_transformations` (B2b). `split_merge_preservation` remains unmeasured; the new queue entry does not complete B2b or all of Packet B. Success probabilities and costs remain unestimated.
 
-Previous targets are compared descriptively only when all eight measurement-contract hashes match: `suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, `store`, `manifests`, and `manifest_probe`. Changed contracts, including a transition from a run without the newly required module hashes, produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`. Candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
+Previous targets are compared descriptively only when all ten measurement-contract hashes match: `suite`, `evaluator`, `policy`, `assertions`, `source_span_probe`, `store`, `manifests`, `manifest_probe`, `transforms`, and `transformation_probe`. Changed contracts, including a transition from a run without the newly required module hashes, produce `prior_action_outcome.status: incomparable_contract_change`, with changed input names and no delta or `target_met`. Candidate or controller changes alone do not prohibit comparison. A missing prior measurement is `unmeasured`. Comparable changes still have no causal attribution. A perfect fixture result cannot authorize deployment, increased scale, paid calls, or promote an unmeasured capability.
 
-The supplied policy `offline-contracts-manifests-v3` permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
+The supplied policy `offline-contracts-graph-transforms-v4` permits only the offline fixture stage, requires all seven families, sets external spend to zero, and disables scale changes. Its assessment duration is an elapsed-time acceptance check, not process isolation. The atomic queue records what should happen next; **writing a queued step does not execute it**. An invoked worker or supervisor must perform the work and then record what actually happened.
 
 The supervisor checks progress every 30 minutes or three core steps, then continues ready authorized work while its session is active. These checkpoints are review boundaries, not session stop rules. The 15-minute heartbeat checks for an existing active job before dispatching; it must not duplicate that work. Worker time/output limits and zero external spend remain unchanged. Neither schedule configuration nor a durable queue promises an always-online agent.
 

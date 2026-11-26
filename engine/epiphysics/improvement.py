@@ -21,15 +21,16 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, manifest_checks, manifests, representation_checks, source_span_checks, store
+from . import assertions, manifest_checks, manifests, representation_checks, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
 from .manifest_checks import run_manifest_checks
+from .transformation_checks import run_transformation_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -39,6 +40,7 @@ _IMPLEMENTATIONS = {
            module.IMPLEMENTATION_CODE, module.IMPLEMENTATION_DEPENDENCIES)
     for name, module in {"evaluator": representation_checks, "assertions": assertions,
                          "manifests": manifests, "manifest_probe": manifest_checks,
+                         "transforms": transforms, "transformation_probe": transformation_checks,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -126,8 +128,10 @@ def select_next(report, run_key):
          "The actual assertion implementation failed or lacks a required history/conflict probe; inspect source_span_checks diagnostics."),
         ("repair_representation_manifests", "representation_manifest_preservation", 1, "increase", m.get("representation_manifest_preservation") != 1,
          "The actual manifest implementation failed or lacks a required identity, artifact, or forecast-binding probe; inspect manifest_checks diagnostics."),
-        ("build_representation_transformations", "transformation_preservation", 1, "increase", True,
-         "Representation contracts and actual assertion and manifest probes pass. Implement and test representation transformations (Packet B2); transformation preservation remains unmeasured."),
+        ("repair_graph_transformations", "transformation_preservation", 1, "increase", m.get("transformation_preservation") != 1,
+         "The actual fixed graph operations failed or lack an execution, preservation, loss, or receipt probe; inspect transformation_checks diagnostics."),
+        ("build_split_merge_transformations", "split_merge_preservation", 1, "increase", True,
+         "Representation contracts and actual assertion, manifest, and fixed graph-operation probes pass. Implement and test split/merge transformations (Packet B2b); split/merge preservation remains unmeasured."),
     ]
     ranked = [{"action": a, "metric": metric, "observed": m.get(metric), "target": target,
                "direction": direction, "eligible": eligible, "reason": reason,
@@ -136,7 +140,7 @@ def select_next(report, run_key):
     chosen = next(c for c in ranked if c["eligible"])
     return {"id": f"{run_key}:next", "state": "queued", **chosen,
             "family": worst if chosen["action"] == "repair_weakest_entity_family" else None,
-            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion and manifest probes, then missing capability",
+            "selection_rule": "integrity, evidence, coverage, weakest family, actual assertion, manifest and fixed graph probes, then missing capability",
             "forecast_kind": "target and directional hypothesis; probability and cost unestimated",
             "candidate_actions": ranked, "scale_change_allowed": False}
 
@@ -144,7 +148,7 @@ def select_next(report, run_key):
 def _forecast_result(previous, report, previous_manifest, current_manifest):
     metric = previous.get("metric")
     if previous_manifest is not None:
-        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe")
+        changed = [name for name in ("suite", "evaluator", "policy", "assertions", "source_span_probe", "store", "manifests", "manifest_probe", "transforms", "transformation_probe")
                    if previous_manifest.get(name) != current_manifest.get(name)]
         if changed:
             return {"status": "incomparable_contract_change", "changed_inputs": changed,
@@ -253,6 +257,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         manifest_probe = run_manifest_checks()
         report["manifest_checks"] = manifest_probe
         report["metrics"].update(manifest_probe["metrics"])
+        transformation_probe = run_transformation_checks()
+        report["transformation_checks"] = transformation_probe
+        report["metrics"].update(transformation_probe["metrics"])
         _implementation_inputs()
         elapsed = time.monotonic() - started
         if elapsed > policy["max_assessment_seconds"]:
@@ -262,7 +269,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": "Synthetic conformance assessment; no execution, deployment or scale promotion"}
+                  "scope": "Synthetic conformance assessment with fixed local checks; queued builds, deployment and scale promotion remain supervised"}
         # Completion and successor are one atomic ledger event, never two separate writes.
         ledger.append("improvement_completed", result, f"improvement:{run_key}:complete", exclusive=True)
         return result
