@@ -334,6 +334,8 @@ The supervisor checks progress every 30 minutes or three core steps, then contin
 
 Retained support failures can now use the schema-3 `support_diagnosis` phase. It checks original receipts and exact source intervals, retains independent semantic review as attributed claims, and binds the result to the actual queued predecessor. A checked diagnosis records follow-up preparation or clarification atomically; it does not rerun retrieval or emit a new quality score. The [study instructions](examples/retrieval/README.md#diagnose-a-retained-support-gap) describe exact additional fields, review categories and replay limits.
 
+The subsequent `support_probe` phase accepts two fixed clause-query executions from that queued preparation. It verifies the pre-execution envelope, each exact request, the inherited evidence boundary and actual caller receipts before comparing results. The report remains a separate development diagnostic; reproduced outcomes select decision-pilot preparation, disagreement selects repair, and incomplete evidence fails with retained inputs. See the [fixed-probe instructions](examples/retrieval/README.md#accept-a-fixed-clause-probe).
+
 ## Dispatching a real assessment worker
 
 `dispatch` starts a separate Python process that executes the assessment program and waits for its result. Use a fresh dedicated store for this example:

@@ -23,7 +23,7 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, source_span_checks, store, transformation_checks, transforms
+from . import assertions, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, retrieval_probe, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
@@ -34,7 +34,7 @@ from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis)
+    for module in (assertions, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis, retrieval_probe)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -52,6 +52,7 @@ _IMPLEMENTATIONS = {
                          "retrieval_contracts": retrieval_contracts, "retrieval_indexing": retrieval_indexing,
                          "retrieval_coverage": retrieval_coverage,
                          "retrieval_diagnosis": retrieval_diagnosis,
+                         "retrieval_probe": retrieval_probe,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
 }
@@ -124,11 +125,13 @@ def _check_diagnosis_origin(preparation, events, after_step):
         return
     artifacts = preparation["prepared"]["artifacts"]
     request = retrieval_assessment._json(artifacts["request"])
-    if request.get("phase") != "support_diagnosis":
+    phase = request.get("phase")
+    if phase not in ("support_diagnosis", "support_probe"):
         return
     try:
         contract = retrieval_assessment._json(artifacts["declared_contract"])
-        supplied = retrieval_assessment._diagnosis_artifacts(artifacts, contract)
+        supplied = (retrieval_assessment._probe_artifacts(artifacts, contract) if phase == "support_probe"
+                    else retrieval_assessment._diagnosis_artifacts(artifacts, contract))
         transitions = [event for event in events if event["kind"] in TRANSITIONS]
         current = transitions[-1] if transitions else None
         if (current is None or current["kind"] != "improvement_completed"
@@ -136,12 +139,23 @@ def _check_diagnosis_origin(preparation, events, after_step):
                 or contract["origin_transition"] != {"id": current["id"], "hash": current["hash"]}):
             raise ValueError("Diagnosis origin must equal the actual completed predecessor")
         step = current["body"]["next_step"]
-        actual = current["body"]["report"]["actual_retrieval"]
-        if (step["id"] != after_step or contract["origin_step_id"] != after_step
-                or step.get("state") != "queued" or step.get("action") != "inspect_fresh_support_failures"
-                or actual.get("schema_version") != 3 or actual.get("phase") != "evaluation"
-                or actual.get("status") != "completed" or actual["reproducibility"]["value"] != 1):
-            raise ValueError("Diagnosis origin must be the queued reproduced coverage failure inspection")
+        if step["id"] != after_step or contract["origin_step_id"] != after_step or step.get("state") != "queued":
+            raise ValueError("Diagnosis origin must be the current queued predecessor")
+        if phase == "support_probe":
+            actual = current["body"]["report"]["support_diagnosis"]
+            if (step.get("action") != "prepare_focused_support_followup"
+                    or actual.get("schema_version") != 3 or actual.get("phase") != "support_diagnosis"
+                    or actual.get("status") != "checked" or actual.get("contract_id") != retrieval_diagnosis.CONTRACT_ID
+                    or actual["machine_findings"]["deferred_question_ids"]
+                    or not actual["semantic_review"]["cases"]
+                    or any(case["category"] != "retrieval_gap" for case in actual["semantic_review"]["cases"])):
+                raise ValueError("Support probe origin must queue follow-up from checked retrieval gaps")
+        else:
+            actual = current["body"]["report"]["actual_retrieval"]
+            if (step.get("action") != "inspect_fresh_support_failures"
+                    or actual.get("schema_version") != 3 or actual.get("phase") != "evaluation"
+                    or actual.get("status") != "completed" or actual["reproducibility"]["value"] != 1):
+                raise ValueError("Diagnosis origin must be the queued reproduced coverage failure inspection")
     except (KeyError, TypeError, IndexError) as error:
         raise ValueError("Invalid diagnosis origin binding") from error
 
@@ -253,6 +267,13 @@ def select_next(report, run_key):
         raise ValueError("Support diagnosis must be checked before choosing a successor")
     followup = diagnosis is not None and not diagnosis["machine_findings"]["deferred_question_ids"] and all(
         case["category"] == "retrieval_gap" for case in diagnosis["semantic_review"]["cases"])
+    support_probe = report.get("support_probe")
+    if support_probe is not None and (support_probe.get("schema_version") != 3
+            or support_probe.get("phase") != "support_probe" or support_probe.get("status") != "completed"
+            or support_probe.get("contract_id") != retrieval_probe.CONTRACT_ID
+            or type(support_probe.get("reproducibility", {}).get("value")) is not int
+            or support_probe["reproducibility"]["value"] not in (0, 1)):
+        raise ValueError("Support probe must be checked before choosing a successor")
     worst = min(report["families"], key=lambda f: (report["families"][f]["accuracy"], f))
     choices = [
         ("repair_time_eligibility", "temporal_violations", 0, "decrease", m["temporal_violations"] > 0,
@@ -281,7 +302,11 @@ def select_next(report, run_key):
          "All failed support cases have reviewed retrieval gaps. Prepare a bounded follow-up declaration; no execution or quality improvement is authorized by this diagnosis."),
         ("clarify_support_diagnosis", None, None, "increase", diagnosis is not None and not followup,
          "Resolve deferred cases, annotation gaps or unresolved review before preparing a retrieval intervention."),
-        ("build_retrieval_baseline", "retrieval_baseline_reproducibility", 1, "increase", report.get("actual_retrieval") is None and ready is None and diagnosis is None,
+        ("repair_retrieval_reproducibility", None, None, "increase", support_probe is not None and support_probe["reproducibility"]["value"] == 0,
+         "The fixed diagnostic repeats disagree. Inspect their retained receipts; do not infer a support comparison or prepare a decision pilot."),
+        ("prepare_control_exchange_decision_pilot", None, None, "increase", support_probe is not None and support_probe["reproducibility"]["value"] == 1,
+         "The fixed two-clause diagnostic is complete. Prepare one separately bounded control/value-exchange decision pilot regardless of support recovery; no payment, control action or quality improvement follows from this result."),
+        ("build_retrieval_baseline", "retrieval_baseline_reproducibility", 1, "increase", report.get("actual_retrieval") is None and ready is None and diagnosis is None and support_probe is None,
          "Representation, assertion, manifest, graph-operation and output materialization probes pass. Build a source-backed reproducible retrieval baseline (Packet C); retrieval_baseline_reproducibility remains unmeasured."),
     ]
     actual = report.get("actual_retrieval")
@@ -336,6 +361,11 @@ def select_next(report, run_key):
             "deferred_question_ids": diagnosis["machine_findings"]["deferred_question_ids"],
             "cases": [{"question_id": case["question_id"], "category": case["category"]}
                 for case in diagnosis["semantic_review"]["cases"]], "quality": "unmeasured"}
+    if support_probe is not None and chosen["action"] in {"prepare_control_exchange_decision_pilot", "repair_retrieval_reproducibility"}:
+        decision["evidence"] = {"study_id": support_probe["study_id"], "origin": support_probe["origin"],
+            "bindings": support_probe["bindings"], "reproducibility": support_probe["reproducibility"],
+            "assessment_identity": support_probe["assessment_identity"],
+            "scope": "Fixed visible-case diagnostic with two top-five selections; no cohort quality or adoption claim"}
     if actual is not None and chosen["metric"] is not None and chosen["metric"].startswith("retrieval_"):
         decision["measurement_contract_hash"] = actual["measurement_contract_identity"]["hash"]
         decision["candidate_hash"] = actual["candidate_identity"]["hash"]
@@ -560,7 +590,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         report["materialization_checks"] = materialization_probe
         report["metrics"].update(materialization_probe["metrics"])
         if actual is not None:
-            if actual.get("schema_version") == 3 and actual.get("phase") == "support_diagnosis":
+            if actual.get("schema_version") == 3 and actual.get("phase") == "support_probe":
+                report["support_probe"] = actual
+            elif actual.get("schema_version") == 3 and actual.get("phase") == "support_diagnosis":
                 report["support_diagnosis"] = actual
             elif actual.get("schema_version") == 3 and actual.get("phase") == "preparation":
                 report["coverage_preparation"] = actual
@@ -579,7 +611,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": ("Synthetic conformance checks plus checked retained support diagnosis; retrieval quality and improvement remain unmeasured. "
+                  "scope": ("Synthetic conformance checks plus one checked two-clause development diagnostic; no new cohort quality, adoption or control-action claim. "
+                            if actual is not None and actual.get("phase") == "support_probe" else
+                            "Synthetic conformance checks plus checked retained support diagnosis; retrieval quality and improvement remain unmeasured. "
                             if actual is not None and actual.get("phase") == "support_diagnosis" else
                             "Synthetic conformance checks plus verified fresh-cohort preparation; retrieval quality remains unmeasured. "
                             if actual is not None and actual.get("phase") == "preparation" else
@@ -597,13 +631,13 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                 raise ValueError("Assessment inputs changed before completion")
             if preparation is not None:
                 retrieval_assessment.check_prepared_retrieval_study(preparation["prepared"])
-            if actual is not None and actual.get("phase") == "support_diagnosis":
+            if actual is not None and actual.get("phase") in ("support_diagnosis", "support_probe"):
                 _check_diagnosis_origin(preparation, _checked_events(ledger), after_step)
                 checked_again = retrieval_assessment.assess_prepared_retrieval_study(preparation["prepared"])["report"]
                 if canonical(checked_again) != canonical(actual):
-                    raise ValueError("Support diagnosis changed before completion")
+                    raise ValueError("Support diagnosis or probe changed before completion")
                 if time.monotonic() - started > policy["max_assessment_seconds"]:
-                    raise ValueError("Diagnosis revalidation exceeded the assessment elapsed-time budget")
+                    raise ValueError("Diagnosis or probe revalidation exceeded the assessment elapsed-time budget")
             if canonical(result) != expected_result:
                 raise ValueError("Assessment result changed before completion")
         ledger.append("improvement_completed", result, f"improvement:{run_key}:complete",

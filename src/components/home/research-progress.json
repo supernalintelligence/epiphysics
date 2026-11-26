@@ -1,7 +1,7 @@
 {
   "recordDate": "2026-11-25",
-  "heading": "The evidence was preserved. Retrieval still missed part of it.",
-  "scope": "Our current test follows evidence through a small retrieval system: what was kept, what was returned, and what a question actually required.",
+  "heading": "Splitting the question recovered the missing evidence.",
+  "scope": "We tested what a small retrieval system kept, what it returned, and whether the returned passages covered every part of a question.",
   "evidence": [
     {
       "id": "coverage",
@@ -13,18 +13,18 @@
     },
     {
       "id": "diagnosis",
-      "href": "/planning/runs/2026-11-26-retrieval-diagnosis",
+      "href": "/planning/runs/2026-11-26-retrieval-probe",
       "requiredText": [
-        "They omitted the capability-discovery passage, even though that passage survived intact in the indexed representation.",
-        "The diagnostic has not executed at this record's cutoff."
+        "Both fixed executions returned identical ordered results.",
+        "This result demonstrates sensitivity to asking separate questions under a larger selection budget."
       ]
     },
     {
       "id": "protocol",
-      "href": "/experiments/retrieval-support-diagnosis",
+      "href": "/experiments/retrieval-fixed-clause-probe",
       "requiredText": [
-        "The proposal is not an executed experiment.",
-        "Two clause queries can return more windows than one whole query."
+        "The next application should test one release-or-hold decision for a simulated agent-delivered artifact.",
+        "Development retrieval results do not establish predictive or business advantage, recursive adaptation or market concentration."
       ]
     }
   ],
@@ -41,20 +41,20 @@
     {
       "id": "diagnosis",
       "status": "completed",
-      "label": "Gap diagnosis",
-      "value": "1 gap located",
-      "measure": "required evidence was indexed, but not returned",
-      "summary": "One question asked about both discovering payment capabilities and committing payment state. The five returned passages omitted the discovery evidence. Review found no complete alternative answer in them.",
-      "linkLabel": "Diagnosis record"
+      "label": "Fixed follow-up",
+      "value": "Both parts found",
+      "measure": "with ten passages instead of five",
+      "summary": "Two separate questions recovered complete evidence for discovery and payment commitment. Both runs agreed. The larger reading budget prevents a claim that this method is better.",
+      "linkLabel": "Follow-up result"
     }
   ],
   "limits": "These are visible development questions over four saved sources. No answers were generated. Predictive advantage, broader entity coverage and the cause of the retrieval ranking remain unmeasured.",
   "next": {
     "status": "planned",
     "evidenceId": "protocol",
-    "question": "Does asking the two parts separately recover the missing evidence?",
-    "description": "Prepare one fixed diagnostic: capability discovery, then payment commitment, using the same saved sources and raw-text method. Freeze the clauses, run count and stopping rule before retrieving again.",
-    "budget": "Two top-five lists allow up to ten windows, compared with five in the original test. Recovery would show sensitivity to that change, not a fair-budget improvement.",
-    "linkLabel": "Follow-up rules"
+    "question": "When should an automated exchange be released or held?",
+    "description": "Prepare a simulation for one agent-delivered artifact. Compare flat and relational records of the same dated evidence about authority, verification and prior release.",
+    "budget": "Two compact views and a lossless control. Measure valid releases, unauthorized releases, duplicates, missing decisions and total processing cost. Live settlement is outside this experiment.",
+    "linkLabel": "Next experiment boundaries"
   }
 }

@@ -186,6 +186,10 @@ Support diagnosis reports covered and missing byte intervals for selected failed
 
 For diagnosis timing, the assessment's stored inner duration ends before completion-time revalidation. The acceptance budget also checks that revalidation; dispatcher and outer caller durations include more of the lifecycle. Report these nested scopes separately rather than adding them. Whole-step builder/reviewer cost remains unknown.
 
+The [fixed two-clause probe](retrieval-fixed-clause-probe.md) reports each clause's complete-bundle coverage at local cutoffs 1/3/5. `joint_support_union_of_two_top5` checks original joint bundles across the two clause outputs within one repeat, with up to ten window occurrences and no shared ranking. It is not the original question's recall at five. Report occurrences, distinct windows, summed lengths and source-byte unions separately; repeated or overlapping windows cannot add union bytes. Never union across repeats.
+
+This probe's reproducibility is a diagnostic condition, not a replacement baseline-quality metric. If valid repeats disagree, retain both outputs and leave aggregate support summaries unavailable. Missing or rejected executions are failures, never zero-hit successes. A reproduced support recovery, tie or loss selects the same next decision-pilot preparation; the controller does not use this exposed case to tune another query. No C4 quality delta, adoption claim or learned success probability follows.
+
 ## Prediction, calibration and coverage
 
 For binary outcomes, use mean Brier loss `(p − y)²` or log loss `−[y log p + (1−y) log(1−p)]`, lower being better. CRPS compares a predictive cumulative distribution with a realized scalar outcome; its units follow the outcome. Proper scores reward truthful probabilities in expectation. Calibration compares probabilities with observed frequencies; interval coverage needs interval width alongside it. [Gneiting and Raftery (2007)](https://sites.stat.washington.edu/raftery/Research/PDF/Gneiting2007jasa.pdf)

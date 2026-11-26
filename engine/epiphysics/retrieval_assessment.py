@@ -20,11 +20,11 @@ import time
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, manifests, retrieval_contracts as retrieval, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, store
+from . import assertions, manifests, retrieval_contracts as retrieval, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_probe, store
 from .store import Ledger, canonical, digest, instant
 
 IMPLEMENTATION_DEPENDENCIES = tuple((m.__name__, m.IMPLEMENTATION_CODE)
-    for m in (store, assertions, manifests, retrieval, retrieval_evaluation, retrieval_coverage, retrieval_diagnosis))
+    for m in (store, assertions, manifests, retrieval, retrieval_evaluation, retrieval_coverage, retrieval_diagnosis, retrieval_probe))
 MAX_ARTIFACTS = retrieval_coverage.MAX_ARTIFACTS
 MAX_ARTIFACT_BYTES = retrieval_coverage.MAX_ARTIFACT_BYTES
 MAX_BUNDLE_BYTES = retrieval_coverage.MAX_BUNDLE_BYTES
@@ -48,6 +48,14 @@ DIAGNOSIS_CONTRACT_FIELDS = {"diagnosis_id", "origin_transition", "origin_step_i
 DIAGNOSIS_FILES = {"support_diagnosis": ("diagnosis_file", "diagnosis_hash", 256 * 1024),
     "support_diagnosis_review": ("diagnosis_review_file", "diagnosis_review_hash", 128 * 1024),
     "origin_transition": ("origin_file", None, MAX_INPUT_BYTES)}
+PROBE_FILES = {"probe_protocol": ("probe_protocol_file", "probe_protocol_hash", MAX_INPUT_BYTES),
+    "probe_review": ("probe_review_file", "probe_review_hash", MAX_INPUT_BYTES),
+    "probe_envelope": ("probe_envelope_file", "probe_envelope_hash", MAX_INPUT_BYTES),
+    "probe_execution": ("probe_execution_file", "probe_execution_hash", MAX_INPUT_BYTES),
+    "origin_transition": ("origin_file", None, MAX_INPUT_BYTES)}
+PROBE_REQUEST_FIELDS = {entry[0] for entry in PROBE_FILES.values()}
+PROBE_CONTRACT_FIELDS = {"origin_transition", "origin_step_id"} | {
+    entry[1] for entry in PROBE_FILES.values() if entry[1] is not None}
 _SELF = (Path(__file__), IMPLEMENTATION_SOURCE, IMPLEMENTATION_CODE)
 
 
@@ -98,11 +106,13 @@ def _request_fields(request):
     if type(request) is not dict or type(request.get("schema_version")) is not int or request["schema_version"] not in (1, 2, 3):
         raise ValueError("Assessment schema_version must be 1, 2 or 3")
     if request["schema_version"] == 3:
-        if request.get("phase") not in ("preparation", "evaluation", "support_diagnosis"):
+        if request.get("phase") not in ("preparation", "evaluation", "support_diagnosis", "support_probe"):
             raise ValueError("Invalid coverage phase")
-        fields = REQUEST_COMMON_V3 | ({"run_terminal_ids"} if request["phase"] != "preparation" else set())
+        fields = REQUEST_COMMON_V3 | ({"run_terminal_ids"} if request["phase"] in ("evaluation", "support_diagnosis") else set())
         if request["phase"] == "support_diagnosis":
             fields |= DIAGNOSIS_REQUEST_FIELDS
+        if request["phase"] == "support_probe":
+            fields |= PROBE_REQUEST_FIELDS
         _keys(request, fields, "coverage request")
         return
     _keys(request, REQUEST_FIELDS if request["schema_version"] == 1 else REQUEST_FIELDS_V2, "study request")
@@ -184,10 +194,12 @@ def _inputs(request, cohort, declared_contract):
 
 
 def _coverage_inputs(request, cohort, contract):
-    evaluated = request["phase"] != "preparation"
+    evaluated = request["phase"] in ("evaluation", "support_diagnosis")
     diagnosis = request["phase"] == "support_diagnosis"
+    probe = request["phase"] == "support_probe"
     fields = CONTRACT_COMMON_V3 | ({"run_terminal_hashes", "projection_hashes"} if evaluated else set())
-    _keys(contract, fields | (DIAGNOSIS_CONTRACT_FIELDS if diagnosis else set()), "coverage declaration")
+    _keys(contract, fields | (DIAGNOSIS_CONTRACT_FIELDS if diagnosis else set()) |
+          (PROBE_CONTRACT_FIELDS if probe else set()), "coverage declaration")
     if type(contract["schema_version"]) is not int or contract["schema_version"] != 3 or contract["phase"] != request["phase"]:
         raise ValueError("Coverage declaration version/phase mismatch")
     for value in (request, contract, cohort):
@@ -197,7 +209,9 @@ def _coverage_inputs(request, cohort, contract):
         _id(request[key], key)
         if request[key] != contract[key]:
             raise ValueError("Coverage request differs from declared " + key)
-    for key in ("evidence_store", "cohort_file", "protocol_file", "review_file", *(("diagnosis_file", "diagnosis_review_file", "origin_file") if diagnosis else ())):
+    for key in ("evidence_store", "cohort_file", "protocol_file", "review_file",
+                *(("diagnosis_file", "diagnosis_review_file", "origin_file") if diagnosis else ()),
+                *(sorted(PROBE_REQUEST_FIELDS) if probe else ())):
         _id(request[key], key)
         if not Path(request[key]).is_absolute():
             raise ValueError("Coverage input paths must be absolute")
@@ -211,6 +225,11 @@ def _coverage_inputs(request, cohort, contract):
     checked = retrieval_evaluation._cohort(cohort)
     if checked["schema_version"] != 2:
         raise ValueError("Coverage study requires cohort schema 2")
+    if probe:
+        _id(contract["origin_step_id"], "origin step ID")
+        retrieval_coverage._ref(contract["origin_transition"], "probe origin")
+        for key in PROBE_CONTRACT_FIELDS - {"origin_transition", "origin_step_id"}:
+            _hash(contract[key])
     if diagnosis:
         _id(request["diagnosis_id"], "diagnosis ID")
         _id(contract["origin_step_id"], "origin step ID")
@@ -237,7 +256,7 @@ def _coverage_inputs(request, cohort, contract):
                 _hash(value)
 
 
-def _current_sources(coverage=False, diagnosis=False):
+def _current_sources(coverage=False, diagnosis=False, probe=False):
     path, source, code = _SELF
     if (IMPLEMENTATION_SOURCE != source or IMPLEMENTATION_CODE is not code
             or path.is_symlink() or not path.is_file() or path.stat().st_size != len(source)):
@@ -266,6 +285,11 @@ def _current_sources(coverage=False, diagnosis=False):
         for name, raw in retrieval_diagnosis.runtime_sources().items():
             if name in sources and sources[name] != raw:
                 raise ValueError("Diagnosis source closure collision")
+            sources[name] = raw
+    if probe:
+        for name, raw in retrieval_probe.runtime_sources().items():
+            if name in sources and sources[name] != raw:
+                raise ValueError("Support probe source closure collision")
             sources[name] = raw
     return {("data:" if name == "html.entities.html5" else "code:") + name: raw for name, raw in sources.items()}
 
@@ -311,7 +335,7 @@ def check_prepared_retrieval_study(prepared):
     _check_artifacts(prepared)
     request = _json(prepared["artifacts"].get("request", b""))
     _request_fields(request)
-    for role, raw in _current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis").items():
+    for role, raw in _current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis", request.get("phase") == "support_probe").items():
         if prepared["artifacts"].get(role) != raw:
             raise ValueError("Prepared study validation implementation changed")
 
@@ -380,7 +404,7 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
         raise ValueError("Evidence roots must not be symlinks")
     artifacts = {"request": _raw(request) if request_raw is None else request_raw,
                  "cohort": _raw(cohort) if cohort_raw is None else cohort_raw,
-                 "declared_contract": _raw(declared_contract), **_current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis")}
+                 "declared_contract": _raw(declared_contract), **_current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis", request.get("phase") == "support_probe")}
     if request["schema_version"] == 2:
         protocol_raw = _read_file(request["protocol_file"], MAX_INPUT_BYTES) if protocol_raw is None else protocol_raw
         if type(protocol_raw) is not bytes or len(protocol_raw) > MAX_INPUT_BYTES or digest(protocol_raw) != declared_contract["protocol_hash"]:
@@ -397,12 +421,29 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
         for role, (field, _, maximum) in DIAGNOSIS_FILES.items():
             artifacts[role] = _read_file(request[field], maximum)
         _diagnosis_artifacts(artifacts, declared_contract)
+    probe = request.get("phase") == "support_probe"
+    if probe:
+        for role, (field, _, maximum) in PROBE_FILES.items():
+            artifacts[role] = _read_file(request[field], maximum)
+        _probe_artifacts(artifacts, declared_contract)
+        probe_protocol, envelope, executions = (_json(artifacts[role]) for role in
+            ("probe_protocol", "probe_envelope", "probe_execution"))
+        probe_refs = retrieval_probe.capture_references(envelope, executions)
+        probe_ids = retrieval_probe.terminal_ids(executions)
+        _keys(executions["evidence_head"], {"seq", "id", "hash"}, "probe evidence head")
+        _id(executions["evidence_head"]["id"], "probe evidence head ID")
+        _hash(executions["evidence_head"]["hash"])
+        if type(executions["evidence_head"]["seq"]) is not int or executions["evidence_head"]["seq"] < 1:
+            raise ValueError("Invalid probe evidence head sequence")
     if _json(artifacts["request"]) != request or _json(artifacts["cohort"]) != cohort:
         raise ValueError("Captured file bytes differ from parsed input")
     with assertions._read_transaction(evidence_ledger):
         selected = [request["corpus_id"], *_run_ids(request)]
         if request["schema_version"] == 3:
             selected.extend([request["freeze_event_id"], declared_contract["reference_terminal"]["id"]])
+        if probe:
+            selected.extend([executions["evidence_head"]["id"], *probe_ids,
+                *(ref["id"] for ref in probe_protocol["origin"]["c4_terminal_refs"])])
         seqs = []
         for event_id in selected:
             row = evidence_ledger.db.execute("SELECT seq FROM events WHERE id=?", (event_id,)).fetchone()
@@ -410,6 +451,10 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
                 raise ValueError("Missing selected retrieval event")
             seqs.append(row["seq"])
         end = max(seqs)
+        if probe:
+            tip = evidence_ledger.db.execute("SELECT seq,id,hash FROM events ORDER BY seq DESC LIMIT 1").fetchone()
+            if dict(tip) != executions["evidence_head"] or end != tip["seq"]:
+                raise ValueError("Probe evidence head must equal the complete observed ledger tip")
         if request["schema_version"] == 3 and request["phase"] == "preparation":
             freeze_seq = evidence_ledger.db.execute("SELECT seq FROM events WHERE id=?", (request["freeze_event_id"],)).fetchone()["seq"]
             if end != freeze_seq:
@@ -444,6 +489,24 @@ def _capture(evidence_ledger, request, cohort, declared_contract, *, request_raw
             for terminal_id in _run_ids(request):
                 terminal = by_id[terminal_id]
                 refs.extend(_run_artifact_refs(terminal))
+            if probe:
+                for ref in probe_protocol["origin"]["c4_terminal_refs"]:
+                    refs.extend(_run_artifact_refs(by_id[ref["id"]]))
+                refs.extend(probe_refs)
+                inherited_count = probe_protocol["evidence_preservation"]["inherited_prefix"]["events"]
+                if type(inherited_count) is not int or not 1 <= inherited_count < len(events):
+                    raise ValueError("Invalid inherited probe prefix length")
+                # The probe verifies the whole retained prefix, including older
+                # observations unrelated to the selected runs. Preserve their
+                # blobs as well as partial run inputs, within the same bounds.
+                for event in events:
+                    if event["kind"] == "observation":
+                        refs.append({"observation_id": event["id"], "event_hash": event["hash"],
+                            "content_hash": event["body"]["content_hash"], "size": event["body"]["size"]})
+                for terminal_id in probe_ids:
+                    terminal = by_id[terminal_id]
+                    if terminal["kind"] == "retrieval_completed":
+                        refs.extend(_run_artifact_refs(terminal))
             blobs = {}
             total = sum(len(raw) for raw in artifacts.values()) + len(_raw(events))
             for ref in refs:
@@ -709,6 +772,56 @@ def _assess_diagnosis(ledger, request, cohort, contract, prepared, artifacts, bu
     return {"report": report, "artifacts": artifacts}
 
 
+def _probe_artifacts(artifacts, contract):
+    for role, (_, hash_field, maximum) in PROBE_FILES.items():
+        raw = artifacts.get(role)
+        if type(raw) is not bytes or len(raw) > maximum:
+            raise ValueError("Missing or oversized probe artifact: " + role)
+        if hash_field is not None and digest(raw) != contract[hash_field]:
+            raise ValueError("Probe artifact differs from declared bytes: " + role)
+    origin = _json(artifacts["origin_transition"])
+    _keys(origin, {"seq", "id", "kind", "recorded_at", "body", "previous_hash", "hash"}, "probe origin event")
+    assertions._event_integrity(origin)
+    if {"id": origin["id"], "hash": origin["hash"]} != contract["origin_transition"]:
+        raise ValueError("Probe origin differs from declared transition")
+    protocol = _json(artifacts["probe_protocol"])
+    if digest(artifacts["origin_transition"]) != protocol["prerequisites"]["origin_file_sha256"]:
+        raise ValueError("Probe origin file differs from reviewed protocol bytes")
+    return origin
+
+
+def _assess_probe(ledger, request, cohort, contract, prepared, artifacts, bundle):
+    origin = _probe_artifacts(artifacts, contract)
+    checked = retrieval_probe.check_support_probe(ledger, cohort=cohort, origin_transition=origin,
+        protocol=_json(artifacts["probe_protocol"]), review=_json(artifacts["probe_review"]),
+        envelope=_json(artifacts["probe_envelope"]), executions=_json(artifacts["probe_execution"]),
+        declared_contract=contract, deadline=time.monotonic() + 30)
+    _keys(checked, {"contract_id", "origin", "bindings", "executions", "reproducibility", "clause_support",
+        "joint_support_union_of_two_top5", "resources", "limitations", "probe_contract_identity"}, "checked support probe")
+    bindings = origin["body"]["report"]["support_diagnosis"]["machine_findings"]["origin_bindings"]
+    for role, field in (("cohort", "cohort_file_hash"), ("coverage_protocol", "protocol_file_hash"),
+                        ("coverage_review", "review_file_hash")):
+        if digest(artifacts[role]) != bindings[field]:
+            raise ValueError("Probe ancestry file differs from frozen original bytes: " + role)
+    report = {"schema_version": 3, "phase": "support_probe", "status": "completed",
+        "study_id": request["study_id"], **checked,
+        "assessment_identity": _identity({"adapter_hash": digest(IMPLEMENTATION_SOURCE),
+            "helper_hash": digest(retrieval_probe.IMPLEMENTATION_SOURCE),
+            "prepared_manifest": prepared["manifest"], "declared_contract_hash": digest(artifacts["declared_contract"])}),
+        "input_bindings": {"prefix_head": bundle["prefix_head"], "request_hash": digest(artifacts["request"]),
+            "cohort_file_hash": digest(artifacts["cohort"]), "protocol_file_hash": digest(artifacts["coverage_protocol"]),
+            "review_file_hash": digest(artifacts["coverage_review"]), "declared_contract_hash": digest(artifacts["declared_contract"]),
+            "corpus_id": request["corpus_id"], "freeze_event_id": request["freeze_event_id"],
+            **{role + "_hash": digest(artifacts[role]) for role in PROBE_FILES}}}
+    raw = _raw(report)
+    if len(raw) > 256 * 1024:
+        raise ValueError("Checked support probe exceeds report bound")
+    check_prepared_retrieval_study(prepared)
+    artifacts["assessment_report"] = raw
+    _check_artifacts({"artifacts": artifacts, "manifest": {role: digest(value) for role, value in artifacts.items()}})
+    return {"report": report, "artifacts": artifacts}
+
+
 def assess_prepared_retrieval_study(prepared):
     """Validate captured evidence in a temporary store; never re-read source paths."""
     check_prepared_retrieval_study(prepared)
@@ -725,7 +838,7 @@ def assess_prepared_retrieval_study(prepared):
     if type(bundle["blobs"]) is not dict or len(bundle["blobs"]) > MAX_ARTIFACTS:
         raise ValueError("Invalid captured blob manifest")
     expected_roles = {"request", "cohort", "declared_contract", "evidence_bundle",
-        *_current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis")}
+        *_current_sources(request["schema_version"] == 3, request.get("phase") == "support_diagnosis", request.get("phase") == "support_probe")}
     if request["schema_version"] == 2:
         expected_roles.add("comparison_protocol")
         protocol = artifacts.get("comparison_protocol")
@@ -740,6 +853,9 @@ def assess_prepared_retrieval_study(prepared):
     if request.get("phase") == "support_diagnosis":
         expected_roles.update(DIAGNOSIS_FILES)
         _diagnosis_artifacts(artifacts, contract)
+    if request.get("phase") == "support_probe":
+        expected_roles.update(PROBE_FILES)
+        _probe_artifacts(artifacts, contract)
     expected_roles.update("blob:" + h for h in bundle["blobs"])
     if set(artifacts) != expected_roles:
         raise ValueError("Unexpected or missing captured artifacts")
@@ -759,6 +875,8 @@ def assess_prepared_retrieval_study(prepared):
             ledger.db.execute("PRAGMA query_only=ON")
             if request.get("phase") == "support_diagnosis":
                 return _assess_diagnosis(ledger, request, cohort, contract, prepared, artifacts, bundle)
+            if request.get("phase") == "support_probe":
+                return _assess_probe(ledger, request, cohort, contract, prepared, artifacts, bundle)
             if request["schema_version"] == 3:
                 return _assess_coverage(ledger, request, contract, prepared, artifacts, bundle)
             for terminal_id in _run_ids(request):
