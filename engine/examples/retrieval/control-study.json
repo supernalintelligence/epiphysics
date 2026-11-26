@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "study_id": "control-development-v1",
+  "evidence_store": "/absolute/path/to/control-evidence",
+  "cohort_file": "/absolute/path/to/epiphysics/engine/examples/retrieval/control-development.json",
+  "corpus_id": "retrieval-corpus:control-development-v1",
+  "run_terminal_ids": [
+    "retrieval:control-development-v1-a:terminal",
+    "retrieval:control-development-v1-b:terminal"
+  ]
+}

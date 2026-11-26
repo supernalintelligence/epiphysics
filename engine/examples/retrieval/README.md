@@ -13,3 +13,13 @@ The corpus is small and builder-visible. Unsupported means the requested fact is
 The source snapshot is dated by the local collector. Later code, configuration and query artifacts describe the retrospective experiment; they are not evidence that the algorithm or questions existed at the earlier cutoff. No external timestamp proof is present.
 
 `engine/tests/test_retrieval.py`, `test_retrieval_evaluation.py` and `test_retrieval_cli.py` use owned synthetic bytes to verify behavior without requiring the local development archive. Their results are conformance checks, not this corpus's retrieval quality. The [measurement contract](../../../docs/experiments/representation-metrics.md) defines the separate real development metrics and reproduction gate.
+
+## Supply the measured baseline to the controller
+
+`control-improvement-policy.json` declares the exact C1 source snapshot, corpus, cohort, queries, gold, historical implementation/dependencies, runtime and two execution hashes. Its `retrieval_study` field binds the intended study; it is not a supplied score. The rest of the policy preserves the seven entity families, 30-second assessment limit, zero external spend and disabled scale changes.
+
+Copy `control-study.json` to a private local file and replace its two placeholder absolute paths with the retained evidence store and this checkout's `control-development.json`. Paths can move; the declared content identities cannot. Do not point the evidence path at the dedicated improvement store or fetch current web pages to replace missing archived bytes.
+
+Pass the resolved request with `--retrieval-study /absolute/path/to/study.json` on the existing improvement `assess` or `dispatch` command, using `control-improvement-policy.json` as its policy. Read the improvement status first and use its current predecessor and a fresh run key. Retained C1 events are validated and rescored; this does not launch a third search or change C1's questions. The controller records actual retrieval separately from its synthetic checks and preserves the original evidence store.
+
+Both example files contain owned identifiers and hashes only. Source bytes, expanded local paths, captured bundles and process receipts belong in the private local archive. The [C2 run record](../../../docs/planning/runs/2026-11-25-retrieval-controller.md) records validation status and the real handoff separately from the examples.
