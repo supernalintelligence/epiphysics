@@ -9,6 +9,7 @@ from pathlib import Path
 from epiphysics.store import Ledger
 from epiphysics.cycle import run_cycle
 from epiphysics.cli import demo
+from epiphysics.public_status import project_status
 
 
 class LedgerTests(unittest.TestCase):
@@ -307,6 +308,28 @@ class LedgerTests(unittest.TestCase):
             self.assertTrue(result["integrity"]["valid"])
             with self.assertRaises(ValueError):
                 demo(root)
+
+    def test_public_status_excludes_source_bytes_paths_and_rejects_mixed_store(self):
+        root = Path(self.temp.name)
+        source = root / "README.md"
+        source.write_text("Public project source")
+        config = root / "project.json"
+        config.write_text(json.dumps({"sources": [{"id": "epiphysics-readme", "kind": "file", "path": "README.md"}]}))
+        run_cycle(self.ledger, config, "public")
+        status = project_status(self.ledger, str(source))
+        self.assertEqual((1, 1, 1, 0), (status["observations"], status["forecasts"], status["pending"], status["resolved"]))
+        self.assertNotIn(str(root), json.dumps(status))
+        self.assertNotIn("Public project source", json.dumps(status))
+        self.ledger.capture("private-source", b"private text")
+        with self.assertRaisesRegex(ValueError, "dedicated store"):
+            project_status(self.ledger, str(source))
+
+    def test_public_status_refuses_corrupted_source(self):
+        source = Path(self.temp.name) / "README.md"
+        observation = self.ledger.capture(str(source.resolve()), b"public")
+        (Path(self.temp.name) / "blobs" / observation["body"]["content_hash"]).write_bytes(b"changed")
+        with self.assertRaisesRegex(ValueError, "integrity"):
+            project_status(self.ledger, str(source))
 
 
 if __name__ == "__main__":

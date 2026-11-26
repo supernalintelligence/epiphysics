@@ -3,10 +3,13 @@
 import argparse
 import json
 import sys
+import os
+import tempfile
 from pathlib import Path
 
 from .store import Ledger, canonical, utc_now
 from .cycle import run_cycle
+from .public_status import project_status, status_destination
 
 
 def demo(root):
@@ -65,6 +68,9 @@ def main():
     cycle = sub.add_parser("cycle", help="Run one bounded collection/evaluation cycle")
     cycle.add_argument("--config", required=True)
     cycle.add_argument("--run-key", required=True, help="Stable scheduler key; duplicate completed runs do nothing")
+    public = sub.add_parser("publish-status", help="Replace a public aggregate status artifact; no source bytes or local paths")
+    public.add_argument("--source", required=True, help="Exact public README file captured by this dedicated store")
+    public.add_argument("--output", required=True)
     args = parser.parse_args()
     ledger = None
     try:
@@ -88,15 +94,30 @@ def main():
                 result = ledger.verify()
             elif args.command == "cycle":
                 result = run_cycle(ledger, args.config, args.run_key)
+            elif args.command == "publish-status":
+                result = project_status(ledger, args.source)
             else:
                 result = ledger.export()
         rendered = json.dumps(result, indent=2, allow_nan=False)
         if getattr(args, "output", None):
             output = Path(args.output)
+            if args.command == "publish-status":
+                output = status_destination(output, ledger.root, args.source)
             output.parent.mkdir(parents=True, exist_ok=True)
-            # Exports are new artifacts; do not silently overwrite an old one.
-            with output.open("x") as stream:
-                stream.write(rendered + "\n")
+            if args.command == "publish-status":
+                # This explicit command replaces only the derived public status, never evidence.
+                with tempfile.NamedTemporaryFile(mode="w", dir=output.parent, delete=False) as stream:
+                    stream.write(rendered + "\n")
+                    temporary = stream.name
+                try:
+                    os.replace(temporary, output)
+                finally:
+                    if os.path.exists(temporary):
+                        os.unlink(temporary)
+            else:
+                # Evidence exports are new artifacts; never silently replace an old one.
+                with output.open("x") as stream:
+                    stream.write(rendered + "\n")
             print(f"Wrote {output}")
         else:
             print(rendered)

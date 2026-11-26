@@ -17,7 +17,7 @@ Prioritized list of what needs to be done. Check this file when looking for work
 - [ ] Add privacy-conscious measurement of example inspection, record downloads, reproductions, corrections, and repeat contributions; report retention and reproduction, not raw page views alone.
 - [ ] Prepare the knowledge-snapshots persona post for Ian's review. Keep it unpublished until reviewed.
 
-The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-recursive-observatory.md`. SCI coordination is tracked there; delivery is not acknowledgment.
+The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-recursive-observatory.md`. SCI's reply on the mathematics-note handoff is verified there; observatory review remains pending.
 
 ## Existing research queue
 

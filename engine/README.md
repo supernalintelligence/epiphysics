@@ -57,3 +57,15 @@ Append-only triggers and hashes protect against accidental edits through this in
 Snapshot selection uses collection time, never a source's publication claim. A model's training data, hidden memory, undeclared tools, or manual reasoning can still leak later information. Process isolation, model-access manifests, signed witness adapters, immutable public bundles, prospective holdouts, and independent resolution are next implementation gates. The current ledger is intended for a trusted local operator; it is not a multi-tenant service.
 
 See `docs/planning/2026-11-24-recursive-observatory.md` for the component roadmap and `docs/experiments/prospective-observatory.md` for the evaluation protocol.
+
+## Updating the site's collection record
+
+The site imports `src/components/home/observatory-status.json`. This is a recorded aggregate refreshed by the daily app automation through reviewed commits/deployments, not a browser connection to a private local database. The first real collection was recorded on 25 November 2026; the example forecast remains clearly synthetic.
+
+After collecting and verifying the dedicated README monitor, run from the checkout containing the engine:
+
+```sh
+PYTHONPATH=engine python3 -m epiphysics --store /absolute/shared-checkout/.supernal-local/observatory publish-status --source /absolute/shared-checkout/README.md --output src/components/home/observatory-status.json
+```
+
+This explicit command atomically replaces only the derived status file. It exports timestamps, counts, source link, and local assurance labels. It refuses a mixed-source store or a failed integrity check, and omits raw contents, local paths, prompts, and internal event IDs. Publish the changed artifact through the normal reviewed site workflow. A missed scheduler wake leaves an older visible capture time; it must not appear as a fresh successful run.

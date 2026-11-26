@@ -16,7 +16,7 @@ feedback:
   enabled: true
 ---
 
-> **Implementation plan, 24 November 2026.** Local implementation and proposed research are distinguished below. This is not evidence that Epimechanics improves prediction. The Epiphysics SCI Claude session has been located. On 25 November, this Codex chat received its mathematics-note handoff and sent a consolidation reply; the separate observatory brief still awaits acknowledgment.
+> **Implementation plan, 24 November 2026.** Local implementation and proposed research are distinguished below. This is not evidence that Epimechanics improves prediction. Direct communication with the Epiphysics SCI Claude session is verified: on 25 November it received the consolidation reply and agreed on the mathematics-note home and qualifications. Its scientific review of the observatory is still pending.
 
 ## Intended outcome
 
@@ -162,7 +162,9 @@ Measure successful reproductions, accepted corrections, eligible questions, reta
 
 ## SCI handoff
 
-**Two-way messages located; observatory review pending.** The user confirmed that Epiphysics is the SCI agent's project. The exact Claude session is `d1fe9b44-383f-4c3e-bc81-8f37a1ff0e4b`, with title/agent name `SCI`. Handoff `CPFFbfpWw4uaoewmvOrK_` was persisted to `claude-code:sci`. That initial message has no confirmed delivery. SCI subsequently addressed this Codex session directly about consolidating mathematics notes; the message was read and a reply sent on 25 November. Its scientific review of the observatory remains pending.
+**SCI receipt and response verified; observatory review pending.** The user confirmed that Epiphysics is the SCI agent's project. The exact Claude session is `d1fe9b44-383f-4c3e-bc81-8f37a1ff0e4b`, with title/agent name `SCI`. The initial handoff `CPFFbfpWw4uaoewmvOrK_` was only queued. SCI later addressed this Codex session directly about consolidating mathematics notes. The reply `njaSc_097MZPPJzosmqqh` reached its native session at 16:52:42 UTC on 25 November; SCI answered at 16:53:30 UTC. Its transcript confirms delivery even though the native adapter timed out without a receipt. Do not replay that message.
+
+SCI agreed that `docs/research/science_of_mathematics.md` is the canonical draft and accepted two additions: explanation-gap measurements need an operational protocol, and the structure-versus-length experiment needs frozen definitions/costs, future Mathlib commits, and a statement-length baseline. Its attempted edits and mailbox reply were blocked by its session's approval controls. Preserve `formal_validation_of_mathematics.md` until those additions and any remaining unique material are retained. This verifies a scientific coordination exchange, not an agreement on the observatory's design or results.
 
 Exchange contracts, experiments, ownership, and limitations when SCI responds. Proposed boundary: SCI supplies candidate generation or agent-runtime interfaces where implemented; Epiphysics owns temporal evidence, prospective evaluation, and public claim status. Confirm with that agent before duplicating work. First integration gate: one SCI candidate evaluated against a frozen Epiphysics snapshot/protocol with an explicit cost receipt.
 
@@ -172,4 +174,8 @@ Deliver the engine/focused checks, landing/overview/observatory, this plan, publ
 
 ## Presentation revision on 25 November
 
-Ian rejected the first visual pass as generic and supplied a screenshot of overlapping content. The article used a `header` element that inherited the global navigation height, causing the text to spill over later sections. It now uses a normal content container. The revision removes slogan headings, colored status cards, and the dashboard-style before/after boxes. The landing uses a research introduction and a simple work index; the example uses a chronological record with source text, commitments, outcome, and calculation. The browser tool reports a saved permission or managed-policy block for the local preview origin, despite Ian confirming access. Post-revision visual verification is outstanding; no alternate browser route was used to bypass the block. Source review, the production build, and 20 engine tests pass. Repository-wide type checking still reports 42 existing errors outside changed files.
+Ian rejected the first visual pass as generic and supplied a screenshot of overlapping content. The article used a `header` element that inherited the global navigation height, causing the text to spill over later sections. It now uses a normal content container. The revision removes slogan headings, colored status cards, and the dashboard-style before/after boxes. The landing uses a research introduction and a simple work index; the example uses a chronological record with source text, commitments, outcome, and calculation. The browser tool reports a saved permission or managed-policy block for the local preview origin, despite Ian confirming access. Post-revision visual verification is outstanding; no alternate browser route was used to bypass the block. Source review, the production build, and 26 engine tests pass. Repository-wide type checking still reports 42 existing errors outside changed files.
+
+## Recorded status connected to the site
+
+On 25 November, the dedicated project README monitor made its first real capture and opened one prospective byte-change question. Its outcome is pending. The site now imports a generated aggregate status artifact: last capture time, pending/resolved/expired counts, collection failures, and local integrity assurance. `publish-status` refuses mixed sources and failed integrity, and exports neither local paths nor raw evidence. The daily heartbeat collects, verifies, refreshes this artifact, and routes any publication through the normal review/deployment process. The public page explicitly distinguishes this recorded status from a live service and from the separate synthetic example.

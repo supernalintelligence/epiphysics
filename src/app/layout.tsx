@@ -18,6 +18,7 @@ import SiteResume from '@/components/SiteResume';
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL(loadSiteConfig().site.url),
   alternates: {
     types: {
       'application/rss+xml': '/api/feed',

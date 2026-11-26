@@ -51,6 +51,12 @@
 .presentation .title { font-size: clamp(2.5rem, 4vw, 3.5rem) !important; }
 .presentationGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; min-height: 480px; }
 .recordHeader { padding: 48px 0 32px; max-width: 800px; }
+.collection { margin-top: 36px; padding: 24px 0 30px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); max-width: 850px; }
+.collection h2 { font-size: 1.125rem; font-weight: 600; margin: 0 0 8px; }
+.collection dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 20px; font-size: .9375rem; margin: 20px 0; }
+.collection dt { color: var(--muted); }
+.collection dd { margin: 0; }
+.collection .actions { margin-top: 12px; }
 .recordHeader .title { font-size: clamp(2.375rem, 4vw, 3.5rem) !important; }
 .recordHeader .lead { font-size: 1.125rem; max-width: 700px; }
 .notice { padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: .875rem; color: var(--muted); margin: 0 0 36px; max-width: 850px; }
@@ -89,6 +95,8 @@
   .card p { grid-column: auto; }
   .entryTime span { display: inline; padding-left: 12px; }
   .entry dl { grid-template-columns: 1fr; gap: 2px; }
+  .collection dl { grid-template-columns: 1fr; gap: 3px; }
+  .collection dd { margin-bottom: 10px; }
   .entry dd { margin-bottom: 10px; }
   .visualTop { flex-wrap: wrap; }
   .topline { gap: 16px; }

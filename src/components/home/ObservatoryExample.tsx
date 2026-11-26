@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import record from './observatory-demo.json';
+import CollectionStatus from './CollectionStatus';
 import s from './ResearchExperience.module.css';
 
 export default function ObservatoryExample() {
@@ -18,9 +19,11 @@ export default function ObservatoryExample() {
     catch { setMessage('Copy this page’s address to share the example.'); }
   };
   return <div className={s.site}><div className={s.container}>
-    <div className={s.topline}><Link href="/">Epiphysics</Link><span>Observatory / Example record</span></div>
+    <div className={s.topline}><Link href="/">Epiphysics</Link><span>Observatory</span></div>
+    <div className={s.recordHeader}><h1 className={s.title}>Observatory</h1><p className={s.lead}>Collection status and reproducible examples from the research engine.</p></div>
+    <CollectionStatus />
     <div className={s.recordHeader}>
-      <h1 className={s.title}>A forecast, from source to score</h1>
+      <h2 className={s.title}>A forecast, from source to score</h2>
       <p className={s.lead}>A small example of the record we want every experiment to leave: its inputs, prediction, outcome, and calculation.</p>
     </div>
     <p className={s.notice}>This example uses fictional workers and a simulated clock. Both probabilities are chosen by hand. It demonstrates the software; it is not a test of predictive skill.</p>
