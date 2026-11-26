@@ -651,7 +651,7 @@
       "id": "doc_fixed_clause_probe_run",
       "kind": "document",
       "title": "Fixed clause recovery with a larger retrieval budget",
-      "repo_path": "docs/planning/runs/2026-11-26-retrieval-probe.md"
+      "repo_path": "docs/experiments/results/2026-11-26-retrieval-probe.md"
     },
     {
       "id": "claim_fixed_clause_probe_result",

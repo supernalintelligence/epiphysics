@@ -20,7 +20,7 @@ Asking the two parts separately recovered the evidence missing from the original
 
 The union of both top-five lists contains complete support for the original joint question. It uses **ten distinct passages**, totaling 20,480 window bytes and 18,688 unique source bytes. The original whole question returned five passages, totaling 10,240 window bytes and 9,728 unique source bytes. This result demonstrates sensitivity to asking separate questions under a larger selection budget. It does not establish an equal-budget gain or justify adopting decomposition generally.
 
-The [fixed protocol](../../experiments/retrieval-fixed-clause-probe.md) permitted exactly two repetitions, with the same saved corpus, raw-text representation, queries and runtime. No alternate wording or third execution ran. Original annotations and the [C4 score of 5/6](2026-11-26-retrieval-coverage.md) remain unchanged. These questions and outcomes are development data visible to the builders. No answers were generated, and no predictive or business advantage was measured.
+The [fixed protocol](../retrieval-fixed-clause-probe.md) permitted exactly two repetitions, with the same saved corpus, raw-text representation, queries and runtime. No alternate wording or third execution ran. Original annotations and the [C4 score of 5/6](../../planning/runs/2026-11-26-retrieval-coverage.md) remain unchanged. These questions and outcomes are development data visible to the builders. No answers were generated, and no predictive or business advantage was measured.
 
 ## A verification failure, retained and repaired
 

@@ -13,7 +13,7 @@
     },
     {
       "id": "diagnosis",
-      "href": "/planning/runs/2026-11-26-retrieval-probe",
+      "href": "/experiments/results/2026-11-26-retrieval-probe",
       "requiredText": [
         "Both fixed executions returned identical ordered results.",
         "This result demonstrates sensitivity to asking separate questions under a larger selection budget."
