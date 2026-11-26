@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "control-sources-20261126:snapshot",
+  "cohort": "development",
+  "span_convention": {
+    "unit": "UTF-8 bytes",
+    "start": "inclusive",
+    "end": "exclusive",
+    "sha256": "SHA-256 of the exact byte slice, not the whole observation"
+  },
+  "answerability_definition": {
+    "answerable": "The necessary supporting evidence is present in this retained snapshot.",
+    "unanswerable": "No supporting span answers the requested fact in this four-source corpus; the question is not asserted to be universally false."
+  },
+  "cases": [
+    {
+      "question_id": "dev-openai-01",
+      "topic": "model_retirement_notice",
+      "query": "For OpenAI’s standard generally available models versus its image and specialist variants, how much warning should I expect before removal, and what could shorten it?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:openai-deprecations",
+          "start": 12565,
+          "end": 12701,
+          "sha256": "e4b201f1c59cf9d4fedd542434531ef97b928093757f19e6d834abc29168360b"
+        },
+        {
+          "observation_id": "control-sources-20261126:openai-deprecations",
+          "start": 12705,
+          "end": 12755,
+          "sha256": "955a015a53559a07bd40a6e81ed4bf417a14bc5cfa5decaa6faf3a0d344660a4"
+        },
+        {
+          "observation_id": "control-sources-20261126:openai-deprecations",
+          "start": 12758,
+          "end": 12860,
+          "sha256": "49038bc355252c2463d6411ed4d3969cfc7c58bd4d3afb35be35a7f3f5e36df0"
+        }
+      ],
+      "rationale": "The policy distinguishes a six-month general category from a three-month specialized/image category, subject to safety or compliance exceptions.",
+      "source_url": "https://developers.openai.com/api/docs/deprecations.md"
+    },
+    {
+      "question_id": "dev-openai-02",
+      "topic": "programmatic_shutdown_monitoring",
+      "query": "How can a monitoring script find an OpenAI model’s planned removal date without someone reading the announcements each time?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:openai-deprecations",
+          "start": 13828,
+          "end": 14057,
+          "sha256": "0d1d135a40433d2042af85bf77691b19b3a34a932ea9f6ef4f6133d85d07ad99"
+        }
+      ],
+      "rationale": "The model-list endpoint exposes an optional retirement-date field suitable for automated monitoring; its presence is not guaranteed for every model.",
+      "source_url": "https://developers.openai.com/api/docs/deprecations.md"
+    },
+    {
+      "question_id": "dev-anthropic-01",
+      "topic": "retired_model_request_behavior",
+      "query": "If an app keeps calling a Claude model after its withdrawal, what happens and which error does the Messages interface return?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:anthropic-deprecations",
+          "start": 2602,
+          "end": 2780,
+          "sha256": "94dbee2641887694d5357f1b97d2e6dde293ecff04a4cff410eb85dbe95237e8"
+        }
+      ],
+      "rationale": "Calls cease to work after retirement; the Claude Messages interface identifies this with HTTP 404 and the not_found_error code.",
+      "source_url": "https://platform.claude.com/docs/en/about-claude/model-deprecations.md"
+    },
+    {
+      "question_id": "dev-anthropic-02",
+      "topic": "research_continuity_and_preservation",
+      "query": "What happens to comparisons against older Claude models when they are retired, and what preservation commitment is intended to lessen the impact?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:anthropic-deprecations",
+          "start": 4395,
+          "end": 4465,
+          "sha256": "0fd4dd412c340c34c479de192d893ba1927fec6afbde43bc9e78f99e5d1ded95"
+        },
+        {
+          "observation_id": "control-sources-20261126:anthropic-deprecations",
+          "start": 4615,
+          "end": 4749,
+          "sha256": "74d78886a4c4f3cffaaca9b821d3594497e9d4086e7f5e7239662f320cffc412"
+        }
+      ],
+      "rationale": "Research comparisons lose model access, while retaining weights over the long term is a stated mitigation; retention does not itself promise continued public access.",
+      "source_url": "https://platform.claude.com/docs/en/about-claude/model-deprecations.md"
+    },
+    {
+      "question_id": "dev-x402-01",
+      "topic": "client_spending_controls",
+      "query": "Does x402’s core payment standard specify how an automated client’s spending cap should work?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:x402-v2",
+          "start": 565,
+          "end": 619,
+          "sha256": "4320a588dc931edcdf6079eb0a55830b588800695b2bfc31c793a507367dbc31"
+        },
+        {
+          "observation_id": "control-sources-20261126:x402-v2",
+          "start": 796,
+          "end": 827,
+          "sha256": "5c123cbe10d5a5bc875430d5f981bde3d83d698918e7f58bc64622ff6c521104"
+        }
+      ],
+      "rationale": "Local spending-limit management is excluded from the core specification; this does not imply that implementations cannot add it.",
+      "source_url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/x402-specification-v2.md"
+    },
+    {
+      "question_id": "dev-x402-02",
+      "topic": "payment_check_ordering",
+      "query": "Under x402 v2, may a server run the purchased service before doing any check on the payment?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:x402-v2",
+          "start": 20156,
+          "end": 20271,
+          "sha256": "7facbba60b79ac029971ffd88c6b1fb4c3ac789e0e1c630c8e32eacc2f618bda"
+        }
+      ],
+      "rationale": "Every permitted flow requires a verification or settlement check before the protected operation executes.",
+      "source_url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/x402-specification-v2.md"
+    },
+    {
+      "question_id": "dev-opentimestamps-01",
+      "topic": "timestamp_assurance",
+      "query": "What fact about a document’s history can a successfully verified OpenTimestamps proof establish?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:opentimestamps",
+          "start": 8592,
+          "end": 8662,
+          "sha256": "348fbc91b2e66f9caad8e453fb74f63be09650087f097075a9ae2c1f0c7bc6e5"
+        }
+      ],
+      "rationale": "The stated assurance is prior existence of the data relative to a time boundary; a local capture time alone is not such a proof.",
+      "source_url": "https://opentimestamps.org/"
+    },
+    {
+      "question_id": "dev-opentimestamps-02",
+      "topic": "calendar_service_access",
+      "query": "What fees and signup requirements does OpenTimestamps state for using its calendar servers?",
+      "answerability": "answerable",
+      "gold_spans": [
+        {
+          "observation_id": "control-sources-20261126:opentimestamps",
+          "start": 9251,
+          "end": 9445,
+          "sha256": "1341998ac2cae6135b0b24ec6146556fec98e25d102fdef52269e067d94144a2"
+        }
+      ],
+      "rationale": "The offered calendar service is described as free and accessible without enrollment or an API credential.",
+      "source_url": "https://opentimestamps.org/"
+    },
+    {
+      "question_id": "dev-openai-03",
+      "topic": "post_retirement_access_adoption",
+      "query": "What proportion of OpenAI customers actually obtained dedicated capacity to keep a model running after its shutdown date?",
+      "answerability": "unanswerable",
+      "gold_spans": [],
+      "rationale": "The retained page mentions a possible continued-access arrangement but supplies no customer adoption count or proportion.",
+      "source_url": "https://developers.openai.com/api/docs/deprecations.md"
+    },
+    {
+      "question_id": "dev-anthropic-03",
+      "topic": "public_release_schedule",
+      "query": "On what exact date will Anthropic make the weights of its retired Claude models publicly downloadable?",
+      "answerability": "unanswerable",
+      "gold_spans": [],
+      "rationale": "The retained page discusses future public availability as an aspiration and weight retention as a commitment, without a public-download release date.",
+      "source_url": "https://platform.claude.com/docs/en/about-claude/model-deprecations.md"
+    },
+    {
+      "question_id": "dev-x402-03",
+      "topic": "observed_settlement_reliability",
+      "query": "What percentage of real-world x402 payments failed to settle during 2026?",
+      "answerability": "unanswerable",
+      "gold_spans": [],
+      "rationale": "The retained specification defines failure handling but does not report observed deployment volumes or a measured annual failure rate.",
+      "source_url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/x402-specification-v2.md"
+    },
+    {
+      "question_id": "dev-opentimestamps-03",
+      "topic": "observed_timestamp_latency",
+      "query": "What was the median wait from submitting a file to a Bitcoin-confirmed OpenTimestamps proof over the past year?",
+      "answerability": "unanswerable",
+      "gold_spans": [],
+      "rationale": "The retained homepage describes stamping and calendar services but contains no measured median confirmation delay or annual latency dataset.",
+      "source_url": "https://opentimestamps.org/"
+    }
+  ],
+  "limitations": [
+    "Builder-visible development data; not a held-out or final evaluation set and not suitable for an unbiased generalization claim.",
+    "Only four retained sources are represented, with two answerable questions and one unsupported question per source domain; this is a small, manually curated sample.",
+    "Answerability is restricted to the exact retained bytes in control-sources-20261126:snapshot; linked pages and external knowledge are outside the corpus.",
+    "Gold spans are minimal supporting passages rather than an exhaustive list of every equivalent passage; a later evaluator must specify how alternative valid evidence is scored.",
+    "The questions use natural paraphrases but were not calibrated against retrieval systems; difficulty, lexical overlap effects, and false-negative rates remain unmeasured.",
+    "The source pages contain reported policies or protocol descriptions, not independently verified outcomes, a market forecast, or evidence of inevitable AI dominance.",
+    "Capture timestamps are local observations rather than external attestations, and this snapshot does not reconstruct information available on earlier source-stated dates.",
+    "The OpenTimestamps assurance question concerns a valid, verified timestamp proof; no proof was generated or verified for these source captures.",
+    "No network requests, new captures, external model calls, payments, or coding API work were performed while curating these cases."
+  ]
+}

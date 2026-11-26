@@ -1,0 +1,462 @@
+{
+  "schema_version": 2,
+  "snapshot_id": "control-sources-20261126:snapshot",
+  "cohort": "development",
+  "cohort_id": "control-fresh-coverage-v1",
+  "source_scope": "selected_corpus_only",
+  "support_semantics": "any_complete_bundle_v1",
+  "cases": [
+    {
+      "question_id": "coverage-01-supported",
+      "query": "For an existing fine-tuned model based on one of OpenAI's listed upcoming retirements, what determines when inference stops?",
+      "pair_id": "coverage-pair-01",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "upcoming_base_schedule",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:openai-deprecations",
+              "start": 8968,
+              "end": 9081,
+              "sha256": "4e27ac65c05431bbfa03618f3eee7f04f03697b06c45a3539292ecc99f371b08"
+            }
+          ]
+        },
+        {
+          "bundle_id": "existing_model_inference",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:openai-deprecations",
+              "start": 14928,
+              "end": 15043,
+              "sha256": "6a7b87be17af72179e0ea2470421e79b9f9603be9064d231f1701456802541a5"
+            }
+          ]
+        }
+      ],
+      "rationale": "The retained page ties the lifetime of the fine-tuned inference service to retirement of its underlying base model. Either of two separate passages supports that dependency.",
+      "family_tags": [
+        "software_service"
+      ],
+      "relation_tags": [
+        "dependency",
+        "time_condition"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-openai-01",
+          "dev-openai-03"
+        ],
+        "distinction": "Asks which base-model event controls existing fine-tuned inference, rather than the general notice period or measured uptake of dedicated post-shutdown capacity."
+      }
+    },
+    {
+      "question_id": "coverage-01-unsupported",
+      "query": "For an existing fine-tuned model based on one of OpenAI's listed upcoming retirements, what determines when its training dataset is deleted?",
+      "pair_id": "coverage-pair-01",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "The selected corpus gives model and training-job shutdown schedules but no rule for deleting the training dataset. Service retirement does not establish data deletion, and none of the other three retained sources supplies that rule.",
+      "family_tags": [
+        "software_service"
+      ],
+      "relation_tags": [
+        "dependency",
+        "time_condition"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-openai-01",
+          "dev-openai-03"
+        ],
+        "distinction": "Asks for a training-data deletion trigger, rather than a notice period or the proportion of customers retaining model access."
+      }
+    },
+    {
+      "question_id": "coverage-02-supported",
+      "query": "Who sets the retirement schedules for Claude models on Amazon Bedrock and Google-managed Google Cloud?",
+      "pair_id": "coverage-pair-02",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "partner_platform_authority",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:anthropic-deprecations",
+              "start": 1704,
+              "end": 1888,
+              "sha256": "363a6ea473a3f607e1da1a23983a41e619c5ec639c8f1f2a89edd307f48802c1"
+            }
+          ]
+        }
+      ],
+      "rationale": "The retained policy assigns the general retirement schedules to the partner-operated platforms, distinguishing them from Anthropic-operated services.",
+      "family_tags": [
+        "software_service",
+        "organization"
+      ],
+      "relation_tags": [
+        "authority",
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-anthropic-01"
+        ],
+        "distinction": "Asks which platform operator controls the schedule, rather than how retired-model requests fail."
+      }
+    },
+    {
+      "question_id": "coverage-02-unsupported",
+      "query": "Who approves customer-specific exceptions to the retirement schedules for Claude models on Amazon Bedrock and Google-managed Google Cloud?",
+      "pair_id": "coverage-pair-02",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "The policy assigns general schedule-setting authority but does not assign authority to approve customer-specific exceptions. Migration help and platform links do not establish that authority; the OpenAI, x402 and OpenTimestamps sources do not fill the gap.",
+      "family_tags": [
+        "software_service",
+        "organization"
+      ],
+      "relation_tags": [
+        "authority",
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-anthropic-01"
+        ],
+        "distinction": "Asks who can approve an individual exception, rather than retired-model error behavior or general schedule-setting."
+      }
+    },
+    {
+      "question_id": "coverage-03-supported",
+      "query": "When stamping a file with the OpenTimestamps web interface, where is the document hash calculated?",
+      "pair_id": "coverage-pair-03",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "browser_hash_computation",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:opentimestamps",
+              "start": 5909,
+              "end": 5972,
+              "sha256": "eaf0ebf1a2a189f14c02c2c12e186c813a12f2a12614ed6a65a2a88d0b5ea823"
+            }
+          ]
+        }
+      ],
+      "rationale": "The retained interface text locates document-hash computation in the browser. This is a stated implementation property, not an independently verified privacy audit.",
+      "family_tags": [
+        "software_service",
+        "representation"
+      ],
+      "relation_tags": [
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-opentimestamps-01",
+          "dev-opentimestamps-02"
+        ],
+        "distinction": "Asks the location of a processing step, rather than the temporal assurance of a verified proof or calendar fees and registration."
+      }
+    },
+    {
+      "question_id": "coverage-03-unsupported",
+      "query": "When stamping a file with the OpenTimestamps web interface, where is the original document stored after stamping?",
+      "pair_id": "coverage-pair-03",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "The page states a hash-computation location and mentions a proof download, but does not specify a post-stamping storage location or retention policy for the original document. Calendar descriptions and script links do not supply it, nor do the other three sources.",
+      "family_tags": [
+        "software_service",
+        "representation"
+      ],
+      "relation_tags": [
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-opentimestamps-01",
+          "dev-opentimestamps-02"
+        ],
+        "distinction": "Asks the original-document storage location after processing, rather than proof assurance, service access conditions or historical confirmation latency."
+      }
+    },
+    {
+      "question_id": "coverage-04-supported",
+      "query": "When an x402 client distinguishes payment error conditions, which fields must it use instead of the human-readable diagnostic messages?",
+      "pair_id": "coverage-pair-04",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "machine_error_discriminator",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 31595,
+              "end": 31930,
+              "sha256": "4b99c5be049b0a1f581ee3205ab1f621495290e03a47eca3dc2a277f03845dfe"
+            }
+          ]
+        }
+      ],
+      "rationale": "The core specification requires clients to distinguish errors with the corresponding reason codes rather than human-readable message text. This is a protocol conformance obligation, not a legal-contract claim.",
+      "family_tags": [
+        "software_service",
+        "contract_obligation",
+        "representation"
+      ],
+      "relation_tags": [
+        "identity",
+        "obligation"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-x402-03"
+        ],
+        "distinction": "Asks how a client must identify an error condition from protocol fields, rather than a measured settlement-failure rate."
+      }
+    },
+    {
+      "question_id": "coverage-04-unsupported",
+      "query": "When an x402 client schedules a retry after a payment error, which response field specifies the required waiting interval?",
+      "pair_id": "coverage-pair-04",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "The retained response schemas do not prescribe a retry-delay field. Payment-completion timeouts and authorization-validity timestamps are different concepts; the pending-settlement instruction calls for reconciliation but supplies no required waiting interval. The other three sources supply no x402 retry rule.",
+      "family_tags": [
+        "software_service",
+        "contract_obligation",
+        "representation"
+      ],
+      "relation_tags": [
+        "time_condition",
+        "obligation"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-x402-03"
+        ],
+        "distinction": "Asks for protocol-prescribed retry timing metadata, rather than a measured failure rate or the pre-resource payment-check ordering."
+      }
+    },
+    {
+      "question_id": "coverage-05-supported",
+      "query": "Which x402 facilitator endpoint lists its supported schemes and networks, and which endpoint durably commits payment state for a request?",
+      "pair_id": "coverage-pair-05",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "discover_and_commit",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 25440,
+              "end": 25555,
+              "sha256": "3d5332d0ed2f278af769b7f15c3d956d56f2a557b6c0d9f430c5d3eecba447dc"
+            },
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 22699,
+              "end": 22917,
+              "sha256": "4f58a53bd38846e53e852e3cf33a21f3c0160cd96d3de360407613b428be17d4"
+            }
+          ]
+        },
+        {
+          "bundle_id": "discover_and_commit_via_flow",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 17726,
+              "end": 17949,
+              "sha256": "d56a89039b8a73f086ccdadd0fd48fbec4283411edca8997328f72e6da906bcc"
+            },
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 19543,
+              "end": 19860,
+              "sha256": "51fb66096627b7ece880bd14bce4be8474a28b804c4a0ef8d304cda9010e1359"
+            },
+            {
+              "observation_id": "control-sources-20261126:x402-v2",
+              "start": 25440,
+              "end": 25555,
+              "sha256": "3d5332d0ed2f278af769b7f15c3d956d56f2a557b6c0d9f430c5d3eecba447dc"
+            }
+          ]
+        }
+      ],
+      "rationale": "A complete answer needs both capability-discovery and durable state-commit endpoint identities. One bundle joins their endpoint descriptions. The alternative joins the discovery description with the flow overview naming the state-committing endpoint and the upfront-flow row establishing durable commitment. Every span in either bundle contributes to those requested facets.",
+      "family_tags": [
+        "software_service"
+      ],
+      "relation_tags": [
+        "identity",
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-x402-02"
+        ],
+        "distinction": "Asks for capability discovery and durable state-commit endpoint identities, rather than whether any payment check precedes resource execution."
+      }
+    },
+    {
+      "question_id": "coverage-05-unsupported",
+      "query": "Which x402 facilitator endpoint lists its supported schemes and networks, and which endpoint reverses previously committed payment state for a request?",
+      "pair_id": "coverage-pair-05",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "Capability discovery is supported, but the retained core specification defines no endpoint for reversing previously committed payment state. Multiple settlement steps and escrow descriptions do not supply a general reversal endpoint. The other sources contain no x402 reversal API, so the full conjunction lacks support.",
+      "family_tags": [
+        "software_service"
+      ],
+      "relation_tags": [
+        "identity",
+        "boundary"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-x402-02"
+        ],
+        "distinction": "Keeps capability discovery but asks for reversal of already committed payment state, a different operation from the old ordering obligation."
+      }
+    },
+    {
+      "question_id": "coverage-06-supported",
+      "query": "For locating deprecated Claude usage, which two dimensions does the Claude Console usage CSV break API usage down by?",
+      "pair_id": "coverage-pair-06",
+      "answerability": "answerable",
+      "support_bundles": [
+        {
+          "bundle_id": "api_key_and_model_dimensions",
+          "spans": [
+            {
+              "observation_id": "control-sources-20261126:anthropic-deprecations",
+              "start": 3344,
+              "end": 3629,
+              "sha256": "0738bfe0da498028bad434944319ba757eb0ae59936658297a26b82fc3116ee9"
+            }
+          ]
+        }
+      ],
+      "rationale": "The retained usage-audit instructions describe a CSV organized by API key and model. Both named dimensions are part of the requested answer.",
+      "family_tags": [
+        "software_service",
+        "representation"
+      ],
+      "relation_tags": [
+        "identity"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-openai-02",
+          "dev-anthropic-01"
+        ],
+        "distinction": "Asks how recorded Claude usage is grouped in an export, rather than how OpenAI exposes a planned shutdown date or how retired Claude calls fail."
+      }
+    },
+    {
+      "question_id": "coverage-06-unsupported",
+      "query": "For locating deprecated Claude usage, which CSV field separates staging-environment traffic from production-environment traffic?",
+      "pair_id": "coverage-pair-06",
+      "answerability": "unanswerable",
+      "support_bundles": [],
+      "rationale": "The retained audit instructions identify API-key and model breakdowns but no field distinguishing staging and production environments. An API key is not automatically an environment label. No other selected source specifies the Claude Console export schema beyond that description.",
+      "family_tags": [
+        "software_service",
+        "representation"
+      ],
+      "relation_tags": [
+        "identity"
+      ],
+      "novelty": {
+        "related_prior_question_ids": [
+          "dev-openai-02",
+          "dev-anthropic-01"
+        ],
+        "distinction": "Asks for a deployment-environment dimension in a Claude usage export, rather than a shutdown-date field or a retired-model error code."
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "pair_id": "coverage-pair-01",
+      "supported_question_id": "coverage-01-supported",
+      "unsupported_question_id": "coverage-01-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:openai-deprecations"
+      ],
+      "changed_requirement": "Change the lifecycle endpoint from stopping inference to deleting the associated training dataset.",
+      "matching_rationale": "Both questions retain the same provider, existing fine-tuned model and upcoming-retirement context. Only the lifecycle operation whose trigger is requested changes; no additional numeric measurement is introduced."
+    },
+    {
+      "pair_id": "coverage-pair-02",
+      "supported_question_id": "coverage-02-supported",
+      "unsupported_question_id": "coverage-02-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:anthropic-deprecations"
+      ],
+      "changed_requirement": "Change general schedule-setting authority to authority over a customer-specific exception.",
+      "matching_rationale": "Both questions name the same two partner platforms, Claude models and retirement schedules; the changed relation is the scope of authority, not an observed rate or date."
+    },
+    {
+      "pair_id": "coverage-pair-03",
+      "supported_question_id": "coverage-03-supported",
+      "unsupported_question_id": "coverage-03-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:opentimestamps"
+      ],
+      "changed_requirement": "Change the requested artifact-location relation from hash computation to original-document storage after stamping.",
+      "matching_rationale": "The same web interface, file and stamping task anchor both questions. Computation location is stated; storage location is a distinct requirement and is not inferred from privacy wording."
+    },
+    {
+      "pair_id": "coverage-pair-04",
+      "supported_question_id": "coverage-04-supported",
+      "unsupported_question_id": "coverage-04-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:x402-v2"
+      ],
+      "changed_requirement": "Change the machine-readable error information requested from condition identity to a required retry delay.",
+      "matching_rationale": "Both questions concern an x402 client processing a payment error and selecting a response field. The unsupported case changes the metadata relation; it does not ask for an artificially precise observed statistic."
+    },
+    {
+      "pair_id": "coverage-pair-05",
+      "supported_question_id": "coverage-05-supported",
+      "unsupported_question_id": "coverage-05-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:x402-v2"
+      ],
+      "changed_requirement": "Keep the discovery facet fixed and replace the second operation, commit, with reversal of committed state.",
+      "matching_rationale": "The syntax, protocol, facilitator and first requested facet are identical. The two positive facets require joint support; the negative remains unsupported despite its answerable first facet."
+    },
+    {
+      "pair_id": "coverage-pair-06",
+      "supported_question_id": "coverage-06-supported",
+      "unsupported_question_id": "coverage-06-unsupported",
+      "anchor_observation_ids": [
+        "control-sources-20261126:anthropic-deprecations"
+      ],
+      "changed_requirement": "Change the usage-partition dimension from documented API key/model fields to deployment environment.",
+      "matching_rationale": "Both questions use the same Console CSV and deprecated-usage audit task. They request comparably specific grouping information, with no numeric-performance demand."
+    }
+  ],
+  "limitations": [
+    "Curator /root/c2_critic previously reviewed C1 questions and C1/C3 retrieval results, including individual misses and rank changes. prior_results_seen=true; fresh_results_seen=false. No fresh C4 retrieval outputs existed or were supplied during this curation.",
+    "Curated as builder-visible development data. Independent semantic review, freezing and execution are established only by their separate retained records; the cohort alone establishes none of them.",
+    "Answerability is relative only to the exact four selected source blobs in control-sources-20261126:snapshot. Linked pages, referenced scripts and external knowledge are excluded.",
+    "The twelve questions form six deliberately related pairs and are not twelve independent population samples. Labels, lexical difficulty and annotation completeness are not empirically calibrated.",
+    "Alternative support means any one complete listed bundle is sufficient; spans in one bundle are jointly required. Two positive cases have alternative bundles and one has jointly required spans for a two-facet question; no multisource bundle is claimed.",
+    "The supported annotations are semantically chosen source passages without candidate retrieval or window-rank inspection for these questions. No score, threshold, quality gain or answerability-classifier accuracy is claimed.",
+    "Unsupported labels identify missing requirements rather than asserting their propositions universally false. Partial support for a conjunctive request does not make the whole request answerable.",
+    "software_service, organization, contract_obligation and representation have eligible cases. person_role, physical_asset and collective have no eligible cases and remain unmeasured. No seven-family macro or worst-family score is justified.",
+    "contract_obligation tags here concern a stated x402 client conformance requirement, not proof of a legal contract. Organization tags distinguish policy-setting authority, not measured organizational control.",
+    "Source policy and interface claims are reported descriptions, not independent operational measurements. The browser-hashing statement is not a security audit, and model service retirement is not a dataset-deletion policy.",
+    "Raw UTF-8 byte spans identify source evidence. C4 metrics must use complete bundles and their own versioned denominator; no C4-minus-C1/C3 quality delta is defined.",
+    "Only retained local files were read. No ledger was opened, no candidate search/index/projection or scoring API was called, no source was fetched, and no source/store/repository file was written. Only this draft, its private curation notes and preserved prior versions of those files were written."
+  ]
+}

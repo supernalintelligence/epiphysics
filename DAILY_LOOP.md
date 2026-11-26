@@ -1,4 +1,47 @@
-# Epiphysics Daily Loop (Current)
+---
+title: "Bounded autonomous research cadence"
+description: "Supervisor instructions for continuous authorized work, measured checkpoints, and recovery wakes."
+date: 2026-11-25
+tts:
+  enabled: false
+feedback:
+  enabled: false
+---
+
+# Bounded autonomous research cadence
+
+The supervisor continues ready, authorized work while its session is active. A 15-minute heartbeat is a recovery backstop, not the pace of execution. The filename is retained for existing links. Read the [stepwise loop](docs/planning/stepwise-improvement-loop.md), [metric contracts](docs/experiments/representation-metrics.md), `TODO.md`, the current build plan, and latest decisions. Coordinate overlapping scientific direction or file ownership with SCI through the existing authorized project channel.
+
+Reach a **checkpoint every 30 minutes or three core steps**, whichever comes first: record progress, review outcomes and resources, refresh priorities, and continue the next eligible step immediately. A checkpoint is not a reason to end active work. Keep one core step in progress; delegate scoped construction to builder subagents and fixed assessments to program workers while the primary supervises. Support work can run in parallel with separate ownership. Check the existing active job before any wake dispatch; join or inspect it rather than starting a duplicate. Stop or hand off only for an actual blocker, exhausted authorized resource limit, user instruction, completed scope, or unavailable session.
+
+1. Read improvement status from its dedicated persistent store outside disposable worktrees. Verify integrity before writes; on failure, preserve the store and diagnose. Do not mix improvement and observatory events. Inspect unfinished claims and worker receipts before resuming; never blindly replay an interrupted worker.
+2. Dispatch the queued action to the appropriate worker. A program can run the fixed offline evaluator; a scoped builder implements a code packet. The current ordered rule is time integrity, provenance, coverage, weakest family, then source-span/history, manifest, fixed-transform, graph-view and materialization capability failures. Passing all preceding gates selects the frozen retrieval baseline (Packet C) until actual retrieval is measured. A validated study then selects reproduction repair, a support-ranking comparison or bounded coverage evaluation from its separate metrics. A valid completed raw/HTML comparison consumes that comparison task and advances to fresh coverage for a gain, tie or regression; it does not select the same experiment again from the same visible errors. Its success probability and cost estimates are null. Use the active worktree until reviewed changes land.
+3. Have the worker return actual changes, relevant checks, failures, and resource use. Obtain independent review before accepting a code packet. Do not treat an oracle fixture pass or the free-text `completed_work` field as proof that a build completed.
+4. Assess the candidate through `epiphysics.improvement dispatch`, using current `next_step.id` as `--after-step` and a new run key for changed inputs. Assessment completion and its successor are recorded atomically. Compare changes only when the registered measurement contract matches; `incomparable_contract_change` has no delta or target judgment. Candidate/controller changes alone can remain comparable, without implying causality. Read the new authoritative state and immediately dispatch the next eligible action. At a checkpoint, review and record the handoff, then continue while the session and authorized resources remain available.
+5. Inspect the actual capability probes as well as representation scores. `source-span-probes-v1` has eight source-span and six assertion-history checks; both metrics must reach 1 before the selector recommends Packet B. A failure queues `repair_source_span_assertions`. The later gates are twenty-two manifest, twenty-six identity/projection, forty-five partition/merge and thirty output-materialization checks. Supply the declared actual study through `--retrieval-study FILE` to measure `retrieval_baseline_reproducibility`: close Packet C only after two distinct actual executions over a frozen eligible corpus validate against reviewed questions and an explicit evaluation contract. Keep the source archive read-only and the captured improvement inputs private; absent input remains unmeasured. Do not repeat a known control run simply to fill a wake.
+6. Maintain observatory collection separately when its daily window is due. Run `PYTHONPATH=engine python3 -m epiphysics --store .supernal-local/observatory cycle --config engine/examples/project-cycle.json --run-key YYYY-MM-DD-project` from the shared checkout, using the current UTC date and its canonical source paths. One attempt per configured source per run; the same completed key is a no-op. A 15-minute heartbeat does not change this collector's daily key or invent missed windows.
+7. Refresh `src/components/home/observatory-status.json` with `publish-status` only when a new verified aggregate is available. Use the persistent observatory store and canonical shared-checkout README; write the artifact in the managed worktree. Keep private ledger contents, captured inputs, and process receipts out of public exports.
+8. Preserve an evidence-backed run entry under `docs/planning/runs/`, including incomplete work and failures, remaining queue, and the reason for stopping. Use normal repository checks, independent review, and landing policy. Report only a meaningful completed change, failure, or decision needed. Draft publication artifacts for review; no unsolicited outreach or automatic social posting.
+
+Program commands and receipt details are in the stepwise loop. `dispatch` allows only a fresh Python process running the offline assessment, with at most 60 seconds and 1 MB output. The example assessment policy is 30 seconds, offline fixtures only, zero external spend, and no scale change. This is trusted local process supervision, not a security sandbox. Its timeout requires the dispatcher to remain alive; a start receipt without a finish receipt requires process investigation after a crash.
+
+A nonzero exit does not always mean the assessment failed. For `assessment_completed_delivery_failed`, inspect `delivery_status`, `authoritative_transition_id`, the bounded `authoritative_transition`, and current status. Preserve that completion and consume its queued successor; do not rerun work because result output hit the cap. With no confirmed transition, inspect the receipts and ledger. Invalid JSON/policy can be refused before claiming a step, leaving the queue unchanged and the refusal in dispatched-child receipts/output. Dispatcher validation can fail even before receipts exist. Recovery may close only its own reaped child's unfinished claim, never an unrelated claim or completed result.
+
+Default research limits remain zero paid model calls, no purchases, and at most ten explicitly configured collection sources. HTTPS additions require documented provenance and a collection purpose. Expanded model use requires an explicit authorized budget and implemented guard. The controller cannot grant itself new access, spending, deployment, or settlement rights. Shadow, canary, and multiple-service stages remain gated future work.
+
+The heartbeat depends on host/session availability; the queue does not execute itself. Local evidence becomes a prospective archive through actual observations and remains without independent timestamp assurance until a witness adapter is implemented. Archive local data separately from Git. Keep final evaluation separate from search and tuning; a bad result creates a next question, not permission to revise an earlier forecast or outcome rule.
+
+## Verified SCI coordination
+
+The user authorized coordination with SCI in this work. A local mailbox write alone is not delivery. The B2c run verified an existing native Claude session delivery receipt and an actual SCI reply confirming separate file ownership; see [the run record](docs/planning/runs/2026-11-25-graph-materialization.md). SCI owns its canonical mathematics note and reports no engine dependency. Preserve its files and unrelated shared-checkout edits.
+
+Use an available live-session message tool when it can reach the intended agent. If only the persistent mailbox is available, inspect the documented native-session adapter and the exact existing session state before using it; do not choose “latest,” start a duplicate conversation, resume a busy session, or equate queue acceptance with receipt. Keep delivery evidence and the actual reply in the local coordination record. No idle polling should launch model turns. This is a coordination path for an authorized recipient, not a general outreach permission.
+
+## Existing falsification cycle
+
+The following project protocol remains available for substantive theory experiments. Its longer work estimates include regular 30-minute/three-step checkpoints and must respect each experiment's resource ceilings. Checkpoints preserve continuity; they do not end an active research session. Preserve the same experiment identity and stopping rule between wakes.
+
+## Epiphysics falsification loop
 
 Purpose: keep theory work, experiments, and issue execution moving every day with auditable outputs.
 
@@ -77,9 +120,9 @@ Daily report format:
 2. What passed/failed
 3. What changed in assumptions
 4. What is next
-5. What needs review/escalation (e.g., FLUX/VERIFY)
+5. What needs independent review or an explicit decision
 
-**Output:** concise status update to Mission Control + `DECISIONS.md` entry.
+**Output:** concise local run record and `DECISIONS.md` entry. Send external status only through an authorized channel when requested.
 
 ---
 
@@ -94,6 +137,7 @@ Daily report format:
 
 ## Ownership
 
-- EPIPHYSICS: lead execution + synthesis
-- FLUX: optimization review / process tuning
-- VERIFY: rigor audits / anti-bias checks
+- Primary supervisor: selects and supervises work, maintains the queue and synthesis, reviews checkpoints, and dispatches ready successors throughout the active session.
+- Builder subagents: perform scoped implementation or research and return checkable artifacts.
+- Allowlisted program workers: run fixed assessment programs and retain process receipts.
+- Independent reviewer/evaluator: reviews rigor and acceptance; preserves separation from candidate optimization. Historical role labels do not establish a currently running agent or grant extra authority.

@@ -1,8 +1,78 @@
+---
+title: "Epiphysics work queue"
+description: "Prioritized implementation and research work, selected against current measured gaps."
+date: 2026-11-25
+tts:
+  enabled: false
+feedback:
+  enabled: false
+---
+
 # Epiphysics — Work Queue
 
 Prioritized list of what needs to be done. Check this file when looking for work.
 
-## High Priority
+## Active measured improvement loop — first priority
+
+Read the durable improvement status before choosing a packet. The [loop protocol](docs/planning/stepwise-improvement-loop.md) and [metric contracts](docs/experiments/representation-metrics.md) govern this queue. The supervisor dispatches ready, authorized successors immediately throughout its active session. Every 30 minutes or three core steps is a checkpoint to record and review progress, not a stop condition. A 15-minute heartbeat recovers unattended work; inspect or join an existing active job instead of duplicating it. The queue alone does not execute tasks.
+
+- [x] Implement offline conformance evaluation: seven entity families, thirty checks, per-case/dimension results, macro and worst-family accuracy, provenance, coverage and time eligibility.
+- [x] Implement dedicated improvement status, hashed inputs, atomic assessment-completion/successor events, stale-claim protection, and explicit failure diagnosis.
+- [x] Add fixed subprocess assessment dispatch with time/output limits and retained process receipts. It does not execute arbitrary build actions.
+- [x] Independently review the controller/evaluator and verify a real two-process assessment continuation. See [the bootstrap record](docs/planning/runs/2026-11-25-improvement-bootstrap.md) for the original hourly configuration; current operation uses continuous active follow-up with a 15-minute backstop. Configuration does not prove a future autonomous run or learned improvement.
+- [ ] Follow the current measured gap in order: diagnose failed/interrupted runs, repair time eligibility, repair evidence ancestry, cover missing answers, then repair the weakest family. Keep all seven families and existing preservation checks.
+- [x] **Packet A — reviewed source-backed assertion slice:** source-backed assertions, typed values/units, world/knowledge time, immutable revisions and unresolved conflicts now have fourteen actual-API probes (`source-span-probes-v1`: eight span, six history). Independent review and 115 engine tests passed; the recorded worker advanced to Packet B. See [the execution record](docs/planning/runs/2026-11-25-source-assertions.md). The selector advances to Packet B only after both metrics and all representation gates pass; failures route to assertion repair.
+- [x] **Packet B1 — independently reviewed manifest metadata:** retained construction/configuration/ontology/predictor artifacts, stable method identity distinct from snapshot instances, explicit cost claims and a forecast-binding adapter now have twenty-two actual-API probes (`representation-manifest-probes-v2`). Independent review, 158 engine tests and the recorded B2 handoff passed; see [the execution record](docs/planning/runs/2026-11-25-representation-manifests.md). Passing B1 plus all prior gates selects B2; metadata alone does not prove construction or inference executed.
+- [x] **Packet B2a — independently reviewed fixed execution:** fixed graph identity/projection generates its own output and computed losses against an eligible recipe and parent manifest; completion embeds results, with rejected runs and unchanged inputs retained. `graph-transformation-probes-v2` supplies twenty-six actual-API checks. Independent review and 192 engine tests passed; the real worker selected B2b. See [the execution record](docs/planning/runs/2026-11-25-graph-transforms.md). All prior gates remain required. No supplied output or arbitrary artifact execution.
+- [x] **Packet B2b — implemented and independently reviewed:** executed named graph partitions and strict compatible-parent merges retain cross-edge losses, full ancestry and exact collision rules. `graph-view-probes-v1` supplies forty-five actual-API checks. Both reviewers verified the identifier-bound fix; 236 tests and a real successor assessment passed. No cloning quantities or silent identity/attribute/unit reconciliation; record partition is not physical entity fission. Passing all earlier gates and B2b selects B2c.
+- [x] **Packet B2c — implemented and independently reviewed:** atomic whole-output materialization creates usable B1 records and complete ancestry receipts. Thirty capability checks, 308 tests and the real persistent assessment passed after time, append-integrity and malformed-input fixes. See [the execution record](docs/planning/runs/2026-11-25-graph-materialization.md). The successor is the frozen retrieval baseline; no forecast execution or historical code backdating.
+- [x] **Packet C1 — measured and reviewed:** four retained sources, twelve reviewed development queries, two fresh FTS5 processes with identical result hashes. Source recall@1 is 8/8; gold-span recall@5 is 7/8; all four unsupported queries return passages. All 373 tests and independent review passed. See [the baseline record](docs/planning/runs/2026-11-25-retrieval-baseline.md); no sealed-holdout or answer-generation claim.
+- [x] **Packet C2 — measured and reviewed:** the bounded read-only adapter validates two actual executions and preserves their complete input/report identities. Independent review and 417 tests passed; the real persistent assessment recorded the original 3/8 and 7/8 support scores and selected the representation comparison. See [the controller record](docs/planning/runs/2026-11-25-retrieval-controller.md).
+- [x] **Packet C3 — measured and reviewed:** neutral validation separates candidate indexing from measurement; 487 exact-runtime tests and independent reviews passed. Four fresh processes reproduced, including the exact C1 raw bridge. HTML support recall tied while source and reciprocal-rank scores regressed. Raw remains the baseline; the real controller selected fresh coverage. See [the comparison record](docs/planning/runs/2026-11-26-retrieval-comparison.md).
+- [x] **Packet C4 — measured:** reviewed preparation selected two fresh raw runs over six supported/unsupported pairs. Both reproduced exactly: complete declared support was 5/6 at 1/3/5; all six unsupported queries returned passages. All 544 final tests and independent code/cohort reviews passed. Preparation and evaluation share the frozen measurement identity. The real controller selected support diagnosis; no cross-cohort improvement claim. See [the execution record](docs/planning/runs/2026-11-26-retrieval-coverage.md).
+- [x] **Packet C5 — checked diagnosis:** the missing discovery span is intact in the retained raw representation but absent from returned windows; independent semantic review found no complete alternative answer there. All 574 tests passed, original scores/source bytes stayed unchanged, and one actual worker atomically selected follow-up preparation. See [the execution record](docs/planning/runs/2026-11-26-retrieval-diagnosis.md).
+- [ ] **Packet C6 — fixed follow-up preparation active:** freeze two exact clauses and two raw repeats, with the larger combined selection budget explicit. Add only the fixed receipt-validation handoff needed to consume the existing preparation step. Stop after the declared diagnostic; valid reproduced outcomes move toward a control/exchange decision pilot, not further tuning on this case.
+- [x] Separate retrieval candidate-build, measurement and execution identities with a declared migration bridge and pinned runtime (C3). Historical infrastructure changes remain incomparable; only matched new-contract runs receive paired deltas.
+- [ ] Record whole-step build/review costs before learning return-on-effort or action-success estimates. Assessment runtime is not the full cost of an improvement.
+- [ ] Add measured action costs and outcome windows before estimating success probabilities or learning a next-action policy. Current cost/probability estimates are null, and observed changes are descriptive.
+- [ ] Implement protected final evaluation and new prospective cohorts before predictive-advantage claims; add shadow/canary gates before changing workload or action scope. Increase one axis at a time, with per-family floors, side-effect limits and exercised rollback.
+
+Preserve observatory collection when due, but do not let the older publication backlog displace an actionable integrity or representation gap. A completed assessment is not proof that an implementation packet passed its tests and review.
+
+## Observatory sequence
+
+- [x] Build the local append-only evidence, snapshot, representation, forecast, resolution, and scoring slice.
+- [x] Add bounded collection cycles and synthetic demonstration data.
+- [x] Clarify the landing page and add a five-step interactive introduction and inspectable example.
+- [x] Validate and integrate this slice on `ian-dev` through independent review; see the 26 November run record.
+- [ ] Promote through the required `ian-dev` → `main` → `production` pull requests after the separate site-loading fix is integrated; verify deployment and rendered layout.
+- [ ] Add an independent witness adapter and verification fixtures; distinguish receipt time from source time.
+- [ ] Add isolated model runners with explicit model/prompt/input manifests and enforced per-run budgets.
+- [ ] Compare a simple baseline, a direct language-model forecast, a fixed entity graph, and a learned representation on the same prospective questions.
+- [ ] Implement evaluator holdout separation, family-aware uncertainty, calibration, and abstention policies before promoting advantage claims.
+- [ ] Study recursive AI control with declared measurable proxies and competing hypotheses; avoid assuming dominance.
+- [ ] Design typed value-exchange events for services, data, compute, money, commitments, reputation, and governance rights; pilot in simulation before settlement adapters.
+- [ ] Add privacy-conscious measurement of example inspection, record downloads, reproductions, corrections, and repeat contributions; report retention and reproduction, not raw page views alone.
+- [ ] Prepare the knowledge-snapshots persona post for Ian's review. Keep it unpublished until reviewed.
+
+The detailed dependencies and acceptance gates are in `docs/planning/2026-11-24-recursive-observatory.md`. SCI's reply on the mathematics-note handoff is verified there; observatory review remains pending.
+
+## Existing research queue
+
+### Representation and knowledge layer
+
+The [research assessment](docs/research/meta-representational-systems.md), [component plan](docs/planning/meta-representation-build.md), and [six proposed protocols](docs/experiments/representation-comparison.md) define the dependency sequence. The active queue above owns Packets A–C; the existing supervisor automation continues them without a second scheduler.
+
+- [x] Investigate primary literature and audit existing representation/graph implementations; seed a curated research map with source limitations and conflicting claims.
+- [x] Add an offline validator/compiler that embeds selected committed source documents and emits a reproducible graph artifact.
+- [ ] Compare hybrid retrieval and graph challengers at matched reading and total construction costs; preserve shuffled/removed-edge controls.
+- [ ] Coordinate scientific revisions of prompt/Lagrangian and Lawvere claims; preserve hypothesis status until explicit constructions and discriminating tests exist.
+- [ ] Register a prospective representation tournament only after model budgets, evaluator separation and numerical acceptance rules are implemented.
+- [ ] Test bounded ontology revision and control/exchange mechanisms in simulation; keep real settlement adapters downstream of delivery verification.
+
+Prior items below need their status reconciled against dated experiment records before rerunning.
+
+### High Priority
 
 - [ ] **Run Experiment 2** — quadratic vs quartic on low-dimensional time-series data. Simplest test. See `docs/experiments/index.md` and `docs/research/rate_distortion_lagrangian.md` (Empirical Testing section).
 - [ ] **Add missing citations to paper** — Caticha (2012, Entropic Dynamics), Balasubramanian (1997, Occam factors), Transtrum/Sethna (sloppy models), Cranmer et al. (2020, Lagrangian NNs), Greydanus et al. (2019, Hamiltonian NNs), Galley (2013, non-conservative Lagrangians). File: `docs/research/paper_representational_efficiency.md`

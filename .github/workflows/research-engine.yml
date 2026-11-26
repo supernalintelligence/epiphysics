@@ -1,0 +1,279 @@
+name: Research engine
+on:
+  push:
+    paths: ['engine/**', '.github/workflows/research-engine.yml']
+  pull_request:
+    paths: ['engine/**', '.github/workflows/research-engine.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: engine
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run engine tests
+        run: python -m unittest discover -s engine/tests -v
+      - name: Verify synthetic controls
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from epiphysics.representation_checks import evaluate, reference_candidate, degraded_candidate
+
+          suite = json.loads(Path('engine/examples/improvement/entities.json').read_text())
+          reference = evaluate(suite, reference_candidate(suite))['metrics']
+          degraded = evaluate(suite, degraded_candidate(suite))['metrics']
+          assert reference['checks'] == reference['correct'] == reference['answered'] == 30
+          assert reference['provenance_correct'] == 30
+          assert reference['macro_family_accuracy'] == reference['worst_family_accuracy'] == 1
+          assert reference['temporal_violations'] == degraded['temporal_violations'] == 0
+          assert degraded['correct'] == 18 and degraded['answered'] == 30
+          assert degraded['provenance_correct'] == 23 and degraded['worst_family_accuracy'] == 0.5
+          print('Synthetic oracle and degraded controls matched their declared results.')
+          PY
+      - name: Verify source-span and assertion-history capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.source_span_checks import run_source_span_checks
+
+          report = run_source_span_checks()
+          assert report['version'] == 'source-span-probes-v1'
+          assert len(report['checks']) == 14 and report['all_passed'] is True
+          assert report['counts']['source_span_resolution'] == {'passed': 8, 'checks': 8}
+          assert report['counts']['assertion_history_preservation'] == {'passed': 6, 'checks': 6}
+          assert report['metrics']['source_span_resolution'] == 1
+          assert report['metrics']['assertion_history_preservation'] == 1
+          print('Actual assertion API passed all 14 synthetic capability contracts.')
+          PY
+      - name: Verify representation manifest capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.manifest_checks import run_manifest_checks
+
+          report = run_manifest_checks()
+          assert report['version'] == 'representation-manifest-probes-v2'
+          assert len(report['checks']) == 22 and report['all_passed'] is True
+          assert report['counts']['representation_manifest_preservation'] == {'passed': 22, 'checks': 22}
+          assert report['metrics']['representation_manifest_preservation'] == 1
+          print('Actual manifest API passed all 22 synthetic metadata and forecast-binding contracts.')
+          PY
+      - name: Verify executed graph transformation capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.transformation_checks import run_transformation_checks
+
+          report = run_transformation_checks()
+          assert report['version'] == 'graph-transformation-probes-v2'
+          assert len(report['checks']) == 26 and report['all_passed'] is True
+          assert report['counts']['transformation_preservation'] == {'passed': 26, 'checks': 26}
+          assert report['metrics']['transformation_preservation'] == 1
+          print('Actual fixed graph operations passed all 26 synthetic transformation contracts.')
+          PY
+      - name: Verify executed graph partition and merge capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.graph_view_checks import run_graph_view_checks
+
+          report = run_graph_view_checks()
+          assert report['version'] == 'graph-view-probes-v1'
+          assert len(report['checks']) == 45 and report['all_passed'] is True
+          assert report['counts']['split_merge_preservation'] == {'passed': 45, 'checks': 45}
+          assert report['metrics']['split_merge_preservation'] == 1
+          print('Actual fixed graph views passed all 45 synthetic partition/merge contracts.')
+          PY
+      - name: Verify atomic graph materialization capabilities
+        run: |
+          python - <<'PY'
+          from epiphysics.materialization_checks import run_materialization_checks
+
+          report = run_materialization_checks()
+          assert report['version'] == 'materialization-probes-v1'
+          assert len(report['checks']) == 30 and report['all_passed'] is True
+          assert report['counts']['output_manifest_materialization'] == {'passed': 30, 'checks': 30}
+          assert report['metrics']['output_manifest_materialization'] == 1
+          print('Actual graph materialization passed all 30 synthetic consumer and atomicity contracts.')
+          PY
+      - name: Dispatch and inspect a real offline worker
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          import tempfile
+
+          with tempfile.TemporaryDirectory(prefix='epiphysics-worker-', dir=os.environ['RUNNER_TEMP']) as temporary:
+              store = (Path(temporary) / 'dedicated-store').resolve()
+              command = [sys.executable, '-m', 'epiphysics.improvement', '--store', str(store)]
+              child = subprocess.run(command + [
+                  'dispatch', '--policy', 'engine/examples/improvement/policy.json',
+                  '--suite', 'engine/examples/improvement/entities.json', '--candidate', 'reference',
+                  '--run-key', 'smoke', '--after-step', 'initial', '--timeout-seconds', '30',
+                  '--completed-work', 'Ran the synthetic oracle through a real assessment worker',
+              ], check=True, capture_output=True, text=True, timeout=45)
+              result = json.loads(child.stdout)
+              assert result['result'] == 'assessed'
+              receipt = result['dispatch']
+              assert receipt['program'] == 'epiphysics.improvement assess'
+              assert isinstance(receipt['pid'], int) and receipt['pid'] > 0
+              assert receipt['returncode'] == 0 and receipt['termination'] is None
+              assert receipt['model_calls'] == receipt['external_spend'] == 0
+              assert result['assessment']['report']['metrics']['correct'] == 30
+              capability = result['assessment']['report']['source_span_checks']
+              assert capability['version'] == 'source-span-probes-v1' and capability['all_passed'] is True
+              assert capability['counts']['source_span_resolution'] == {'passed': 8, 'checks': 8}
+              assert capability['counts']['assertion_history_preservation'] == {'passed': 6, 'checks': 6}
+              manifests = result['assessment']['report']['manifest_checks']
+              assert manifests['version'] == 'representation-manifest-probes-v2' and manifests['all_passed'] is True
+              assert manifests['counts']['representation_manifest_preservation'] == {'passed': 22, 'checks': 22}
+              assert result['assessment']['report']['metrics']['representation_manifest_preservation'] == 1
+              transforms = result['assessment']['report']['transformation_checks']
+              assert transforms['version'] == 'graph-transformation-probes-v2' and transforms['all_passed'] is True
+              assert transforms['counts']['transformation_preservation'] == {'passed': 26, 'checks': 26}
+              assert result['assessment']['report']['metrics']['transformation_preservation'] == 1
+              views = result['assessment']['report']['graph_view_checks']
+              assert views['version'] == 'graph-view-probes-v1' and views['all_passed'] is True
+              assert views['counts']['split_merge_preservation'] == {'passed': 45, 'checks': 45}
+              assert result['assessment']['report']['metrics']['split_merge_preservation'] == 1
+              materialization = result['assessment']['report']['materialization_checks']
+              assert materialization['version'] == 'materialization-probes-v1' and materialization['all_passed'] is True
+              assert materialization['counts']['output_manifest_materialization'] == {'passed': 30, 'checks': 30}
+              assert result['assessment']['report']['metrics']['output_manifest_materialization'] == 1
+              assert {'assertions', 'source_span_probe', 'store', 'manifests', 'manifest_probe', 'transforms', 'transformation_probe', 'graph_views', 'graph_view_probe', 'materialization', 'materialization_probe'} <= result['assessment']['request']['manifest'].keys()
+              receipts = Path(receipt['receipt_directory'])
+              assert receipts.parent == store / 'dispatches'
+              assert all((receipts / name).is_file() for name in ('start.json', 'output.log', 'finish.json'))
+              inspected = subprocess.run(command + ['status'], check=True, capture_output=True, text=True, timeout=15)
+              status = json.loads(inspected.stdout)
+              assert status['completed_assessments'] == 1 and status['unfinished_runs'] == []
+              assert status['next_step']['id'] == 'smoke:next'
+              assert status['next_step']['action'] == 'build_retrieval_baseline'
+              assert status['next_step']['metric'] == 'retrieval_baseline_reproducibility'
+              assert status['next_step']['observed'] is None
+              assert status['next_step']['scale_change_allowed'] is False
+          print('Real offline worker completed; its verified successor remains queued.')
+          PY
+      - name: Verify fixed representation comparison and measured coverage handoff
+        run: |
+          python - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          import tempfile
+          from epiphysics.store import Ledger, canonical, digest
+          from epiphysics.assertions import resolve_span
+          from epiphysics.retrieval import freeze_retrieval_corpus
+          from epiphysics.retrieval_evaluation import evaluate_retrieval, project_queries
+
+          with tempfile.TemporaryDirectory(prefix='epiphysics-retrieval-', dir=os.environ['RUNNER_TEMP']) as directory:
+              root = Path(directory)
+              ledger = Ledger(directory)
+              try:
+                  raw = b'<main title="attributeonly">An invented team keeps its receipts in a cobalt archive.</main>'
+                  source = ledger.capture('synthetic:receipt-book', raw, media_type='text/html')
+                  snapshot = ledger.snapshot()
+                  corpus = freeze_retrieval_corpus(ledger, snapshot['id'], [source['id']])
+                  start = raw.index(b'cobalt archive')
+                  cohort = {'schema_version': 1, 'snapshot_id': snapshot['id'], 'cohort': 'development', 'cases': [
+                      {'question_id': 'supported', 'query': 'cobalt archive', 'answerability': 'answerable',
+                       'gold_spans': [{'observation_id': source['id'], 'start': start,
+                                      'end': start + len(b'cobalt archive'), 'sha256': digest(b'cobalt archive')}]},
+                      {'question_id': 'unsupported', 'query': 'attributeonly', 'answerability': 'unanswerable', 'gold_spans': []},
+                  ]}
+                  queries = project_queries(cohort)
+                  assert all(set(row) == {'query_id', 'query'} for row in queries)
+              finally:
+                  ledger.close()
+              runs, reports = {}, {}
+              recipes = {'raw': 'raw-window-text-v1', 'html': 'static-html-text-nodes-v1'}
+              for arm, recipe in recipes.items():
+                  runs[arm], reports[arm] = [], []
+                  for repeat in ('a', 'b'):
+                      request = {'corpus_id': corpus['id'], 'queries': queries,
+                                 'run_key': arm + '-' + repeat, 'indexing_recipe': recipe}
+                      request_path = root / (arm + '-' + repeat + '.json')
+                      request_path.write_text(canonical(request))
+                      process = subprocess.run([sys.executable, '-m', 'epiphysics', '--store', str(root),
+                          'run-retrieval', str(request_path)], check=True, capture_output=True, text=True, timeout=60)
+                      run = json.loads(process.stdout)
+                      assert run['kind'] == 'retrieval_completed' and run['body']['schema_version'] == 2
+                      ledger = Ledger.open_readonly(root)
+                      try:
+                          for row in run['body']['results']:
+                              for hit in row['hits']:
+                                  resolve_span(ledger, snapshot['id'], {key: hit[key] for key in ('observation_id', 'start', 'end', 'sha256')})
+                          report = evaluate_retrieval(ledger, cohort, run['id'])
+                      finally:
+                          ledger.close()
+                      assert report['metrics']['source_recall_at_k']['5']['value'] == 1
+                      assert report['metrics']['gold_span_recall_at_k']['5']['value'] == 1
+                      assert report['metrics']['unsupported_query_retrieval_rate_at_5']['value'] == (1 if arm == 'raw' else 0)
+                      runs[arm].append(run)
+                      reports[arm].append(report)
+                  assert runs[arm][0]['body']['results_hash'] == runs[arm][1]['body']['results_hash']
+                  assert runs[arm][0]['body']['projection_hash'] == runs[arm][1]['body']['projection_hash']
+              identity = reports['raw'][0]['identity']
+              protocol = {'schema_version': 1, 'study_id': 'owned-ci-comparison',
+                          'scope': 'Owned synthetic integration fixture; no real retrieval-quality claim'}
+              protocol_raw = canonical(protocol).encode()
+              (root / 'protocol.json').write_bytes(protocol_raw)
+              declaration = {
+                  'schema_version': 2, 'study_id': 'owned-ci-comparison', 'protocol_hash': digest(protocol_raw),
+                  **{key: identity[key] for key in ('snapshot_id', 'snapshot_hash', 'snapshot_manifest_hash',
+                      'corpus_id', 'corpus_hash', 'cohort_hash', 'gold_hash', 'query_hash',
+                      'sources_hash', 'passages_hash', 'config_hash')},
+                  'arms': {arm: {'indexing_recipe': recipes[arm],
+                      'candidate_algorithm_hash': reports[arm][0]['identity']['candidate']['algorithm_hash'],
+                      'projection_hashes': {run['id']: run['body']['projection_hash'] for run in runs[arm]},
+                      'run_terminal_hashes': {run['id']: run['hash'] for run in runs[arm]}} for arm in recipes},
+              }
+              policy = json.loads(Path('engine/examples/improvement/policy.json').read_text())
+              policy['retrieval_study'] = declaration
+              (root / 'cohort.json').write_text(canonical(cohort))
+              (root / 'policy.json').write_text(canonical(policy))
+              (root / 'study.json').write_text(canonical({
+                  'schema_version': 2, 'study_id': declaration['study_id'],
+                  'evidence_store': str(root), 'cohort_file': str(root / 'cohort.json'),
+                  'protocol_file': str(root / 'protocol.json'), 'corpus_id': corpus['id'],
+                  'arms': {arm: {'indexing_recipe': recipes[arm],
+                                'run_terminal_ids': [run['id'] for run in runs[arm]]} for arm in recipes},
+              }))
+              child = subprocess.run([
+                  sys.executable, '-m', 'epiphysics.improvement', '--store', str(root / 'improvement'),
+                  'dispatch', '--policy', str(root / 'policy.json'),
+                  '--suite', str(Path('engine/examples/improvement/entities.json').resolve()),
+                  '--candidate', 'reference', '--run-key', 'actual-comparison-smoke', '--after-step', 'initial',
+                  '--retrieval-study', str(root / 'study.json'), '--timeout-seconds', '60',
+                  '--completed-work', 'Validated four fresh raw/HTML processes on owned synthetic source bytes',
+              ], check=True, capture_output=True, text=True, timeout=75)
+              assessment = json.loads(child.stdout)['assessment']
+              actual = assessment['report']['actual_retrieval']
+              assert actual['schema_version'] == 2 and actual['reproducibility']['value'] == 1
+              assert len(actual['quality']['runs']) == 4
+              assert actual['quality']['runs'][0]['metrics'] == reports['raw'][0]['metrics']
+              assert actual['comparison']['delta'] is not None
+              assert actual['comparison']['operational_baseline'] == 'raw'
+              assert assessment['next_step']['action'] == 'prepare_retrieval_coverage_evaluation'
+              assert assessment['next_step']['target'] is None
+              readonly = Ledger.open_readonly(root)
+              try:
+                  assert readonly.events()[-1]['id'] == runs['html'][-1]['id']
+                  assert readonly.verify()['valid']
+              finally:
+                  readonly.close()
+          print('Four fresh raw/HTML processes, separate scoring and measured coverage handoff passed on owned evidence.')
+          PYTHON
+      - name: Verify prepared coverage and automatic continuation
+        run: python engine/examples/retrieval/coverage-smoke.py
+      - name: Run synthetic ledger demo
+        run: python -m epiphysics --store "$RUNNER_TEMP/epiphysics-demo" demo
