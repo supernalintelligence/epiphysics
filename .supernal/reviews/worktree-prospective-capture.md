@@ -30,22 +30,6 @@ The final freeze SHA-256 is `ef78f04074e477c4a16747821bec03d9f8ff3e8c17daea4e734
 ## Not verified
 The original R8 full-module run is still a failed run; there is no claim that a final complete module rerun passed. R8b's real-worker final-deadline branch remains unexercised. Actual Python 3.10 execution is not established; the deterministic trace harness requires Python 3.11 or later. The trusted main-thread POSIX and single-connection assumptions do not establish hostile-code containment, descendant isolation, a nonreturning kernel-call bound, host-loss recovery, or exhaustive asynchronous safety. No production caller, real registration or acceptance, source selection, network/model call, historical queue/cohort replay, new quality/outcome evidence, continued automation authority, site build, browser validation, remote CI, push or deployment was introduced. This is local capture evidence and local Ledger/instance/channel firstness, not a complete prospective pilot or predictive/business result.
 
-## Findings
-- [high] [fixed] Constructor/spawn child ownership, including the later supported SIGINT manifestation; exact owned PID publication precedes unmasking.
-- [medium] [fixed] Cumulative clock integrity preserves observed middle/EOF inconsistencies with bounded memory.
-- [medium] [fixed] Wait-status certainty retains actual owned waitpid status and treats unavailable ownership/status as unknown.
-- [medium] [fixed] Descriptor acquisition and retirement preserve exact ownership and do not blindly retry uncertain numeric FDs.
-- [high] [fixed] Cleanup resumption continues only unfinished owned cleanup within the original reserve after supported admission or cleanup interruption.
-- [medium] [fixed] Caller-interruption priority survives later final alarms and final dispatch, including the reopened R6 manifestation.
-- [high] [fixed] Production exception handling no longer depends on an API absent from the declared Python 3.10 range; actual 3.10 execution remains unverified.
-- [medium] [fixed] Signal handler installation and retirement preserve caller state and observed pending alarms.
-- [medium] [fixed] Ambient caller exceptions are excluded from locally owned cancellation and remain unchanged.
-- [medium] [fixed] Caller database busy-timeout ownership restores the exact observed timeout after supported interruption.
-- [medium] [fixed] Cleanup-entry ownership is installed before acquisition and covers first retirement-instruction cancellation.
-- [medium] [fixed] Local independent Ledger append recovery retires uncommitted transaction/flag state without undoing an actual commit.
-- [medium] [fixed] Captured native-close uncertainty survives deadline/interrupt selection with bounded deduplicated metadata and explicit truncation.
-- [medium] [fixed] A positively observed and consumed first pending alarm survives later interruption, with truthful phase and earlier-observation evidence.
-
 ## Guided reviewer report
 Reviewer: `/root/submission_capture_builder/capture_safety`.
 Exact report file SHA-256: `a109f075b2d89a98f06775465505df5e27454817b9b49c8d32169a945c5d2a04`. The unchanged report text follows in a fence so its internal headings cannot be confused with the author findings above.
@@ -107,6 +91,22 @@ Final audit verified **9071/9071 supplied and 30/30 independent pin records unch
 
 [Receipt](first-process-receipt.json), [counts](summary.json), [audit](final-pin-audit.json), [expectations](expectations.json). Unchanged reports: [v1](../independent-safety-v1/report.md), [R1](../independent-safety-r1/report.md), [R2](../independent-safety-r2/report.md), [R3](../independent-safety-r3/report.md), [R4](../independent-safety-r4/report.md), [R5](../independent-safety-r5/report.md), [R6](../independent-safety-r6/report.md), [R7](../independent-safety-r7/report.md). All previous failures/harness errors remain intact. No source/docs/tests edits, network/model/pilot/queue action, commit or landing.
 ```
+
+## Findings
+- [high] [fixed] Constructor/spawn child ownership, including the later supported SIGINT manifestation; exact owned PID publication precedes unmasking.
+- [medium] [fixed] Cumulative clock integrity preserves observed middle/EOF inconsistencies with bounded memory.
+- [medium] [fixed] Wait-status certainty retains actual owned waitpid status and treats unavailable ownership/status as unknown.
+- [medium] [fixed] Descriptor acquisition and retirement preserve exact ownership and do not blindly retry uncertain numeric FDs.
+- [high] [fixed] Cleanup resumption continues only unfinished owned cleanup within the original reserve after supported admission or cleanup interruption.
+- [medium] [fixed] Caller-interruption priority survives later final alarms and final dispatch, including the reopened R6 manifestation.
+- [high] [fixed] Production exception handling no longer depends on an API absent from the declared Python 3.10 range; actual 3.10 execution remains unverified.
+- [medium] [fixed] Signal handler installation and retirement preserve caller state and observed pending alarms.
+- [medium] [fixed] Ambient caller exceptions are excluded from locally owned cancellation and remain unchanged.
+- [medium] [fixed] Caller database busy-timeout ownership restores the exact observed timeout after supported interruption.
+- [medium] [fixed] Cleanup-entry ownership is installed before acquisition and covers first retirement-instruction cancellation.
+- [medium] [fixed] Local independent Ledger append recovery retires uncommitted transaction/flag state without undoing an actual commit.
+- [medium] [fixed] Captured native-close uncertainty survives deadline/interrupt selection with bounded deduplicated metadata and explicit truncation.
+- [medium] [fixed] A positively observed and consumed first pending alarm survives later interruption, with truthful phase and earlier-observation evidence.
 
 ## Reviewer report
 # C23 R8/R8b independent full-diff review
