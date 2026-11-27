@@ -78,12 +78,12 @@ export default function ResearchMap({ data }: { data: ResearchMapData }) {
   return <div className={s.site}>
     <div className={s.container}>
       <nav className={s.breadcrumb} aria-label="Breadcrumb"><Link href="/research">Research</Link><span aria-hidden="true">/</span><span>Research map</span></nav>
-      <header className={s.header}>
+      <div className={s.header}>
         <p className={s.eyebrow}>Claims, evidence, and open questions</p>
         <h1>Research map</h1>
         <p className={s.lead}>Follow a claim to its sources, qualifications, and possible next tests.</p>
         <p className={s.scope}>A curated view of the research record. Read the statement and its basis together; connections show recorded relationships, not a score of truth or authority.</p>
-      </header>
+      </div>
       <div className={s.workspace}>
         <aside className={s.browser} aria-labelledby="browse-heading">
           <h2 id="browse-heading">Browse claims</h2>
