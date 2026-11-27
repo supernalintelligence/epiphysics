@@ -864,6 +864,54 @@
       "statement": "The first registered inventory of one committed theory document accounted for 20 supported links and 28 exclusions. A separate checker and non-producer review passed its original bytes; the producer claim agreed in one eligible delivery. This establishes one artifact’s scoped conformance, not general reliability, rendered navigation, predictive advantage or independent time assurance.",
       "status": "reported_result",
       "basis": "observed"
+    },
+    {
+      "id": "doc_knowledge_snapshots",
+      "kind": "document",
+      "title": "Draft essay on knowledge snapshots and witness limits",
+      "repo_path": "docs/research/knowledge-snapshots.md"
+    },
+    {
+      "id": "doc_time_witness_research_run",
+      "kind": "document",
+      "title": "Time-witness research and a bounded verifier proposal",
+      "repo_path": "docs/planning/runs/2026-11-27-time-witness-research.md"
+    },
+    {
+      "id": "opentimestamps_client",
+      "kind": "source",
+      "title": "OpenTimestamps Python client documentation",
+      "url": "https://github.com/opentimestamps/opentimestamps-client",
+      "date": null,
+      "date_type": "mutable_main_revision_unverified",
+      "reviewed_on": "2026-11-27",
+      "bibliographic_only": true,
+      "claim_supported": "The client documentation distinguishes pending and complete proofs, describes confirmation taking hours, and requires Bitcoin Core for local verification.",
+      "limitation": "Mutable client documentation was read without retaining remote-response bytes or an immutable revision. These are reported client requirements, not measured latency, a service guarantee, or evidence that this project verified a proof."
+    },
+    {
+      "id": "claim_timestamp_accuracy_interval",
+      "kind": "claim",
+      "title": "RFC 3161 time has an explicit accuracy boundary",
+      "statement": "RFC 3161 section 2.4.2 defines accuracy as an interval around genTime. When the whole accuracy field is absent, accuracy may be available through the authority's policy; absence is not an assertion of zero uncertainty. Trust and token validation remain separate requirements.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_opentimestamps_pending",
+      "kind": "claim",
+      "title": "Pending OpenTimestamps proofs require a later completion step",
+      "statement": "The OpenTimestamps Python client documentation distinguishes pending from complete proofs, provides an upgrade operation, describes Bitcoin confirmation taking hours, and requires Bitcoin Core for local verification. Those reported client constraints are not measured service performance or a completed witness for this project.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_timestamp_cutoff_proposal",
+      "kind": "claim",
+      "title": "A conservative cutoff rule needs a separate trust policy",
+      "statement": "The reviewed research proposes an offline verifier over exact retained bytes and a saved proof: under an accepted RFC 3161 authority policy and validated token with known accuracy, genTime plus accuracy at or before the cutoff is a sufficient pre-existence bound. A later upper bound leaves earlier existence unestablished, rather than proving late creation. This is an unimplemented proposal; no backend, library or provider is selected, and the current pilot's external witness remains null.",
+      "status": "hypothesis",
+      "basis": "inferred"
     }
   ],
   "edges": [
@@ -1775,6 +1823,46 @@
     {
       "source": "claim_first_dated_delivery",
       "target": "exp_dated_evidence_quality",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_timestamp_accuracy_interval",
+      "target": "rfc3161_timestamp",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_accuracy_interval",
+      "target": "doc_knowledge_snapshots",
+      "type": "cites"
+    },
+    {
+      "source": "claim_opentimestamps_pending",
+      "target": "opentimestamps_client",
+      "type": "cites"
+    },
+    {
+      "source": "claim_opentimestamps_pending",
+      "target": "doc_time_witness_research_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "doc_knowledge_snapshots",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "doc_time_witness_research_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "claim_timestamp_accuracy_interval",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "claim_witness",
       "type": "depends_on"
     }
   ]
