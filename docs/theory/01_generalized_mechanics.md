@@ -683,7 +683,7 @@ When the entity density $\rho(X, t)$ and velocity field $\mathbf{v}(X, t) = \lan
 
 $$\frac{\partial \rho}{\partial t} + \nabla \cdot (\rho \mathbf{v}) = \sigma$$
 
-where $\sigma(X, t)$ is a source/sink term for entity creation and destruction - births, deaths, conversions, institutional founding and dissolution. In physics, the continuity equation has $\sigma = 0$ (particle number is conserved). In social systems, entities are created and destroyed, so $\sigma \neq 0$ in general.
+where $\sigma(X, t)$ is a source/sink term for entity creation and destruction - births, deaths, conversions, institutional founding and dissolution. In physics, a conserved quantity such as electric charge has $\sigma = 0$. Particle number is conserved only when no process creates or destroys particles; decay, pair creation and annihilation give $\sigma \neq 0$. In social systems, entities are created and destroyed, so $\sigma \neq 0$ in general.
 
 **Navier-Stokes analogue** (momentum balance in state space):
 
