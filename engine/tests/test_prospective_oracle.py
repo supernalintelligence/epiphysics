@@ -427,7 +427,8 @@ class RawOracleTests(unittest.TestCase):
         marker = b'"retained_byte_length":' + str(m["observations"][0]["retained_byte_length"]).encode()
         raw = raw.replace(marker, b'"retained_byte_length":' + b"9" * 4301, 1)
         self.call(raw, b, expected_exception=OracleUnavailable)
-        self.call(b"[" * 2000 + b"0" + b"]" * 2000, {}, expected_exception=ValueError)
+        # Shallow enough for every supported runtime to parse: this case is malformed, not too deep.
+        self.call(b"[" * 200 + b"0" + b"]" * 200, {}, expected_exception=ValueError)
         self.call(b"[" * 10000 + b"0" + b"]" * 10000, {}, expected_exception=OracleUnavailable)
         self.call(b'{"raw_input_schema_version":NaN}', {}, expected_exception=ValueError)
 
