@@ -57,6 +57,18 @@ Batching snapshot and forecast commitments could make that layer practical. But 
 
 Today, Epiphysics has a local hash-linked ledger, not an independent timestamp integration. That gives us an inspectable local record. A privileged operator could still rewrite the entire store; an outside checkpoint is needed to detect that kind of replacement.
 
+## The next boundary to build
+
+Before connecting a timestamp service, I would build a verifier that accepts the exact retained bytes, a saved proof, and a versioned trust policy. It should report separately whether the proof matches those bytes, whether its signer is trusted, and what timing claim follows. No backend, cryptographic library, or provider has been selected.
+
+An RFC 3161 token carries a generation time and may supply an accuracy interval. Under an accepted authority policy, the latest time allowed by that uncertainty must be at or before our cutoff to establish the proposed pre-cutoff claim. Missing accuracy is not automatically zero. A later bound leaves earlier existence unestablished; it does not prove late creation. [RFC 3161](https://www.rfc-editor.org/rfc/rfc3161.html) defines the token's timing semantics; our conservative cutoff rule would still require implementation and independent review.
+
+OpenTimestamps could provide a second, asynchronous layer. Its client distinguishes pending from complete proofs, describes confirmation taking hours, and requires Bitcoin Core for local verification. I would not make it the sole witness for a five-minute decision window. [OpenTimestamps client documentation](https://github.com/opentimestamps/opentimestamps-client)
+
+A transparency log addresses another question: whether an entry belongs to a particular history and that history remains consistent across checkpoints. One inclusion proof does not rule out conflicting views shown to different observers. Monitoring is a separate component. [RFC 9162](https://www.rfc-editor.org/rfc/rfc9162.html)
+
+The first checks would use saved, explicitly synthetic proofs and independently fixed failure cases. They would test verification behavior without claiming a real external witness. This remains a future proposal: the current prospective pilot retains null external-witness evidence and its existing timing rules.
+
 ## Why this matters for recursive AI systems
 
 An AI company can use models to make decisions that change its resources, capabilities, and future access to information. Other organizations respond. The system we want to predict is learning and changing partly because of predictions made within it.
