@@ -267,14 +267,17 @@ def _answers(packet, query):
     _require(type(query['query_schema_version']) is int and query == public_query(packet['family']), 'Public query differs')
     question = next(e['id'] for e in packet['entities'] if e['kind'] == 'question')
     answers, provenance = {}, {}
-    def put(name, subject, predicate):
+    def put(name, subject, predicate, dependencies=()):
         answers[name], provenance[name] = _one(packet, subject, predicate)
+        provenance[name] = sorted(set(provenance[name]) | set(dependencies))
     put('subject_id', question, 'question.subject')
     put('knowledge_cutoff_utc', question, 'question.knowledge_cutoff')
     put('outcome_cutoff_utc', question, 'question.outcome_cutoff')
     answers['source_observation_ids'] = sorted(o['id'] for o in packet['observations'])
     provenance['source_observation_ids'] = answers['source_observation_ids'][:]
     subject = answers['subject_id']
+    # Derived queries traverse this active binding, so retain its encoded support.
+    subject_support = set(provenance['subject_id'])
     if packet['family'] == 'software_component':
         opening, opening_support = _one(packet, question, 'question.opening_observation')
         samples = {o['id'] for o in packet['observations'] if o['kind'] == 'release_sample'}
@@ -299,17 +302,16 @@ def _answers(packet, query):
                     opening_values[key] = not values['draft'] and not values['prerelease']
         _require(len(set(release_ids.values())) == len(release_ids), 'One release ID has multiple entities')
         answers['seen_id_set'] = sorted(seen)
-        provenance['seen_id_set'] = sorted(support | samples)
+        provenance['seen_id_set'] = sorted(subject_support | support | samples)
         answers['opening_eligibility'] = opening_values
-        provenance['opening_eligibility'] = sorted(set(opening_support) | {opening} | support)
+        provenance['opening_eligibility'] = sorted(subject_support | set(opening_support) | {opening} | support)
     else:
         for name, predicate in [('promisor_role_id', 'promisor'), ('beneficiary_role_id', 'beneficiary'),
                                 ('quality_rule_hash', 'quality_rule_hash'), ('acceptance_event_id', 'acceptance_event'),
                                 ('authorized_submission_channel_id', 'channel')]:
-            put(name, subject, 'obligation.' + predicate)
+            put(name, subject, 'obligation.' + predicate, subject_support)
         source, source_support = _one(packet, subject, 'obligation.source')
-        put('source_sha256', source, 'source.sha256')
-        provenance['source_sha256'] = sorted(set(provenance['source_sha256']) | set(source_support))
+        put('source_sha256', source, 'source.sha256', subject_support | set(source_support))
     _require(set(answers) == set(FIELDS[packet['family']]), 'Answer field set differs')
     result = {'answers': answers, 'provenance': provenance}
     _bytes(result, ANSWER_LIMIT)

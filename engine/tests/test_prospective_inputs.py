@@ -149,13 +149,13 @@ class InputTests(unittest.TestCase):
                 self.assertEqual(support[field], ['q-source'])
             self.assertEqual(support['source_observation_ids'], expected['source_observation_ids'])
             if 'seen_id_set' in expected:
-                self.assertEqual(support['seen_id_set'], ['sample-open', 'sample-prior'])
+                self.assertEqual(support['seen_id_set'], ['q-source', 'sample-open', 'sample-prior'])
                 self.assertEqual(support['opening_eligibility'], ['q-source', 'sample-open', 'sample-prior'])
             else:
-                self.assertEqual(support['source_sha256'], ['acceptance-source', 'blob-source'])
+                self.assertEqual(support['source_sha256'], ['acceptance-source', 'blob-source', 'q-source'])
                 for field in ('promisor_role_id', 'beneficiary_role_id', 'quality_rule_hash',
                               'acceptance_event_id', 'authorized_submission_channel_id'):
-                    self.assertEqual(support[field], ['acceptance-source'])
+                    self.assertEqual(support[field], ['acceptance-source', 'q-source'])
         return json.loads(packet)
 
     def test_release_raw_saved_roundtrip_history_and_independent_answers(self):
