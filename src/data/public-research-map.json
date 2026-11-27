@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "f01a44f2371b49658aef61759e22377363e46788",
-  "catalogHash": "5b5d766e8de7c4ef7ad8923727a208cada2f164501b40342b5bddeea74d69a09",
+  "sourceCommit": "da4232253b34ab6997019b6a7485d11d116bc82a",
+  "catalogHash": "12649c330171d28ac13c6ba9eb039d650bacee88fdd56d51e104202e7cddf113",
   "nodes": [
     {
       "id": "beir",
@@ -182,7 +182,7 @@
       "title": "Fixed first-delivery and timing protocol",
       "href": "/experiments/dated-artifact-delivery",
       "contentHash": "0efe8bee9be819e47da68dd53045f2a67fa7ae2f42985fec37ecf05a93dc0451",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_decision_information_result",
@@ -190,7 +190,7 @@
       "title": "Verification claims, retention losses and dated evidence",
       "href": "/experiments/results/2026-11-26-decision-information-limits",
       "contentHash": "defa61e64c0a73400f47b5b6e5ff29370e15a31c4ccb0a74e30cd0f7fb7f955d",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_decision_pilot_protocol",
@@ -198,7 +198,7 @@
       "title": "Owned release-or-hold comparison protocol",
       "href": "/experiments/control-exchange-decision-pilot",
       "contentHash": "2fdd7fc31466b722fe639aaae77284dd1f5f71d67d5dd73662d5fe9b64e1d62c",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_decision_pilot_result",
@@ -206,7 +206,7 @@
       "title": "Two compact records with opposite missed decisions",
       "href": "/experiments/results/2026-11-26-decision-pilot",
       "contentHash": "13242b1083a7ae94fb786f5af88137739b5e3f01ece87c3e5c90748f406f86dd",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_first_dated_delivery_result",
@@ -214,7 +214,7 @@
       "title": "First registered maintenance delivery and independent check",
       "href": "/experiments/results/2026-11-26-first-dated-delivery",
       "contentHash": "192a4fdfee70024a083488cb6af9ffb061c31de4bdea79347f91633a159ee641",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_fixed_clause_probe_protocol",
@@ -222,7 +222,7 @@
       "title": "Fixed two-clause development diagnostic",
       "href": "/experiments/retrieval-fixed-clause-probe",
       "contentHash": "08d57abf0af5631d3e5595aebf9614601b0522e01cd18076d8b1ca6ce0f41c84",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_fixed_clause_probe_run",
@@ -230,7 +230,7 @@
       "title": "Fixed clause recovery with a larger retrieval budget",
       "href": "/experiments/results/2026-11-26-retrieval-probe",
       "contentHash": "c36b1091a7bee7dba41c9ecc98bf36412a39f14453d6432a2418c693db60a968",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_fresh_decision_protocol",
@@ -238,7 +238,7 @@
       "title": "Fixed fresh decision comparison protocol",
       "href": "/experiments/control-exchange-fresh-comparison",
       "contentHash": "84acc2522e0b4e56b9708c57cced74763e59c3767f4dc684c6a410fbc2e21725",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_fresh_decision_result",
@@ -246,7 +246,7 @@
       "title": "Equal fresh totals and invalid-delivery effects",
       "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
       "contentHash": "21c9c9692913ca7e1af3b107d9b74f7d702fddccf3bca8b70d80b49f6151ca6b",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_protocol",
@@ -254,7 +254,7 @@
       "title": "Prospective observatory protocol",
       "href": "/experiments/prospective-observatory",
       "contentHash": "1f7805302fea4dfb8c8822913c8f018f2c044712362b6d11f7b5a224d19b1f43",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_research",
@@ -262,7 +262,7 @@
       "title": "Recursive research program",
       "href": "/research/recursive-research-program",
       "contentHash": "f72ba5dec57c7862fc49bbddcbddf128297fed5218c7fc009beab66d8426c81f",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "doc_retrieval_coverage_protocol",
@@ -270,7 +270,7 @@
       "title": "Fresh complete-support and paired-question protocol",
       "href": "/experiments/retrieval-coverage",
       "contentHash": "73c25155e2e38584f908fae68a8de8ce9cc79200887ebb0c6ae90418eaae8906",
-      "commit": "f01a44f2371b49658aef61759e22377363e46788"
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
     },
     {
       "id": "erc8004",
@@ -905,5 +905,5 @@
     "Proposed experiment and representation nodes describe catalog concepts, not the completion status of associated runs. Challenges may describe qualifications or competing mechanisms.",
     "The source commit and document digests identify retained local bytes. They are not independent timestamps or evidence of historical availability."
   ],
-  "payloadHash": "a77a2c1c8c763117a850c471802f8b062921c6d8d146101fbb979432d835b7d2"
+  "payloadHash": "9bd4a4c5c616cfa6a8b2074a8097bdb2a961b7d6ba4313412e22549a1f516a93"
 }
