@@ -1,6 +1,6 @@
 ---
 title: "A prospective representation integrity pilot"
-description: "Proposed comparison and the first implemented saved-view component; no prospective run has begun."
+description: "Proposed comparison with bounded raw-input and saved-view components; no prospective run has begun."
 date: 2026-11-26
 draft: true
 tts:
@@ -13,6 +13,8 @@ The proposed pilot compares a chronological table and a typed directed graph ove
 
 The reviewed declaration v2 is retained privately with SHA256 `ed9f98c0155d41e67a5c1fd38b9f1d5075fdf829eea6133faf48ec16d4cf7f65`. It separates original source access during construction from decoding the saved representation, and separates registration inputs from the receipt/time bindings generated later. A local role name is not authenticated independent authorship. The independent raw-source oracle, collector, timing support, producer, quality checker, registration bindings and complete runtime review remain required future work.
 
+`engine/epiphysics/prospective_inputs.py` now supplies the preceding pure raw-byte-to-fact step. Its [versioned public contract](../planning/prospective-inputs.md) accepts bounded retained bodies plus explicit question, observation and acceptance/source bindings. It checks bytes, hashes, completeness, exact types and internally consistent local receipt claims; valid prior release samples remain separate and a valid opening is required. Optional raw publisher values are retained without date-based eligibility. Obligation source bytes and Git blob identity are checked while promisor/beneficiary direction follows explicit acceptance. It returns canonical normalized bytes or explicit refusal and bounded diagnostics. It neither collects evidence nor independently witnesses caller-supplied times, execution, source selection or registration.
+
 ## Implemented slice
 
 `engine/epiphysics/prospective_views.py` implements pure encoders and decoders. It does not read files, contact sources, open a ledger, schedule work, issue forecasts or score a study. The caller supplies bounded UTF-8 JSON bytes to `encode_flat` and `encode_graph`; each returns bounded encoding bytes. The caller must save those bytes, hash them and reread the same bytes before calling `decode_flat_answers` or `decode_graph_answers`. Tests perform that actual file round trip. A future runtime must enforce and retain its own corresponding receipt.
@@ -21,7 +23,7 @@ Both decoders accept only `(persisted_encoding_bytes, public_query)`. Public que
 
 ## Normalized fact packet, version 1
 
-The input has exactly `schema_version`, `family`, `entities`, `observations` and `assertions`. Its maximum is 262,144 bytes. Family is `software_component` or `local_delivery_obligation`. This is a deliberately bounded pilot schema, not a universal entity ontology. A future normalizer must produce the same eligible packet for both encoders and independently establish its relationship to raw source bytes.
+The input has exactly `schema_version`, `family`, `entities`, `observations` and `assertions`. Its maximum is 262,144 bytes. Family is `software_component` or `local_delivery_obligation`. This is a deliberately bounded pilot schema, not a universal entity ontology. The input adapter produces the same packet for both encoders; a separately authored raw-source oracle must independently establish expected facts and provenance without importing the adapter or views.
 
 | Collection | Exact record fields and interpretation |
 | --- | --- |
@@ -33,7 +35,7 @@ The predicate registry in the module is the normative type map. Question facts b
 
 Observation references must exist in the packet. Empty assertion support may be retained as missing provenance but cannot license a required answer. Release assertions additionally require exactly one explicit release-sample reference: losing that reference refuses, rather than changing which observation the assertion belongs to. Supersession links preserve the original assertion, require the same subject/predicate and nondecreasing knowledge time, and reject missing ancestors, forks and cycles. A release correction must remain within the same sample as its predecessor; a later sample is a separate observation, not a revision that erases the earlier one. Conflicting active values refuse a single-valued query. Matching active values may combine their cited support. These conventions are declared representation semantics, not assertions that the underlying evidence is true.
 
-Release assertions are scoped to one source sample; their chronological repetition does not erase earlier samples. The seen-ID answer unions all sampled IDs, including draft/prerelease IDs. Opening eligibility uses the opening sample's exact boolean fields; missing booleans do not mean false. Stable transitions under the same ID do not invent new IDs. The module answers these snapshot queries only; it does not resolve future release novelty. Large integer IDs remain integers. A missing opening observation refuses, while a declared empty opening sample can yield an empty map. Raw response validity/completeness is a future collector/oracle responsibility, not established by the `release_sample` label.
+Release assertions are scoped to one source sample; their chronological repetition does not erase earlier samples. The seen-ID answer unions all sampled IDs, including draft/prerelease IDs. Opening eligibility uses the opening sample's exact boolean fields; missing booleans do not mean false. Stable transitions under the same ID do not invent new IDs. The module answers these snapshot queries only; it does not resolve future release novelty. Accepted large integer IDs remain integers; runtime digit/number limitations produce explicit unavailable-input refusal without rounding. A missing opening observation refuses, while an actually validated empty opening sample can yield an empty map. The raw adapter checks supplied bytes and receipt consistency; independently complete collection remains a future collector/oracle responsibility, not established by the `release_sample` label.
 
 Optional `tag_name`, `created_at` and `published_at` assertions retain an object with `raw`, `precision`, `parse_status`. Raw JSON values, including malformed dates and explicit nulls, remain distinct from absent facts. These publisher claims cannot substitute for knowledge times or change release eligibility. Source hashes and time labels are retained declarations here; this slice does not read the referenced blobs or independently witness time.
 
@@ -47,6 +49,6 @@ Common answers are subject identity, knowledge/outcome cutoffs and included obse
 
 ## Validation and remaining gates
 
-Invented controls save/reread both encodings, compare independent literal answers, preserve malformed optional metadata, check directed roles and revisions, and remove every encoded copy of a unique required fact or its required support. Loss causes refusal and cannot be repaired through the original packet or shared state. The [implementation record](../planning/runs/2026-11-26-prospective-views.md) records executed checks, artifacts and limits.
+Invented controls save/reread both encodings, compare independent literal answers, preserve malformed optional metadata, check directed roles and revisions, and remove every encoded copy of a unique required fact or its required support. Loss causes refusal and cannot be repaired through the original packet or shared state. The [view implementation record](../planning/runs/2026-11-26-prospective-views.md) and [raw-input implementation record](../planning/runs/2026-11-27-prospective-inputs.md) record executed checks, artifacts and limits. The new raw-byte controls add no actual pilot data or performance claim.
 
 This module is not yet connected to the bounded pilot runtime or the shared work-contract dispatcher. It adds no registration, external requests, model calls, transactions, scheduler or continuation authority. Its tests do not establish hostile-host isolation, real observation completeness, forecast calibration or graph superiority. The proposed 10–60-second start windows cannot be met by the existing 15-minute heartbeat alone; that remains an explicit launch prerequisite.
