@@ -28,6 +28,26 @@ EXPECTED = canonical({'schema_version': 1, 'source_sha256': digest(SOURCE), 'sou
               {'start': 5, 'end': 13, 'sha256': digest(b'capture\n')}]}).encode()
 
 
+_INHERITED = []
+
+
+def setUpModule():
+    """Capture refuses inheritable parent descriptors, and CI runners pass some to the test process."""
+    for name in os.listdir('/dev/fd'):
+        descriptor = int(name)
+        try:
+            if descriptor > 2 and os.get_inheritable(descriptor):
+                os.set_inheritable(descriptor, False)
+                _INHERITED.append(descriptor)
+        except OSError:  # The listing's own descriptor is already closed.
+            continue
+
+
+def tearDownModule():
+    while _INHERITED:
+        os.set_inheritable(_INHERITED.pop(), True)
+
+
 class FakeSelector:
     """Ready regular files emulate pipes; this does not test OS readiness."""
     def __init__(self): self.rows = {}
