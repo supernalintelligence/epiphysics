@@ -23,7 +23,7 @@ export default function ResearchHome() {
           <h1 className={s.title}>How should we model a changing world?</h1>
           <p className={s.lead}>Epiphysics studies whether different representations of a system help us predict what happens next.</p>
           <p className={s.intro}>We build small, inspectable tests: retain the evidence, measure a result, investigate failures, and use that record to choose the next question.</p>
-          <div className={s.actions}><a className={s.primary} href="#latest-evidence">Latest findings</a><Link className={s.secondary} href="/overview">An introduction</Link></div>
+          <div className={s.actions}><a className={s.primary} href="#latest-evidence">Latest findings</a><Link className={s.secondary} href="/overview">An introduction</Link><Link className={s.secondary} href="/research-map">Explore the research map</Link></div>
         </div>
         <div className={s.visual}>
           <div className={s.visualTop}><span>Alternative representations</span><button className={s.pause} onClick={() => setPaused(!paused)} aria-pressed={paused}>{paused ? 'Resume' : 'Pause'}</button></div>

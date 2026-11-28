@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
+import { htmlToDOM, type Element } from 'html-react-parser';
 import SafeHTML from './SafeHTML';
 
 declare global {
@@ -30,6 +31,12 @@ interface CollectionTTSContentProps {
   aiAuthors?: string[];
 }
 
+function hasLevelOneHeading(nodes: Element['children']): boolean {
+  return nodes.some(node => node.type === 'tag' && node.name !== 'template' && (
+    node.name === 'h1' || hasLevelOneHeading(node.children)
+  ));
+}
+
 export default function CollectionTTSContent({
   html,
   content,
@@ -42,6 +49,10 @@ export default function CollectionTTSContent({
   aiAuthors,
 }: CollectionTTSContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Index bodies may supply their own heading; otherwise use the metadata title.
+  const showTitle = title && !hide?.includes('title') && (
+    !isIndex || !hasLevelOneHeading(htmlToDOM(html))
+  );
 
   useEffect(() => {
     if (!tts?.enabled || !containerRef.current) return;
@@ -81,23 +92,25 @@ export default function CollectionTTSContent({
       data-enable-speed={tts?.enableSpeed ? 'true' : undefined}
       data-enable-progress={tts?.enableProgress ? 'true' : undefined}
     >
-      {title && !isIndex && !hide?.includes('title') && (
+      {showTitle && (
         <>
           <h1 className="text-3xl md:text-4xl font-bold mb-3 font-display">{title}</h1>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            <span>
-              By{' '}
-              {authorUrl ? (
-                <a href={authorUrl} target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-primary-400 hover:underline">
-                  {authorName || 'Ian Derrington'}
-                </a>
-              ) : (
-                authorName || 'Ian Derrington'
-              )}
-            </span>
-            <span className="mx-1">•</span>
-            <span>AI Contributors: {(aiAuthors && aiAuthors.length ? aiAuthors : ['Codex 5.3', 'Opus 4.6', 'Sonnet 4.6']).join(', ')}</span>
-          </div>
+          {!isIndex && (
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              <span>
+                By{' '}
+                {authorUrl ? (
+                  <a href={authorUrl} target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-primary-400 hover:underline">
+                    {authorName || 'Ian Derrington'}
+                  </a>
+                ) : (
+                  authorName || 'Ian Derrington'
+                )}
+              </span>
+              <span className="mx-1">•</span>
+              <span>AI Contributors: {(aiAuthors && aiAuthors.length ? aiAuthors : ['Codex 5.3', 'Opus 4.6', 'Sonnet 4.6']).join(', ')}</span>
+            </div>
+          )}
         </>
       )}
       <SafeHTML html={html} />

@@ -39,11 +39,11 @@ feedback:
 
 ## Scope
 
-This note applies the Epimechanics vocabulary to how a representation becomes accepted. Statements carry the corpus tags: **relabeling** (a known result in framework terms), **structural** (follows from the framework's definitions) and **novel** (a prediction the framework adds). The corpus contains no derivation about primes or the zeta function, and nothing here argues that Epiphysics bears on the Riemann Hypothesis.
+This note applies the Epimechanics vocabulary to how a representation becomes accepted. Where a statement is tagged, it uses the corpus tags: **relabeling** (a known result in framework terms), **structural** (follows from the framework's definitions) and **novel** (a prediction the framework adds). The corpus contains no derivation about primes or the zeta function, and nothing here argues that Epiphysics bears on the Riemann Hypothesis.
 
 ## Three properties
 
-Engineering separates verification (was the thing built correctly?) from validation (was the right thing built?). Machine-checked mathematics needs a third property, because a proof can pass both a checker and expert review while no person can say why it holds.
+Engineering separates verification (was the thing built correctly?) from validation (was the right thing built?). Machine-checked mathematics needs a third property, because a proof can pass a checker while no person can say why it holds.
 
 | Property | Relation | Checked by | Scales by | Fails when |
 |---|---|---|---|---|
@@ -58,34 +58,37 @@ A representation can have any combination of the three. The definitions give a p
 
 ## Case 1: the Lean-certified Riemann Hypothesis proof
 
-The verification details come from the joint statement of the Lean FRO and the Mathlib Initiative (21 November 2026), which is a primary source. The rest comes from news coverage and a Wikipedia current-events page dated 24 November 2026. Two further primary sources were read in part: Andrew Sutherland's verification log (page updated 24 November 2026) and a 265-page explanatory draft described below. Alpöge's own four-page note (alpo.ge/remark.pdf) and the arXiv version of the MIT paper were also read. The Lean code and the PNAS version of the paper were not, so the remaining details are provisional.
+The verification details come from the joint statement of the Lean FRO and the Mathlib Initiative (21 November 2026), which is a primary source. The rest comes from news coverage and the Wikipedia article on the proof. Two further primary sources were read in part: Andrew Sutherland's verification log (as read on 24 November 2026) and a 265-page explanatory draft described below. Alpöge's own four-page note (alpo.ge/remark.pdf) and the arXiv version of the MIT paper were also read. The Lean code and the PNAS version of the paper were not, so the remaining details are provisional.
 
 - **Verified.** Levent Alpöge released a Lean 4 formalization of about 17 million lines on 20 November 2026. The Lean FRO and Mathlib Initiative certified it a day later, citing four criteria that the Lean community had published before the claim (the Xena Project post cited in the certification carries the date 12 November 2026). The statement is Mathlib's own `RiemannHypothesis`, vetted by experts. Dozens of people reproduced the same raw proof export. Two independent tools, `comparator` and `con-leche --compare`, confirmed that the theorem proved is exactly Mathlib's statement. Several checkers in different languages accepted the export, including `con-leche` and `con-ron`, which come with a formal proof, relative to set theory, that they cannot accept a false proof. The checks ran on an inert export, out of reach of any malicious code in the Lean sources. Andrew Sutherland's log adds counts: all 175,187 modules compile, the five headline theorems use only the three standard axioms (`propext`, `Classical.choice`, `Quot.sound`), an independent sandboxed rebuild reproduced the export byte for byte, and two independently written kernels accepted the full export. Lean's default kernel took 48 hours on one thread, and its paranoid mode took 72 hours. These are measurements of replication and trust base (items 1 and 2 below).
 - **Valid.** The question of whether the Lean statement is the Riemann Hypothesis went to reviewers. Kevin Buzzard raised it as the first question to ask. The imported definition and the comparison tools answer it, and people still judge that answer. The certification names this link explicitly and assigns it to expert vetting.
-- **Understood.** Not yet. Daniel Litt summarized the position in two lines: the formalized proof is exceedingly likely to be correct, and no human understands it yet. Andrew Granville, James Maynard and Maksym Radziwill each commented on the lack of a readable account.
+- **Understood.** Not yet. Daniel Litt summarized the position in two lines: the formalized proof is exceedingly likely to be correct, and no human understands it yet. Andrew Granville and Maksym Radziwill criticized the clarity of Alpöge's document and the lack of human understanding of the proof.
 
-A 265-page draft shows the understanding work in progress. Michael Rubinstein commissioned it, and it is credited to three AI systems working at his behest (version 2, working draft, 22 November 2026). It explains the argument for the Riemann zeta function only. Its own abstract lists what it does not do:
+A 265-page draft shows the understanding work in progress. Michael Rubinstein commissioned it, and it is credited to three AI systems working at his behest (version 2, working draft, 22 November 2026). It explains the argument for the Riemann zeta function only. Its own opening pages state what it does not do:
 
 - It quotes the main inequality, called (M), from the Lean development and does not prove it.
 - It reduces (M) to thirteen numbered hypotheses stated in classical terms, and proves none of them outright.
 - It lists 195 statements that the Lean development takes as published results, and says its attributions for them are "from memory".
 
-So understood is being built in layers, here by an AI-written exposition commissioned by a human, and each layer states which links it has not yet closed. This note has not checked whether humans have reviewed the draft. Its length of 265 pages is consistent with Wikipedia's report that the 250,000-page figure was a joke.
-- **Who validates.** The work is spread across a team that includes AI. An AI-led teardown of the proof ran in a number theory Zulip chat that Terence Tao cited.
+So understood is being built in layers, here by an AI-written exposition commissioned by a human, and each layer states which links it has not yet closed. This note has not checked whether humans have reviewed the draft.
 
-One figure needs care. Alpöge's own note says in a footnote that he "amused myself, and hit 250,000+ pages" with an AI-written English version, and that posting it would have been a "massive unreadable travesty of slop", so he released only the Lean. Wikipedia reports that he said on 23 November that the page figure was a joke. The note itself does not call it a joke. Either way, the reading problem is 17 million lines of Lean with no written proof, and this note leaves the page count out of its arguments.
+**Who validates.** The work is spread across a team that includes AI. Terence Tao pointed to a Lean Zulip thread as probably the best place to follow the verification. Wikipedia reports that number theorists in a Zulip chat Tao referred to reacted to an AI-led teardown of the proof.
+
+One figure needs care. Alpöge's own note says in a footnote that he "amused myself, and hit 250,000+ pages" with an AI-written English version, and that posting it would have been a "massive unreadable travesty of slop", so he released only the Lean. Wikipedia reports that he said on 23 November that the page figure was a joke. The note itself does not call it a joke. Either way, the original release is 17 million lines of Lean with no written proof, and this note leaves the page count out of its arguments.
+
+A later [repository](https://github.com/lsernau/grh-lean) gives shorter editions for the generalized theorems, of about 300,000 and 76,000 lines. Its README says that they have passed machine checks only, that no mathematician has read the proof through, and that no paper comes with it. A shorter certificate is therefore not yet an understood one. This note read the README and has not built or checked that code.
 
 The author's own note shows the gap from the inside. He writes that he is presenting "a complete argument before having mastered a massive neighbourhood around its mathematics", that "Claude far outpaced me near the finish line", and that for parts where Claude was the expert he is "paraphrasing a slop summary, which might make zero sense", adding that the Lean "should suffice to clarify everything". So verified and valid do not require that any one person, the author included, holds the whole argument. He commits to "understand and impart understanding of this argument", and he expects it to be "massively simplified".
 
-Terence Tao's post of 20 November 2026 gives a direct ordering on the understood axis. He lists three results from the same group, "in decreasing order of how digested the results currently are":
+Terence Tao's post of 20 November 2026 gives a direct ordering on the understood axis. He lists three results, "in decreasing order of how digested the results currently are":
 
 1. A proof of finite-time blowup for the unforced 3D Euler equations (Alpöge, Buckmaster and Coiculescu). It is human-readable and formalized in Lean.
-2. A proof of finite-time blowup for the unforced 3D Navier-Stokes equations (Alpöge and Buckmaster). The paper is technically human-readable and the strategy is broadly clear: build an approximate self-similar solution numerically, then use rigorous perturbation theory to make it exact. It has a Lean formalization, and it still needs a professionally written proof.
+2. A proof of finite-time blowup for the unforced 3D Navier-Stokes equations (Alpöge and Buckmaster). The paper is technically human-readable and the strategy is broadly clear: build an approximate discretely self-similar solution numerically, then use rigorous perturbation theory to make it exact. It has a Lean formalization, and it still needs a professionally written proof.
 3. The Lean-only proof of the Generalized Riemann Hypothesis.
 
 Tao adds that in the third case there is at least a human author to ask. These are Tao's reports. This note has not checked the first two results.
 
-The ordering shows that verified, valid and understood can be at different stages in results from one source, and that a written account is the main thing that moves a result along the understood axis.
+The ordering shows that verified, valid and understood can be at different stages in different results. We infer that a written account helps move a result along the understood axis.
 
 ## Case 2: a hard-constrained model of chaotic systems
 
@@ -93,15 +96,15 @@ An MIT News story dated 20 November 2026 describes a PNAS paper by Sunbochen Tan
 
 The same split applies:
 
-- **Verified by construction.** Boundedness holds for every input, including inputs the model has not seen.
+- **Proved by construction.** The authors prove that trajectories of the learned continuous system stay bounded from any initial state. This is a mathematical proof about the model, and this note knows of no proof checker run on it. Computed forecasts use a numerical integration scheme.
 - **Valid.** Whether the learned energy function and boundary fit the real system is settled against data. Bounded output does not show a correct model.
 
 ## Mapping to the framework
 
-- **Verified uses the selection idea, not the basin.** In the glossary, extant describes a loop whose basin depth ΔV clears a perturbation ΔE. A proof object is static and has no basin, so ΔV and ΔE do not transfer. What transfers is the selection rule: a representation persists in an environment if it survives every test that environment applies. Each test here is a checker with a binary outcome, so the surviving set 𝒮(ℰ) is the set of certificates every checker accepts. A new, independently written checker widens ℰ.
-- **Environments are plural.** A representation can be extant under machine checkers and fall outside the human reader's environment. The Riemann Hypothesis proof sits in that gap. Understood is a second compression: a representation small enough for a reader's capacity.
-- **Valid depends on purpose.** The corpus holds that accuracy is matched to purpose and not maximized. Valid therefore reads as fit to a stated purpose, and the purpose has to be named each time the word is used.
-- **The referent differs from physics.** A physical model faces measurement. A mathematical statement's referent is the theorem mathematicians intend, and it exists in their agreement. Validation in mathematics is therefore social, which is the quasi-empirical view of Lakatos.
+- **Verified uses the selection idea, not the basin.** In the glossary, extant describes a loop whose basin depth ΔV clears a perturbation ΔE. A proof object is static and has no basin, so ΔV and ΔE do not transfer. What transfers is the selection rule: a representation persists in an environment if it survives every test that environment applies. Each test here is a checker with a binary outcome. By analogy only, since the glossary defines the surviving set 𝒮(ℰ) through ΔV and ΔE, call the accepted set those certificates that every checker accepts. A new, independently written checker adds a test to ℰ.
+- **Environments are plural.** A representation can survive every machine checker and still fall outside the human reader's environment. The Riemann Hypothesis proof sits in that gap. Understood is a second compression: a representation small enough for a reader's capacity.
+- **Valid depends on purpose.** The corpus holds that accuracy is set by what survival in an environment needs, and is not maximized. We extend this and read valid as fit to a stated purpose, so the purpose has to be named each time the word is used.
+- **The referent differs from physics.** A physical model faces measurement. A mathematical statement's referent is the theorem mathematicians intend, and it exists in their agreement. We suggest that validation in mathematics is therefore partly social, close to the quasi-empirical view of Lakatos, whose work was not reread for this note.
 
 ## A related position: reality as a vector in Hilbert space
 
@@ -109,7 +112,7 @@ Sean Carroll's "Reality as a Vector in Hilbert Space" (arXiv:2103.09780, 2021, a
 
 Two points from the paper bear on the three properties.
 
-- **A thing and its representation come apart.** Carroll writes that the choice between position and momentum space "is simply a change of basis in Hilbert space, which presumably has no physical importance". The physical state is the vector, and each basis is one representation of it. This is the referent-versus-representation split used above, in a case where checking one representation does not settle the referent.
+- **A thing and its representation come apart.** Carroll writes that the choice between position and momentum space "is simply a change of basis in Hilbert space, which presumably has no physical importance". The physical state is the vector, and each basis is one representation of it. This resembles the split between referent and representation used above.
 - **A usable emergent description is a rare event.** He notes that most Hamiltonians admit no local decomposition and most factorizations admit no classical limit. The descriptions we use exist only for non-generic Hamiltonians. This parallels the corpus's surviving set: usable representations are a small subset of all candidates. It does not test the Efficiency Conjecture, which concerns cost and not rarity.
 
 > [!caveat] Where the positions differ

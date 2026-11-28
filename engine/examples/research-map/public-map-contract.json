@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "contract_id": "public-research-map-preparation-v1",
+  "phase": "public_research_map_preparation",
+  "stage": "retained_public_map_preparation",
+  "commands": {
+    "verifier": [
+      "node",
+      "scripts/verify-public-research-map.mjs",
+      "--json"
+    ],
+    "exporter_tests": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "test/public-research-map.test.mjs"
+    ],
+    "ui_tests": [
+      "node",
+      "node_modules/jest/bin/jest.js",
+      "src/components/research-map",
+      "--runInBand",
+      "--json"
+    ],
+    "typecheck": [
+      "node",
+      "scripts/check-public-research-map-types.mjs",
+      "--json"
+    ],
+    "lint": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      "src/app/research-map/page.tsx",
+      "src/components/research-map/ResearchMap.tsx",
+      "src/components/research-map/Neighborhood.tsx",
+      "src/components/research-map/model.ts",
+      "src/components/research-map/model.test.ts",
+      "src/components/research-map/focus.test.tsx",
+      "src/components/home/ResearchHome.tsx",
+      "scripts/check-public-research-map-types.mjs"
+    ],
+    "build": [
+      "npm",
+      "run",
+      "build"
+    ]
+  },
+  "selection": {
+    "schema_version": 1,
+    "commands": {
+      "verifier": [
+        "node",
+        "scripts/verify-public-research-map.mjs",
+        "--json"
+      ],
+      "exporter_tests": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "test/public-research-map.test.mjs"
+      ],
+      "ui_tests": [
+        "node",
+        "node_modules/jest/bin/jest.js",
+        "src/components/research-map",
+        "--runInBand",
+        "--json"
+      ],
+      "typecheck": [
+        "node",
+        "scripts/check-public-research-map-types.mjs",
+        "--json"
+      ],
+      "lint": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/app/research-map/page.tsx",
+        "src/components/research-map/ResearchMap.tsx",
+        "src/components/research-map/Neighborhood.tsx",
+        "src/components/research-map/model.ts",
+        "src/components/research-map/model.test.ts",
+        "src/components/research-map/focus.test.tsx",
+        "src/components/home/ResearchHome.tsx",
+        "scripts/check-public-research-map-types.mjs"
+      ],
+      "build": [
+        "npm",
+        "run",
+        "build"
+      ]
+    },
+    "test_names": {
+      "test/public-research-map.test.mjs": [
+        "deterministic public projection preserves direction, qualifications and limits without private/text fields",
+        "publication verification never silently adds an approved or unapproved new node",
+        "current catalog edits require a new reviewed committed pin",
+        "current public document edits do not inherit an older digest",
+        "private, code, traversal and route-mismatched document bindings are refused",
+        "committed draft/private documents and missing public routes are refused",
+        "selected unknown fields fail closed while excluded private nodes stay excluded",
+        "unsafe bibliographic URLs cannot become clickable public links",
+        "source date precision and bibliographic-only labels are checked",
+        "duplicate identifiers, duplicate edges and dangling or mistyped relationships fail",
+        "claims must retain a real public citation rather than a private-only or missing edge",
+        "snapshot field injection or payload tampering is rejected without rewriting",
+        "symlink documents cannot bypass committed-file or local-path validation",
+        "a missing promisor object cannot execute a configured remote helper",
+        "complete serialized artifact size is checked before any write, including hash and pretty formatting",
+        "export refuses leaf and parent symlinks without changing their targets",
+        "export is exclusive unless an exact previous raw digest authorizes reviewed replacement"
+      ],
+      "src/components/research-map/model.test.ts": [
+        "searches all words across title, statement, status, and basis, without changing source order",
+        "combines the status filter with search and preserves honest zero matches",
+        "browses claims only, never interpreting proposal status as a result",
+        "defaults only absent parameters and leaves invalid, empty, or non-claim IDs unresolved",
+        "writes a stable encoded selection URL while preserving other query parameters and fragments",
+        "resolves a restored URL independently of the currently filtered list",
+        "includes both directed endpoints without adding a second-hop connection",
+        "uses precisely the same edges for all text groups and the optional graph",
+        "represents every supported edge type once without replacing its direction or type",
+        "keeps an isolated claim and empty edge groups honest"
+      ],
+      "src/components/research-map/focus.test.tsx": [
+        "moves focus to the selected heading after following a related claim",
+        "preserves browse-list focus when selecting a claim from the list",
+        "moves focus to the selected heading when recovering from an unknown claim link"
+      ]
+    },
+    "typecheck_entries": [
+      "src/app/research-map/page.tsx",
+      "src/data/public-research-map.json",
+      "src/components/research-map/ResearchMap.tsx",
+      "src/components/research-map/Neighborhood.tsx",
+      "src/components/research-map/model.ts",
+      "src/components/research-map/model.test.ts",
+      "src/components/research-map/focus.test.tsx",
+      "src/components/home/ResearchHome.tsx"
+    ]
+  },
+  "required_files": [
+    "src/app/research-map/page.tsx",
+    "src/components/research-map/ResearchMap.tsx",
+    "src/components/research-map/Neighborhood.tsx",
+    "src/components/research-map/model.ts",
+    "src/components/research-map/model.test.ts",
+    "src/components/research-map/focus.test.tsx",
+    "src/components/home/ResearchHome.tsx",
+    "src/components/research-map/ResearchMap.module.css",
+    "src/components/home/RepresentationLattice.tsx",
+    "src/components/home/ResearchExperience.module.css",
+    "src/components/home/research-stages.ts",
+    "src/components/home/research-progress.json",
+    "scripts/export-public-research-map.mjs",
+    "scripts/verify-public-research-map.mjs",
+    "scripts/public-research-map.mjs",
+    "scripts/check-public-research-map-types.mjs",
+    "test/public-research-map.test.mjs",
+    "scripts/preprocess-content-simple.js",
+    "scripts/verify-research-progress.mjs",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "next.config.js",
+    "mdx.config.js",
+    "jest.config.js",
+    "jest.setup.js",
+    ".eslintrc.json"
+  ],
+  "typecheck_entries": [
+    "src/app/research-map/page.tsx",
+    "src/data/public-research-map.json",
+    "src/components/research-map/ResearchMap.tsx",
+    "src/components/research-map/Neighborhood.tsx",
+    "src/components/research-map/model.ts",
+    "src/components/research-map/model.test.ts",
+    "src/components/research-map/focus.test.tsx",
+    "src/components/home/ResearchHome.tsx"
+  ],
+  "report_checks": [
+    "explicitNodeAndFieldAllowlists",
+    "committedAndCurrentInputIdentity",
+    "publishedDocumentRoutes",
+    "safeBibliographicURLs",
+    "publicClaimCitations",
+    "typedDirectedRelationships",
+    "savedSnapshotMatchesDeterministicProjection"
+  ],
+  "next_actions": [
+    "prepare_evidence_navigation_evaluation",
+    "repair_public_research_map_preparation"
+  ],
+  "limits": {
+    "request_bytes": 32768,
+    "contract_receipt_bytes": 65536,
+    "dataset_bytes": 262144,
+    "verifier_report_bytes": 16384,
+    "log_bytes": 1048576,
+    "manifest_bytes": 1048576,
+    "prefix_bytes": 8388608,
+    "prefix_events": 4096,
+    "bundle_bytes": 16777216,
+    "assessment_seconds": 10
+  },
+  "scope": "Trusted local retained static-publication checks; no external execution witness, browser, human-use, deployment or predictive gain claim",
+  "unchanged_failed_retry": false,
+  "publication_metadata": "UTF-8 YAML frontmatter with unambiguous scalar publication fields; unsupported tags, aliases, merges, duplicate keys or complex publication values are failed artifact checks",
+  "repair_identity": "Direct source/catalog/document/selection bytes and policy/dataset content excluding commit labels and derived digests"
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import type { Post } from '@/lib/content/types';
 import { CombinedItem, FolderItem } from '@/lib/content/collectionUtils';
 import { CoverImage } from '@/lib/imageUtils';
 import CardGrid from './CardGrid';
@@ -42,7 +43,7 @@ const CollectionViewWrapper: React.FC<CollectionViewWrapperProps> = ({
 
   // Keep original mixed ordering from server (important for `.pages nav` ordering)
   const folders = items.filter((item): item is FolderItem => 'posts' in item);
-  const posts = items.filter(item => !('posts' in item));
+  const posts = items.filter((item): item is Post => !('posts' in item));
 
   // Determine if we should show the view selector
   // Show if allowedViewTypes is specified AND there are items AND more than one view type is allowed
@@ -135,4 +136,4 @@ const CollectionViewWrapper: React.FC<CollectionViewWrapperProps> = ({
   );
 };
 
-export default CollectionViewWrapper; 
+export default CollectionViewWrapper;

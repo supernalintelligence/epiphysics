@@ -154,7 +154,7 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({
       )}
 
       {/* Render Optional Index Post Content */}
-      {hasIndexContent && (
+      {indexPost && (hasIndexContent || (indexPost.metadata.title && !indexPost.metadata.hide?.includes('title'))) && (
         <CollectionTTSContent
           html={indexPost.html}
           content={indexPost.content}
@@ -198,4 +198,4 @@ const CollectionDisplay: React.FC<CollectionDisplayProps> = ({
   );
 };
 
-export default CollectionDisplay; 
+export default CollectionDisplay;
