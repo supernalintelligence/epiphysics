@@ -25,11 +25,7 @@ interface PostCardProps {
 
 export default function PostCard({ post, section, showDate = true, imagePath, priority = false }: PostCardProps) {
   const { title, description, date, tags } = post.metadata;
-  const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }) : null;
+  const formattedDate = formatDate(date, 'short');
 
   const showTags = section === 'blog' && tags && tags.length > 0;
   const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${post.slug}`;

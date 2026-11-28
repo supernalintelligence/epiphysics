@@ -7,9 +7,9 @@ on:
 permissions:
   contents: read
 jobs:
-  verify:
+  unit-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       PYTHONPATH: engine
       PYTHONDONTWRITEBYTECODE: '1'
@@ -20,6 +20,23 @@ jobs:
           python-version: '3.11'
       - name: Run engine tests
         run: python -m unittest discover -s engine/tests -v
+  verify:
+    needs: unit-tests
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: engine
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Require engine tests to pass
+        env:
+          UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
+        run: test "$UNIT_TEST_RESULT" = success
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Verify synthetic controls
         run: |
           python - <<'PY'

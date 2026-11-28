@@ -1,0 +1,17 @@
+{
+  "allow_scale_change": false,
+  "external_spend": 0,
+  "max_assessment_seconds": 60,
+  "required_families": [
+    "software_service",
+    "organization",
+    "person_role",
+    "contract_obligation",
+    "physical_asset",
+    "collective",
+    "representation"
+  ],
+  "schema_version": 1,
+  "stage": "offline_fixture",
+  "version": "evidence-navigation-local-v1"
+}

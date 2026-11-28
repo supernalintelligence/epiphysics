@@ -23,7 +23,7 @@ from pathlib import Path
 IMPLEMENTATION_SOURCE = Path(__file__).read_bytes()
 IMPLEMENTATION_CODE = sys._getframe().f_code
 
-from . import assertions, decision_assessment, decision_diagnosis, decision_views, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, retrieval_probe, source_span_checks, store, transformation_checks, transforms
+from . import assertions, decision_assessment, decision_diagnosis, decision_views, dated_delivery, dated_delivery_verifier, public_map_assessment, navigation_assessment, navigation_contracts, navigation_runner, navigation_evaluation, graph_view_checks, graph_views, manifest_checks, manifests, materialization, materialization_checks, representation_checks, retrieval, retrieval_assessment, retrieval_contracts, retrieval_coverage, retrieval_diagnosis, retrieval_evaluation, retrieval_indexing, retrieval_probe, source_span_checks, store, transformation_checks, transforms
 from .store import Ledger, canonical, digest, utc_now
 from .representation_checks import FAMILIES, evaluate, reference_candidate, degraded_candidate, validate_suite
 from .source_span_checks import run_source_span_checks
@@ -34,7 +34,7 @@ from .materialization_checks import run_materialization_checks
 
 IMPLEMENTATION_DEPENDENCIES = tuple(
     (module.__name__, module.IMPLEMENTATION_CODE)
-    for module in (assertions, decision_assessment, decision_diagnosis, decision_views, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis, retrieval_probe)
+    for module in (assertions, decision_assessment, decision_diagnosis, decision_views, dated_delivery, dated_delivery_verifier, public_map_assessment, navigation_assessment, navigation_contracts, navigation_runner, navigation_evaluation, manifests, manifest_checks, representation_checks, source_span_checks, store, transforms, transformation_checks, graph_views, graph_view_checks, materialization, materialization_checks, retrieval, retrieval_evaluation, retrieval_assessment, retrieval_contracts, retrieval_indexing, retrieval_coverage, retrieval_diagnosis, retrieval_probe)
 )
 
 # Pin dependency identities after imports. Reloading a module can otherwise pair
@@ -55,6 +55,13 @@ _IMPLEMENTATIONS = {
                          "retrieval_probe": retrieval_probe,
                          "decision_assessment": decision_assessment,
                          "decision_diagnosis": decision_diagnosis,
+                         "dated_delivery": dated_delivery,
+                         "public_map_assessment": public_map_assessment,
+                         "navigation_assessment": navigation_assessment,
+                         "navigation_contracts": navigation_contracts,
+                         "navigation_runner": navigation_runner,
+                         "navigation_evaluation": navigation_evaluation,
+                         "dated_delivery_verifier": dated_delivery_verifier,
                          "decision_views": decision_views,
                          "source_span_probe": source_span_checks, "store": store,
                          "controller": sys.modules[__name__]}.items()
@@ -101,7 +108,8 @@ def _prepare_decision(study_path):
         return {"prepared": decision_assessment.prepare_decision_study(study_path), "error": None}
     except (ValueError, OSError, TypeError, KeyError, RuntimeError, sqlite3.Error) as error:
         failed = _failed_retrieval_preparation(study_path, error)
-        if isinstance(error, (decision_assessment.DecisionStudyPreparationError, decision_diagnosis.PreparationError)):
+        if isinstance(error, (decision_assessment.DecisionStudyPreparationError, decision_diagnosis.PreparationError,
+                              dated_delivery.PreparationError, public_map_assessment.PreparationError, navigation_assessment.PreparationError)):
             artifacts = failed["prepared"]["artifacts"]
             artifacts.update({"invalid-captured:" + role: raw for role, raw in error.artifacts.items()})
             failed["prepared"]["manifest"] = {role: digest(raw) for role, raw in artifacts.items()}
@@ -127,12 +135,14 @@ def _information_context(preparation, events):
     if current is not None and (current["body"]["next_step"]["action"] in {
             "investigate_decision_information_limits", "repair_decision_information_diagnosis",
             "review_unresolved_decision_evidence", "prepare_dated_evidence_quality_protocol"}
+            | dated_delivery.SEMANTIC_ACTIONS | public_map_assessment.SEMANTIC_ACTIONS | public_map_assessment.NEXT_ACTIONS
+            | navigation_assessment.SEMANTIC_ACTIONS | navigation_assessment.NEXT_ACTIONS
             or _failed_decision_parent(current)):
         return True
     if preparation is None:
         return False
     if preparation["error"] is None:
-        return preparation["prepared"]["report"].get("phase") == decision_diagnosis.PHASE
+        return preparation["prepared"]["report"].get("phase") in {decision_diagnosis.PHASE, *dated_delivery.PHASES, public_map_assessment.PHASE, *navigation_assessment.PHASES}
     # A failed explicit diagnosis still has diagnosis preclaim semantics even
     # when aimed at an unrelated queued step. Use only captured bounded bytes;
     # a file name or an incomplete/ambiguous JSON prefix cannot declare a phase.
@@ -145,12 +155,19 @@ def _information_context(preparation, events):
             request = decision_assessment._json(raw)
         except (ValueError, TypeError, RecursionError):
             continue
-        if type(request) is dict and request.get("phase") == decision_diagnosis.PHASE:
+        if type(request) is dict and request.get("phase") in {decision_diagnosis.PHASE, *dated_delivery.PHASES, public_map_assessment.PHASE, *navigation_assessment.PHASES}:
             return True
     return False
 
 
+def _check_legacy_queue(events):
+    transitions = [event for event in events if event["kind"] in TRANSITIONS]
+    if transitions and "work:declaration" in transitions[-1]["body"].get("request", {}).get("manifest", {}):
+        raise ValueError("Queued work-contract evidence requires the work entry; a legacy assessment cannot consume it")
+
+
 def _check_decision_origin(preparation, events, after_step):
+    _check_legacy_queue(events)
     transitions = [event for event in events if event["kind"] in TRANSITIONS]
     previous = transitions[-1]["body"]["next_step"] if transitions else None
     if preparation is None:
@@ -158,7 +175,9 @@ def _check_decision_origin(preparation, events, after_step):
                 "prepare_control_exchange_decision_pilot", "repair_decision_pilot", "prepare_fresh_decision_comparison",
                 "prepare_prospective_decision_shadow", "investigate_decision_information_limits",
                 "repair_decision_information_diagnosis", "review_unresolved_decision_evidence",
-                "prepare_dated_evidence_quality_protocol"}):
+                "prepare_dated_evidence_quality_protocol"}
+                | dated_delivery.SEMANTIC_ACTIONS | public_map_assessment.SEMANTIC_ACTIONS | public_map_assessment.NEXT_ACTIONS
+            | navigation_assessment.SEMANTIC_ACTIONS | navigation_assessment.NEXT_ACTIONS):
             raise ValueError("This queued decision step requires its decision evidence; a generic assessment cannot complete it")
         if transitions and _failed_decision_parent(transitions[-1]):
             raise ValueError("A failed decision assessment requires its retained decision evidence; a generic assessment cannot complete it")
@@ -173,6 +192,15 @@ def _check_decision_origin(preparation, events, after_step):
         raise ValueError("Decision study must bind the currently queued decision-pilot step")
     if report.get("phase") == decision_diagnosis.PHASE:
         decision_diagnosis.validate_lineage(preparation["prepared"], events, after_step)
+        return
+    if report.get("phase") in dated_delivery.PHASES:
+        dated_delivery.validate_lineage(preparation["prepared"], events, after_step)
+        return
+    if report.get("phase") == public_map_assessment.PHASE:
+        public_map_assessment.validate_lineage(preparation["prepared"], events, after_step)
+        return
+    if report.get("phase") in navigation_assessment.PHASES:
+        navigation_assessment.validate_lineage(preparation["prepared"], events, after_step)
         return
     if report.get("phase") == "development":
         if previous["action"] not in {"prepare_control_exchange_decision_pilot", "repair_decision_pilot"}:
@@ -376,6 +404,11 @@ def select_next(report, run_key):
                   decision_diagnosis.PHASE: (decision_diagnosis.STAGE, {
                       "repair_decision_information_diagnosis", "review_unresolved_decision_evidence",
                       "prepare_dated_evidence_quality_protocol"})}
+        phases.update({phase: (stage, dated_delivery.PHASE_NEXT_ACTIONS[phase])
+                       for phase, stage in dated_delivery.PHASES.items()})
+        phases[public_map_assessment.PHASE] = (public_map_assessment.STAGE, public_map_assessment.NEXT_ACTIONS)
+        phases.update({phase: (stage, navigation_assessment.PHASE_NEXT_ACTIONS[phase])
+                       for phase, stage in navigation_assessment.PHASES.items()})
         expected = phases.get(pilot.get("phase"))
         if (pilot.get("schema_version") != 1 or pilot.get("status") != "checked" or expected is None
                 or pilot.get("stage") != expected[0] or pilot.get("next_step", {}).get("action") not in expected[1]):
@@ -383,6 +416,13 @@ def select_next(report, run_key):
         if (pilot["phase"] == decision_diagnosis.PHASE
                 and pilot.get("contract_id") != decision_diagnosis.CONTRACT_ID):
             raise ValueError("Decision diagnosis must use its checked diagnostic contract")
+        if (pilot["phase"] in dated_delivery.PHASES
+                and pilot.get("contract_id") != dated_delivery.CONTRACT_ID):
+            raise ValueError("Dated delivery must use its checked protocol contract")
+        if pilot["phase"] == public_map_assessment.PHASE and pilot.get("contract_id") != public_map_assessment.CONTRACT_ID:
+            raise ValueError("Public map must use its checked preparation contract")
+        if pilot["phase"] in navigation_assessment.PHASES and pilot.get("contract_id") != navigation_assessment.CONTRACT_ID:
+            raise ValueError("Navigation must use its checked contract")
     ready = report.get("coverage_preparation")
     if ready is not None and (ready.get("schema_version") != 3 or ready.get("phase") != "preparation" or ready.get("status") != "ready"):
         raise ValueError("Coverage readiness must be validated before choosing a successor")
@@ -435,6 +475,30 @@ def select_next(report, run_key):
          "The retained diagnostic is structurally valid but leaves an evidence attribution unresolved. Review the gap before preparing a new protocol."),
         ("prepare_dated_evidence_quality_protocol", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_dated_evidence_quality_protocol",
          "The retained diagnosis identifies the next evidence-quality question. Prepare a dated, independently checkable, nonacting artifact-delivery protocol; no new capture, experiment, spending or authority follows from this step."),
+        ("repair_dated_evidence_quality_protocol", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_dated_evidence_quality_protocol",
+         "The dated delivery preparation failed a declared check. Repair the protocol while preserving its accepted origin; no substitute delivery or live authority."),
+        ("bind_dated_artifact_delivery", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "bind_dated_artifact_delivery",
+         "The protocol is checked. Register one eligible backlog delivery before producing its first artifact; quality and outcomes remain unmeasured."),
+        ("check_dated_artifact_delivery", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "check_dated_artifact_delivery",
+         "One future delivery is registered. Preserve its first bytes and claim, then check retained evidence or close honestly at the declared deadline."),
+        ("review_dated_delivery_evidence", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "review_dated_delivery_evidence",
+         "Review the exact unresolved delivery evidence once; preserve missing or failed outcomes and never replace the first submission."),
+        ("prepare_public_research_map_view", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_public_research_map_view",
+         "The first delivery has a checked closure, including negative or missing outcomes. Prepare a public view of the curated research graph; do not infer predictive gain."),
+        ("repair_public_research_map_preparation", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_public_research_map_preparation",
+         "Repair the retained static public-map failure with changed relevant evidence; no unchanged retry or user-performance inference."),
+        ("prepare_evidence_navigation_evaluation", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_evidence_navigation_evaluation",
+         "Prepare six fixed textual evidence-navigation cases with separate answer keys and one attempt per case; browser and human usability remain unmeasured."),
+        ("run_textual_evidence_navigation_baseline", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "run_textual_evidence_navigation_baseline",
+         "One prospective six-case baseline is registered; retain exactly one first attempt per case without exposing its key."),
+        ("repair_evidence_navigation_protocol", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_evidence_navigation_protocol",
+         "Repair the unavailable navigation preparation prerequisite; no unchanged retry or candidate execution."),
+        ("prepare_independent_evidence_navigation_comparison", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "prepare_independent_evidence_navigation_comparison",
+         "Prepare new cases and a stronger comparison; six selected baseline cases establish no human or graph benefit."),
+        ("diagnose_textual_navigation_failure", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "diagnose_textual_navigation_failure",
+         "Diagnose retained reference, direction or interpretation failures without replacing first attempts."),
+        ("repair_navigation_execution_contract", None, None, "increase", pilot is not None and pilot["next_step"]["action"] == "repair_navigation_execution_contract",
+         "Repair the bounded execution or evaluation failure while preserving first attempts; no automatic repeat."),
         ("execute_fresh_coverage_baseline", None, None, "increase", ready is not None,
          "Reviewed fresh coverage inputs are frozen. Execute the two declared raw-baseline runs; retrieval quality remains unmeasured."),
         ("prepare_focused_support_followup", None, None, "increase", followup,
@@ -480,7 +544,7 @@ def select_next(report, run_key):
                "estimated_success_probability": None, "estimated_cost": None}
               for a, metric, target, direction, eligible, reason in choices]
     chosen = next(c for c in ranked if c["eligible"])
-    if (pilot is not None and pilot["phase"] == decision_diagnosis.PHASE
+    if (pilot is not None and pilot["phase"] in {decision_diagnosis.PHASE, *dated_delivery.PHASES, public_map_assessment.PHASE, *navigation_assessment.PHASES}
             and chosen["action"] != pilot["next_step"]["action"]):
         # Preserve the semantic task when an enclosing fixture/probe fails.
         # assess retains the actual request/claim and queues operational
@@ -527,6 +591,14 @@ def select_next(report, run_key):
         if pilot["phase"] == decision_diagnosis.PHASE:
             decision["evidence"].update(evidence_origin=pilot["evidence_origin"],
                                         queue_parent=pilot["queue_parent"], ancestry=pilot["ancestry"])
+    if pilot is not None and pilot["phase"] in dated_delivery.PHASES:
+        decision["evidence"] = {"study_id": pilot["study_id"], "origin": pilot["origin"],
+            "assessment_identity": pilot["assessment_identity"], "checks": pilot["checks"],
+            "phase": pilot["phase"], "evidence_origin": pilot["evidence_origin"],
+            "queue_parent": pilot["queue_parent"], "ancestry": pilot["ancestry"],
+            "scope": "Versioned local delivery preparation, registration or retained check; no predictive lift, external witness or live authority"}
+    if pilot is not None and (pilot["phase"] == public_map_assessment.PHASE or pilot["phase"] in navigation_assessment.PHASES):
+        decision["evidence"] = {key: pilot[key] for key in ("study_id", "origin", "assessment_identity", "checks", "phase", "evidence_origin", "queue_parent", "ancestry", "scope")}
     if actual is not None and chosen["metric"] is not None and chosen["metric"].startswith("retrieval_"):
         decision["measurement_contract_hash"] = actual["measurement_contract_identity"]["hash"]
         decision["candidate_hash"] = actual["candidate_identity"]["hash"]
@@ -679,6 +751,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
     if current["next_step"]["id"] != after_step:
         raise ValueError("Stale predecessor; read status and use the currently queued step")
     previous = current["next_step"]
+    _check_legacy_queue(events)
     if decision_preparation is None:
         _check_decision_origin(None, events, after_step)
     previous_manifest = (ledger.get(current["last_transition"])["body"]["request"]["manifest"]
@@ -706,6 +779,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         actual = transitions[-1]["body"]["next_step"]["id"] if transitions else "initial"
         if actual != after_step:
             raise ValueError("Another worker advanced the queue")
+        _check_legacy_queue(locked_events)
         # Invalid current-step evidence follows the usual durable failure path;
         # stale ownership above still refuses before claiming any work.
         try:
@@ -730,6 +804,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         actual = None
         decision_actual = None
         decision_diagnostic_seconds = None
+        delivery_verification_seconds = None
+        map_check_seconds = None
+        navigation_check_seconds = None
         if origin_error is not None:
             raise ValueError(origin_error)
         expected_request_hash = os.environ.get("EPIPHYSICS_EXPECTED_REQUEST_SHA256")
@@ -750,6 +827,23 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                         or not math.isfinite(decision_diagnostic_seconds)
                         or not 0 <= decision_diagnostic_seconds <= decision_diagnosis.MAX_SECONDS):
                     raise ValueError("Invalid diagnostic elapsed-time receipt")
+            if decision_actual.get("phase") in dated_delivery.PHASES:
+                delivery_verification_seconds = decision_measured.get("actual_resources", {}).get("first_verification_elapsed_seconds")
+                if delivery_verification_seconds is not None and (
+                        type(delivery_verification_seconds) not in (int, float)
+                        or not math.isfinite(delivery_verification_seconds)
+                        or not 0 <= delivery_verification_seconds <= dated_delivery.MAX_SECONDS):
+                    raise ValueError("Invalid delivery verification elapsed-time receipt")
+            if decision_actual.get("phase") == public_map_assessment.PHASE:
+                map_check_seconds = decision_measured.get("actual_resources", {}).get("retained_check_elapsed_seconds")
+                if (type(map_check_seconds) not in (int, float) or not math.isfinite(map_check_seconds)
+                        or not 0 <= map_check_seconds <= public_map_assessment.MAX_SECONDS):
+                    raise ValueError("Invalid public-map retained-check elapsed-time receipt")
+            if decision_actual.get("phase") in navigation_assessment.PHASES:
+                navigation_check_seconds = decision_measured.get("actual_resources", {}).get("retained_navigation_elapsed_seconds")
+                if (type(navigation_check_seconds) not in (int, float) or not math.isfinite(navigation_check_seconds)
+                        or not 0 <= navigation_check_seconds <= navigation_assessment.MAX_SECONDS):
+                    raise ValueError("Invalid retained navigation elapsed-time receipt")
             for role, raw in decision_measured["artifacts"].items():
                 if role in decision_preparation["prepared"]["artifacts"]:
                     if raw != decision_preparation["prepared"]["artifacts"][role]:
@@ -816,12 +910,24 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
             raise ValueError("Assessment exceeded its elapsed-time acceptance budget")
         if decision_diagnostic_seconds is not None and decision_diagnostic_seconds > elapsed:
             raise ValueError("Diagnostic elapsed time exceeds its enclosing assessment duration")
+        if delivery_verification_seconds is not None and delivery_verification_seconds > elapsed:
+            raise ValueError("Delivery verification elapsed time exceeds its enclosing assessment duration")
+        if map_check_seconds is not None and map_check_seconds > elapsed:
+            raise ValueError("Public-map retained-check elapsed time exceeds its enclosing assessment duration")
+        if navigation_check_seconds is not None and navigation_check_seconds > elapsed:
+            raise ValueError("Navigation check exceeds enclosing assessment duration")
         result = {"run_key": run_key, "request": request, "input_observations": captures,
                   "stage": "offline_fixture", "result": "assessed", "report": report,
                   "prior_action_outcome": _forecast_result(previous, report, previous_manifest, manifest),
                   "next_step": select_next(report, run_key),
                   "actual_resources": {"elapsed_seconds": elapsed, "model_calls": 0, "external_spend": 0},
-                  "scope": ("Synthetic conformance checks plus checked diagnosis of the 96 retained decision attempts; no new candidate execution, predictive improvement or live control claim. "
+                  "scope": ("Synthetic conformance plus prospective or retained six-case textual navigation; no candidate execution by assessor, human-use or comparative benefit claim. "
+                            if decision_actual is not None and decision_actual.get("phase") in navigation_assessment.PHASES else
+                            "Synthetic conformance checks plus retained static public-map preparation; no external process execution by the assessor, browser, human-use, deployment or predictive improvement result. "
+                            if decision_actual is not None and decision_actual.get("phase") == public_map_assessment.PHASE else
+                            "Synthetic conformance checks plus a checked dated artifact-delivery phase; preparation and registration have no delivery-quality result, and retained checks imply no general predictive gain or live control. "
+                            if decision_actual is not None and decision_actual.get("phase") in dated_delivery.PHASES else
+                            "Synthetic conformance checks plus checked diagnosis of the 96 retained decision attempts; no new candidate execution, predictive improvement or live control claim. "
                             if decision_actual is not None and decision_actual.get("phase") == decision_diagnosis.PHASE else
                             "Synthetic conformance checks plus one validated fixed24-case fresh exploratory comparison; no automatic repeat, representative capability or live control claim. "
                             if decision_actual is not None and decision_actual.get("phase") == "fresh_comparison" else
@@ -839,6 +945,16 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
             result["actual_resources"].update(
                 first_diagnostic_elapsed_seconds=decision_diagnostic_seconds,
                 diagnostic_timing_scope="First checked diagnosis only, nested within assessment elapsed time; completion revalidation excluded")
+        if decision_actual is not None and decision_actual.get("phase") in dated_delivery.PHASES:
+            result["actual_resources"].update(
+                first_verification_elapsed_seconds=delivery_verification_seconds,
+                verification_timing_scope="First retained-inventory verification only, nested in assessment; completion revalidation excluded; null when no verifier ran")
+        if decision_actual is not None and decision_actual.get("phase") == public_map_assessment.PHASE:
+            result["actual_resources"].update(first_retained_map_check_elapsed_seconds=map_check_seconds,
+                public_map_timing_scope="First retained-only map check, nested in assessment; completion revalidation excluded; no external program invocation")
+        if decision_actual is not None and decision_actual.get("phase") in navigation_assessment.PHASES:
+            result["actual_resources"].update(first_retained_navigation_check_elapsed_seconds=navigation_check_seconds,
+                navigation_timing_scope="First retained check nested in assessment; excludes completion revalidation; no external program invocation")
         if actual is not None:
             identity = {"input_manifest": dict(manifest),
                         "retrieval_assessment_hash": actual["assessment_identity"]["hash"]}
@@ -848,7 +964,7 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
             result["assessment_identity"] = {**identity, "hash": digest(canonical(identity).encode())}
         # Completion and successor are one atomic ledger event, never two separate writes.
         expected_result = canonical(result)
-        def validate_completion(_):
+        def validate_completion(recorded_at):
             _implementation_inputs()
             if {name: digest(raw) for name, raw in inputs.items()} != manifest:
                 raise ValueError("Assessment inputs changed before completion")
@@ -870,6 +986,9 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
                     raise ValueError("Diagnosis or probe revalidation exceeded the assessment elapsed-time budget")
             if canonical(result) != expected_result:
                 raise ValueError("Assessment result changed before completion")
+            if decision_actual is not None and decision_actual.get("phase") == navigation_assessment.CHECK:
+                navigation_assessment.validate_completion(decision_preparation["prepared"], decision_actual,
+                    recorded_at, ledger.clock())
         ledger.append("improvement_completed", result, f"improvement:{run_key}:complete",
                       exclusive=True, validate=validate_completion)
         return result
@@ -877,11 +996,15 @@ def assess(ledger, policy_path, suite_path, candidate, run_key, *, after_step="i
         failed = {"run_key": run_key, "request": request, "result": "failed", "error": type(error).__name__,
                   "message": str(error)[:400], "next_step": {"id": f"{run_key}:diagnose", "state": "queued",
                   "action": "diagnose_failed_assessment", "reason": str(error)[:400], "scale_change_allowed": False}}
+        if isinstance(error, navigation_assessment.ClosureDeadlineExceeded):
+            failed["next_step"]["action"] = "repair_navigation_execution_contract"
+            failed["navigation_closure"] = {"status": "outside_original_budget", "accepted_scores": None,
+                "retained_report_observation": captures.get("decision-result:assessment_report"), "retry_allowed": False}
         ledger.append("improvement_failed", failed, f"improvement:{run_key}:failed", exclusive=True)
         return failed
 
 
-def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason):
+def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason, *, validate=None):
     """Close only this already-reaped child's unfinished claim, under the ledger lock."""
     ledger = Ledger(store)
     try:
@@ -903,6 +1026,8 @@ def _recover_reaped_dispatch(store, run_key, dispatch_id, pid, reason):
         def validate_recovery(_):
             if any(e["kind"] in TRANSITIONS and e["body"]["run_key"] == run_key for e in ledger.events()):
                 raise ValueError("Run already finished; recovery refused")
+            if validate is not None:
+                validate(ledger)
         ledger.append("improvement_failed", result, f"improvement:{run_key}:failed",
                       exclusive=True, validate=validate_recovery)
         return "diagnosis_queued"
@@ -936,12 +1061,14 @@ def _dispatch_transition(store, run_key, dispatch_id, pid, delivered_result, exp
 
 
 def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="initial",
-             completed_work="", timeout_seconds=60, retrieval_study_path=None, decision_study_path=None):
+             completed_work="", timeout_seconds=60, retrieval_study_path=None, decision_study_path=None,
+             work_contract_path=None):
     """Spawn one fixed assessment program and persist a bounded process receipt.
 
     This is process supervision for a trusted local checkout, not a security
     sandbox. Builder agents remain separate workers supervised by the desktop.
     """
+    dispatch_began, dispatch_started_at = time.monotonic(), utc_now()
     if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 60:
         raise ValueError("Worker timeout must be positive and at most 60 seconds")
     if not isinstance(run_key, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", run_key):
@@ -950,9 +1077,14 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         raise ValueError("A nonempty completion description of at most 8000 characters is required")
     if decision_study_path is not None and retrieval_study_path is not None:
         raise ValueError("Dispatch one decision or retrieval study per transition")
+    if work_contract_path is not None and (retrieval_study_path is not None or decision_study_path is not None):
+        raise ValueError("Dispatch exactly one work interface")
+    if work_contract_path is not None and any(value is not None for value in (policy_path, suite_path, candidate)):
+        raise ValueError("Work contracts cannot include ignored legacy candidate or policy inputs")
     store = Path(store).resolve()
-    policy_path, suite_path = str(Path(policy_path).resolve()), str(Path(suite_path).resolve())
-    candidate = candidate if candidate in {"reference", "degraded"} else str(Path(candidate).resolve())
+    if work_contract_path is None:
+        policy_path, suite_path = str(Path(policy_path).resolve()), str(Path(suite_path).resolve())
+        candidate = candidate if candidate in {"reference", "degraded"} else str(Path(candidate).resolve())
     if retrieval_study_path is not None:
         retrieval_study_path = os.path.abspath(retrieval_study_path)
     if decision_study_path is not None:
@@ -965,17 +1097,30 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         ledger.close()
     expected_request = None
     preparation = None
-    try:
-        policy, _, _, input_bytes = _assessment_inputs(policy_path, suite_path, candidate)
-        preparation = _prepare_retrieval(retrieval_study_path, policy, store)
-        input_bytes.update(_retrieval_inputs(preparation))
-        input_bytes.update(_decision_inputs(_prepare_decision(decision_study_path)))
-        expected_request = {"manifest": {name: digest(raw) for name, raw in input_bytes.items()},
-                            "after_step": after_step, "completed_work": completed_work}
-    except (ValueError, OSError, TypeError, KeyError):
-        # The child reports invalid input through its ordinary exit/output path.
-        # Without a manifest, a prior completion cannot be attributed to this request.
-        pass
+    work_prepared = None
+    if work_contract_path is not None:
+        from . import work_runner
+        work_prepared = work_runner.prepare(work_contract_path, store)
+        declaration = work_prepared['bundle']['declaration']
+        if declaration['id'] != run_key or declaration['after_step'] != after_step:
+            raise ValueError("Work dispatch identity differs from declaration")
+        expected_request = work_prepared['request']
+        remaining = (work_runner.store.instant(declaration['expires_at']) - work_runner.store.instant(utc_now())).total_seconds()
+        work_deadline = min(dispatch_began + timeout_seconds, dispatch_began + declaration['max_seconds'], time.monotonic() + remaining)
+        timeout_seconds = work_deadline - dispatch_began
+        work_runner.alive(work_prepared, work_deadline)
+    if work_prepared is None:
+        try:
+            policy, _, _, input_bytes = _assessment_inputs(policy_path, suite_path, candidate)
+            preparation = _prepare_retrieval(retrieval_study_path, policy, store)
+            input_bytes.update(_retrieval_inputs(preparation))
+            input_bytes.update(_decision_inputs(_prepare_decision(decision_study_path)))
+            expected_request = {"manifest": {name: digest(raw) for name, raw in input_bytes.items()},
+                                "after_step": after_step, "completed_work": completed_work}
+        except (ValueError, OSError, TypeError, KeyError):
+            # Invalid legacy input remains the child's ordinary refusal path.
+            # Without a manifest, prior completion cannot be attributed here.
+            pass
     dispatch_id = uuid.uuid4().hex
     directory = store / "dispatches" / dispatch_id
     directory.mkdir(parents=True, exist_ok=False)
@@ -985,6 +1130,13 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
                  "--run-key", run_key, "--after-step", after_step, "--completed-work", completed_work]
     environment = {"PATH": os.defpath, "PYTHONPATH": str(engine), "PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1",
                    "PYTHONUTF8": "1", "EPIPHYSICS_DISPATCH_ID": dispatch_id}
+    if work_prepared is not None:
+        capsule = directory / 'work-bundle.json'
+        with capsule.open('xb') as target:
+            target.write(work_prepared['raw'])
+        arguments = [sys.executable, '-s', '-m', 'epiphysics.improvement', '--store', str(store),
+                     'work-assess', '--work-contract', str(capsule)]
+        environment['EPIPHYSICS_EXPECTED_REQUEST_SHA256'] = digest(canonical(expected_request).encode())
     if preparation is not None:
         prepared_path, prepared_hash = _write_retrieval_preparation(directory / "retrieval-input", preparation)
         arguments.extend(["--prepared-retrieval-study", str(prepared_path)])
@@ -997,7 +1149,8 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         if expected_request is not None:
             environment["EPIPHYSICS_EXPECTED_REQUEST_SHA256"] = digest(canonical(expected_request).encode())
     receipt = {"schema_version": 1, "dispatch_id": dispatch_id, "run_key": run_key,
-               "program": "epiphysics.improvement assess", "started_at": utc_now(), "pid": None,
+               "program": "epiphysics.improvement work-assess" if work_prepared else "epiphysics.improvement assess",
+               "started_at": dispatch_started_at if work_prepared else utc_now(), "pid": None,
                "timeout_seconds": timeout_seconds, "output_limit_bytes": MAX_BYTES,
                "cwd": str(engine), "arguments": arguments, "model_calls": 0, "external_spend": 0,
                "assurance": "Local process supervision; timeout enforcement requires the dispatcher to remain alive"}
@@ -1005,7 +1158,7 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
     process = None
     termination = None
     output_bytes = 0
-    started = time.monotonic()
+    started = dispatch_began if work_prepared else time.monotonic()
     try:
         process = subprocess.Popen(arguments, cwd=engine, env=environment, stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
@@ -1057,16 +1210,32 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
     if process and process.returncode == 0 and termination is None:
         try:
             result = json.loads(raw_output)
-            if not isinstance(result, dict) or result.get("run_key") != run_key or result.get("result") != "assessed":
+            expected_result = 'provisional' if work_prepared else 'assessed'
+            if not isinstance(result, dict) or result.get("run_key") != run_key or result.get("result") != expected_result:
                 raise ValueError("Unexpected worker result")
         except (ValueError, UnicodeDecodeError):
             termination = "invalid_worker_output"
     failed = termination is not None or process is None or process.returncode != 0
+    if work_prepared is not None and not failed:
+        try:
+            result = work_runner.finish(store, work_prepared, dispatch_id,
+                {**receipt, 'ended_at': utc_now(), 'returncode': process.returncode,
+                 'termination': termination, 'output_sha256': digest(raw_output)}, raw_output, work_deadline)
+        except (ValueError, OSError, TypeError, KeyError, sqlite3.Error) as error:
+            failed = True
+            termination = 'work_closure_failed: ' + type(error).__name__ + ': ' + str(error)[:400]
     recovery = "not_needed"
     if failed and process:
         try:
+            guard = (work_runner.recovery_guard(work_prepared, work_deadline, store, dispatch_id, process.pid)
+                     if work_prepared is not None else None)
             recovery = _recover_reaped_dispatch(store, run_key, dispatch_id, process.pid,
-                termination or f"Worker exited with code {process.returncode}")
+                termination or f"Worker exited with code {process.returncode}", validate=guard)
+            if work_prepared is not None:
+                try:
+                    work_runner.alive(work_prepared, work_deadline)
+                except ValueError:
+                    recovery = "recovery_publication_deadline_exceeded"
         except (ValueError, OSError) as error:
             recovery = f"recovery_refused: {error}"
     authoritative = None
@@ -1091,7 +1260,30 @@ def dispatch(store, policy_path, suite_path, candidate, run_key, *, after_step="
         assessment_status=assessment_status,
         authoritative_transition_id=authoritative["event_id"] if authoritative else None,
         receipt_directory=str(directory))
+    def observe_work_delivery():
+        if work_prepared is None:
+            return False
+        try:
+            work_runner.alive(work_prepared, work_deadline)
+            within_deadline = True
+        except ValueError:
+            within_deadline = False
+        receipt.update(deadline_status="observed_within_deadline" if within_deadline else "exceeded",
+            publication_status="observed_within_deadline" if within_deadline and not failed
+                               else "timely_delivery_not_established",
+            automatic_continuation_allowed=within_deadline and not failed,
+            continuation_status="ready_for_declared_review" if within_deadline and not failed else "requires_inspection")
+        if not within_deadline:
+            receipt.update(result="work_deadline_exceeded", delivery_status="failed",
+                           termination=receipt["termination"] or "work_publication_deadline_exceeded")
+        receipt.update(ended_at=utc_now(), elapsed_seconds=time.monotonic() - started)
+        return not within_deadline
+    observe_work_delivery()
     (directory / "finish.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    if observe_work_delivery():
+        # Preserve any durable transition. Never turn an expired delivery into
+        # ordinary success via the authoritative-result fallback or replay it.
+        (directory / "finish.json").write_text(json.dumps(receipt, indent=2) + "\n")
     return {"result": receipt["result"], "dispatch": receipt, "assessment": result,
             "authoritative_transition": authoritative}
 
@@ -1101,6 +1293,9 @@ def main(argv=None):
     parser.add_argument("--store", required=True)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("status")
+    for command in ('work', 'work-assess'):
+        work = commands.add_parser(command, help='Retained-input invented work fixtures')
+        work.add_argument('--work-contract', required=True)
     for command in ("assess", "dispatch"):
         run = commands.add_parser(command)
         run.add_argument("--policy", required=True)
@@ -1118,7 +1313,18 @@ def main(argv=None):
     args = parser.parse_args(argv)
     ledger = None
     try:
-        if args.command == "dispatch":
+        if args.command == 'work-assess':
+            from . import work_runner
+            result = work_runner.child(args.store, args.work_contract)
+        elif args.command == 'work':
+            from . import work_contracts
+            bundle, _ = work_contracts.read(args.work_contract)
+            work_contracts.validate(bundle)
+            declaration = bundle['declaration']
+            result = dispatch(args.store, None, None, None, declaration['id'], after_step=declaration['after_step'],
+                completed_work='Assess retained invented work inputs', timeout_seconds=declaration['max_seconds'],
+                work_contract_path=args.work_contract)
+        elif args.command == "dispatch":
             result = dispatch(args.store, args.policy, args.suite, args.candidate, args.run_key,
                 after_step=args.after_step, completed_work=args.completed_work, timeout_seconds=args.timeout_seconds,
                 retrieval_study_path=args.retrieval_study, decision_study_path=args.decision_study)
@@ -1129,7 +1335,7 @@ def main(argv=None):
                 retrieval_study_path=args.retrieval_study, _prepared_retrieval_path=args.prepared_retrieval_study,
                 decision_study_path=args.decision_study)
         print(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False))
-        return 2 if result.get("result") in {"failed", "assessment_completed_delivery_failed"} else 0
+        return 2 if result.get("result") in {"failed", "assessment_completed_delivery_failed", "work_deadline_exceeded"} else 0
     except (ValueError, OSError, TypeError, KeyError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 2

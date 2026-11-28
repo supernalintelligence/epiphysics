@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StoryGraph, TimelineEvent, StoryElement } from '@/types/story-graph';
 import { Clock, Users, MapPin, Zap, AlertCircle } from 'lucide-react';
+import { formatDate } from '@/lib/utils/dates';
 
 interface StoryGraphTimelineProps {
   storyGraph: StoryGraph;
@@ -72,8 +73,7 @@ const StoryGraphTimeline: React.FC<StoryGraphTimelineProps> = ({
       return timestamp.match(/Era \d+/i)![0];
     }
     if (timestamp.match(/\d{4}-\d{2}-\d{2}/)) {
-      const date = new Date(timestamp);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      return formatDate(timestamp, 'month');
     }
     return 'Unknown Period';
   };

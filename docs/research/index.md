@@ -20,6 +20,8 @@ tts:
 
 > **Status: Under active development.** Research notes and validation programs. Not peer-reviewed.
 
+[Explore the research map](/research-map) to find a claim, read its stated basis, and follow its citations, qualifications, and proposed next tests. The map is a curated view of the record; a connection is not a validation score.
+
 ## Current Focus
 
 ### Grounding & Validation
@@ -74,7 +76,7 @@ Key documents:
 
 ## Brainstorms & Handoffs
 
-Exploratory thinking preserved in [brainstorms/](./brainstorms/README.md):
+Exploratory thinking is also preserved in brainstorms and handoff notes:
 - Handoff documents from intensive sessions
 - Fan-out ideas and wild hypotheses  
 - Tangents removed from main docs

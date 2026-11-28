@@ -1,0 +1,909 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "da4232253b34ab6997019b6a7485d11d116bc82a",
+  "catalogHash": "12649c330171d28ac13c6ba9eb039d650bacee88fdd56d51e104202e7cddf113",
+  "nodes": [
+    {
+      "id": "beir",
+      "kind": "source",
+      "title": "BEIR: A Heterogenous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+      "href": "https://arxiv.org/abs/2104.08663v4",
+      "date": "2021-10-21",
+      "dateType": "arxiv_revision",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Historical systems; retrieval metrics do not establish answer or forecast correctness."
+      ]
+    },
+    {
+      "id": "claim_concentration",
+      "kind": "claim",
+      "title": "Capability can reinforce control",
+      "statement": "Capability gains may increase resources and access rights, which may support further capability growth.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_decision_information_result",
+      "kind": "claim",
+      "title": "Complete records do not establish the truth of verification claims",
+      "statement": "The retained diagnosis reconciled 96 saved attempts without rerunning a candidate. Four of 22 eligible operative exactly bound claims disagreed with stipulated artifact validity across 22 cases; three of 21 positive claims accompanied invalid artifacts. Each compact method lost two observable opportunities through bounded retention; lossless controls recovered those opportunities but still accepted the three invalid deliveries. These are descriptive synthetic results, not real verifier error rates or independent causal proof.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_decision_late_rights",
+      "kind": "claim",
+      "title": "Identical available evidence can conceal different actual rights",
+      "statement": "The constructed baseline and late-revocation cases supplied identical candidate bytes and produced the same release proposal, although authority differed in the stipulated world. Each arm therefore retained one unauthorized proposal, which the common world-state guard refused. No duplicate or unauthorized effects were observed, but this guard conformance does not establish observer safety or a realizable distributed authorization service.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_decision_retention_result",
+      "kind": "claim",
+      "title": "Equal development totals can conceal opposite retention losses",
+      "statement": "In one owned twelve-case simulation, both 2048-byte views completed four of five observable opportunities and four of seven world opportunities, but missed opposite storage-pressure cases. Both lossless controls completed five of five observable opportunities. This is an exposed development comparison of full retention/view systems, not graph superiority, broad predictive capability or live exchange evidence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_exchange",
+      "kind": "claim",
+      "title": "Exchange must separate delivery and settlement",
+      "statement": "Offer order, latency, service quality, payment and reputation should be represented and evaluated separately.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_exchange_quality_gap",
+      "kind": "claim",
+      "title": "Authority checks leave delivery-quality errors visible",
+      "statement": "Each of four fixed arms produced 3 accepted simulated releases for artifacts later stipulated invalid, despite 0 unauthorized and 0 duplicate effects. Positive observed verification and actual artifact quality were separate facts in these deliberately constructed cases. This records a limit of the declared guard and evidence contract, not an estimate of real verifier error prevalence.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_feedback",
+      "kind": "claim",
+      "title": "Actions change prediction targets",
+      "statement": "Using forecasts to select actions can alter the distribution of subsequent outcomes.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_first_dated_delivery",
+      "kind": "claim",
+      "title": "One first inventory passed a separately implemented check",
+      "statement": "The first registered inventory of one committed theory document accounted for 20 supported links and 28 exclusions. A separate checker and non-producer review passed its original bytes; the producer claim agreed in one eligible delivery. This establishes one artifact’s scoped conformance, not general reliability, rendered navigation, predictive advantage or independent time assurance.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_fixed_clause_probe_result",
+      "kind": "claim",
+      "title": "Separate clauses recover support under a larger selection budget",
+      "statement": "Two fixed local repetitions returned identical ordered results. Discovery support was complete at five passages and commitment support at one. The union of both top-five lists covers the original complete bundles using ten distinct passages rather than five. A post-execution transport repair preserved the unchanged measurement core without new retrieval. The actual controller selected one offline control/exchange decision-pilot preparation. This visible development diagnostic is not an equal-budget quality improvement, adoption result, predictive advantage or business advantage.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_fresh_decision_retention",
+      "kind": "claim",
+      "title": "Fresh scripted tradeoffs remain paired rather than aggregate gains",
+      "statement": "One post-freeze 24-case scripted cohort produced 96 retained attempts. Both compact methods completed 7/9 observable and 7/11 world opportunities, with two successful releases unique to each method and net difference 0. Both lossless controls reached 9/9 observable and 9/11 world opportunities. This is a descriptive result for hand-designed mechanisms, not representative performance or superiority of graph notation.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "claim_graph_task",
+      "kind": "claim",
+      "title": "Graph usefulness depends on task and budget",
+      "statement": "Graph retrieval should be compared with strong text retrieval at matched context and total construction costs.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_historical_state_retrieval",
+      "kind": "claim",
+      "title": "Historical-state retrieval needs its own provenance assessment",
+      "statement": "Memento provides datetime negotiation and TimeMaps for prior resource states. In this project, an archive response would still require retained bytes, collection timing and separately assessed provenance before use as historical evidence; retrieval alone is not a complete knowledge snapshot.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_interchange",
+      "kind": "claim",
+      "title": "Standards describe structure and provenance",
+      "statement": "RDF, PROV-O, SHACL and nanopublications offer complementary interchange, provenance, validation and assertion packaging.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_meta",
+      "kind": "claim",
+      "title": "Operational meta-representation",
+      "statement": "A meta-representation records representation families, permitted transformations, preservation obligations and comparative evidence.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_newer",
+      "kind": "claim",
+      "title": "Newer information is not automatically true",
+      "statement": "Preserve disagreement and corrections separately instead of making recency the scientific truth policy.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_portability",
+      "kind": "claim",
+      "title": "Portability can distribute control",
+      "statement": "Substitutable providers and portable representations may reduce dependence and concentrated veto rights.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_support_bundle_definition",
+      "kind": "claim",
+      "title": "A sufficient alternative differs from a required conjunction",
+      "statement": "C4 defines support as all exact spans in at least one declared sufficient bundle. This gives each supported question one vote, accepts complete alternatives, and prevents partial alternatives from being combined into an undeclared answer. Semantic sufficiency still requires review; exact byte coverage does not prove answer correctness. The versioned definition is a measurement contract, not an empirical finding.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_temporal",
+      "kind": "claim",
+      "title": "Two time axes are necessary",
+      "statement": "World-time claims and collection-time eligibility must remain separate to prevent retrospective knowledge leakage.",
+      "status": "definition",
+      "basis": "inferred"
+    },
+    {
+      "id": "claim_transparency_scope",
+      "kind": "claim",
+      "title": "Receipt inclusion, statement accuracy and issuance order are separate",
+      "statement": "RFC 9943 distinguishes signed statements and registration receipts from factual accuracy. A relying party cannot assume registration sequence matches issuance order unless the service policy promises it, and selective issuer submission remains possible.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_witness",
+      "kind": "claim",
+      "title": "Existence proofs do not establish truth",
+      "statement": "A verified timestamp can support prior existence of committed bytes without proving their truth or availability to a model.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "doc_dated_delivery_protocol",
+      "kind": "document",
+      "title": "Fixed first-delivery and timing protocol",
+      "href": "/experiments/dated-artifact-delivery",
+      "contentHash": "0efe8bee9be819e47da68dd53045f2a67fa7ae2f42985fec37ecf05a93dc0451",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_decision_information_result",
+      "kind": "document",
+      "title": "Verification claims, retention losses and dated evidence",
+      "href": "/experiments/results/2026-11-26-decision-information-limits",
+      "contentHash": "defa61e64c0a73400f47b5b6e5ff29370e15a31c4ccb0a74e30cd0f7fb7f955d",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_decision_pilot_protocol",
+      "kind": "document",
+      "title": "Owned release-or-hold comparison protocol",
+      "href": "/experiments/control-exchange-decision-pilot",
+      "contentHash": "2fdd7fc31466b722fe639aaae77284dd1f5f71d67d5dd73662d5fe9b64e1d62c",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_decision_pilot_result",
+      "kind": "document",
+      "title": "Two compact records with opposite missed decisions",
+      "href": "/experiments/results/2026-11-26-decision-pilot",
+      "contentHash": "13242b1083a7ae94fb786f5af88137739b5e3f01ece87c3e5c90748f406f86dd",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_first_dated_delivery_result",
+      "kind": "document",
+      "title": "First registered maintenance delivery and independent check",
+      "href": "/experiments/results/2026-11-26-first-dated-delivery",
+      "contentHash": "192a4fdfee70024a083488cb6af9ffb061c31de4bdea79347f91633a159ee641",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_fixed_clause_probe_protocol",
+      "kind": "document",
+      "title": "Fixed two-clause development diagnostic",
+      "href": "/experiments/retrieval-fixed-clause-probe",
+      "contentHash": "08d57abf0af5631d3e5595aebf9614601b0522e01cd18076d8b1ca6ce0f41c84",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_fixed_clause_probe_run",
+      "kind": "document",
+      "title": "Fixed clause recovery with a larger retrieval budget",
+      "href": "/experiments/results/2026-11-26-retrieval-probe",
+      "contentHash": "c36b1091a7bee7dba41c9ecc98bf36412a39f14453d6432a2418c693db60a968",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_fresh_decision_protocol",
+      "kind": "document",
+      "title": "Fixed fresh decision comparison protocol",
+      "href": "/experiments/control-exchange-fresh-comparison",
+      "contentHash": "84acc2522e0b4e56b9708c57cced74763e59c3767f4dc684c6a410fbc2e21725",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_fresh_decision_result",
+      "kind": "document",
+      "title": "Equal fresh totals and invalid-delivery effects",
+      "href": "/experiments/results/2026-11-26-fresh-decision-comparison",
+      "contentHash": "21c9c9692913ca7e1af3b107d9b74f7d702fddccf3bca8b70d80b49f6151ca6b",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_protocol",
+      "kind": "document",
+      "title": "Prospective observatory protocol",
+      "href": "/experiments/prospective-observatory",
+      "contentHash": "1f7805302fea4dfb8c8822913c8f018f2c044712362b6d11f7b5a224d19b1f43",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_research",
+      "kind": "document",
+      "title": "Recursive research program",
+      "href": "/research/recursive-research-program",
+      "contentHash": "f72ba5dec57c7862fc49bbddcbddf128297fed5218c7fc009beab66d8426c81f",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "doc_retrieval_coverage_protocol",
+      "kind": "document",
+      "title": "Fresh complete-support and paired-question protocol",
+      "href": "/experiments/retrieval-coverage",
+      "contentHash": "73c25155e2e38584f908fae68a8de8ce9cc79200887ebb0c6ae90418eaae8906",
+      "commit": "da4232253b34ab6997019b6a7485d11d116bc82a"
+    },
+    {
+      "id": "erc8004",
+      "kind": "source",
+      "title": "ERC-8004: Trustless Agents",
+      "href": "https://eips.ethereum.org/EIPS/eip-8004",
+      "date": "2025-08-13",
+      "dateType": "proposal_creation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Draft as reviewed; registration and feedback do not certify delivered quality or independence."
+      ]
+    },
+    {
+      "id": "exp_complete_support",
+      "kind": "experiment",
+      "title": "Measure complete evidence on fresh supported and unsupported pairs",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_control_exchange_decisions",
+      "kind": "experiment",
+      "title": "Compare dated views for authorization, delivery and simulated settlement",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_dated_evidence_quality",
+      "kind": "experiment",
+      "title": "Prepare a future artifact delivery with fixed quality criteria and dated evidence",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_decision_information_limits",
+      "kind": "experiment",
+      "title": "Diagnose retained information loss, late evidence and verification-quality gaps",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_exchange",
+      "kind": "experiment",
+      "title": "E6: Control and exchange mechanisms",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_fidelity",
+      "kind": "experiment",
+      "title": "E1: Provenance and transformation fidelity",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_fixed_clause_probe",
+      "kind": "experiment",
+      "title": "Check separate clause support under an explicit larger selection budget",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_forecast",
+      "kind": "experiment",
+      "title": "E3: Prospective representation tournament",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_fresh_decision_comparison",
+      "kind": "experiment",
+      "title": "Compare frozen decision views on one new exploratory cohort",
+      "status": "proposed"
+    },
+    {
+      "id": "exp_retrieval",
+      "kind": "experiment",
+      "title": "E2: Retrieval and synthesis ablation",
+      "status": "proposed"
+    },
+    {
+      "id": "graphrag",
+      "kind": "source",
+      "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+      "href": "https://arxiv.org/abs/2404.16130v2",
+      "date": "2025-02-19",
+      "dateType": "arxiv_revision",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Two approximately million-token corpora; not universal accuracy or temporal validation."
+      ]
+    },
+    {
+      "id": "magentic_marketplace",
+      "kind": "source",
+      "title": "Magentic Marketplace: An Open-Source Environment for Studying Agentic Markets",
+      "href": "https://www.microsoft.com/en-us/research/publication/magentic-marketplace-an-open-source-environment-for-studying-agentic-markets/",
+      "date": "2025-10",
+      "dateType": "technical_report_month",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Author-reported simulated results do not establish real-market outcomes."
+      ]
+    },
+    {
+      "id": "nanopublications",
+      "kind": "source",
+      "title": "Nanopublications: A Growing Resource of Provenance-Centric Scientific Linked Data",
+      "href": "https://arxiv.org/abs/1809.06532v1",
+      "date": "2018-09-18",
+      "dateType": "arxiv_first_submission",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Packaging and attribution do not validate assertions or resolve disagreements."
+      ]
+    },
+    {
+      "id": "opentimestamps",
+      "kind": "source",
+      "title": "OpenTimestamps",
+      "href": "https://opentimestamps.org/",
+      "date": null,
+      "dateType": "undated_live_documentation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Does not establish truth, completeness, original publication time, or model information access."
+      ]
+    },
+    {
+      "id": "performative_prediction",
+      "kind": "source",
+      "title": "Performative Prediction",
+      "href": "https://proceedings.mlr.press/v119/perdomo20a.html",
+      "date": "2020",
+      "dateType": "conference_proceedings_year",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Convergence and stability results depend on formal assumptions."
+      ]
+    },
+    {
+      "id": "prov_o",
+      "kind": "source",
+      "title": "PROV-O: The PROV Ontology",
+      "href": "https://www.w3.org/TR/2013/REC-prov-o-20130430/",
+      "date": "2013-04-30",
+      "dateType": "w3c_recommendation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Provenance does not certify truth, source independence, or uncertainty calibration."
+      ]
+    },
+    {
+      "id": "rag_vs_graphrag",
+      "kind": "source",
+      "title": "RAG vs. GraphRAG: A Systematic Evaluation and Key Insights",
+      "href": "https://arxiv.org/html/2502.11371v4",
+      "date": "2026-11-07",
+      "dateType": "arxiv_revision",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Token matching narrows some gains; model judges show position bias."
+      ]
+    },
+    {
+      "id": "rdf11",
+      "kind": "source",
+      "title": "RDF 1.1 Concepts and Abstract Syntax",
+      "href": "https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/",
+      "date": "2014-02-25",
+      "dateType": "w3c_recommendation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Atemporal data model; application-specific temporal semantics remain necessary."
+      ]
+    },
+    {
+      "id": "rep_control",
+      "kind": "representation",
+      "title": "Control and exchange view",
+      "status": "proposed"
+    },
+    {
+      "id": "rfc3161_timestamp",
+      "kind": "source",
+      "title": "RFC 3161: Time-Stamp Protocol",
+      "href": "https://www.rfc-editor.org/rfc/rfc3161.html",
+      "date": "2001-08",
+      "dateType": "rfc_publication_month",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Requires appropriate TSA trust, policy and token validation; it does not inspect the source meaning or establish model knowledge."
+      ]
+    },
+    {
+      "id": "rfc7089_memento",
+      "kind": "source",
+      "title": "RFC 7089: HTTP Framework for Time-Based Access to Resource States — Memento",
+      "href": "https://www.rfc-editor.org/rfc/rfc7089.html",
+      "date": "2013-12",
+      "dateType": "rfc_publication_month",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Informational retrieval protocol; locating an archived state does not by itself establish complete historical collection or model access."
+      ]
+    },
+    {
+      "id": "rfc9943_scitt",
+      "kind": "source",
+      "title": "RFC 9943: An Architecture for Trustworthy and Transparent Digital Supply Chains",
+      "href": "https://www.rfc-editor.org/rfc/rfc9943.html",
+      "date": "2026-06",
+      "dateType": "rfc_publication_month",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Registration does not establish statement accuracy; sequence order need not equal issuance order; issuers can selectively submit statements. No SCITT integration has been performed."
+      ]
+    },
+    {
+      "id": "shacl",
+      "kind": "source",
+      "title": "Shapes Constraint Language",
+      "href": "https://www.w3.org/TR/2017/REC-shacl-20170720/",
+      "date": "2017-07-20",
+      "dateType": "w3c_recommendation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Conformance is not factual correctness or causal identification."
+      ]
+    },
+    {
+      "id": "transform_encode",
+      "kind": "transformation",
+      "title": "Encode text into graph with provenance",
+      "status": "proposed"
+    },
+    {
+      "id": "transform_revise",
+      "kind": "transformation",
+      "title": "Revise representation construction method",
+      "status": "proposed"
+    },
+    {
+      "id": "x402",
+      "kind": "source",
+      "title": "x402 introduction",
+      "href": "https://github.com/x402-foundation/x402/blob/main/docs/introduction.md",
+      "date": null,
+      "dateType": "undated_live_documentation",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Mutable documentation; payment success is not proof of useful delivery."
+      ]
+    },
+    {
+      "id": "zep",
+      "kind": "source",
+      "title": "Zep: A Temporal Knowledge Graph Architecture for Agent Memory",
+      "href": "https://arxiv.org/html/2501.13956v1",
+      "date": "2025-01-20",
+      "dateType": "arxiv_first_submission",
+      "reviewedOn": "2026-11-25",
+      "bibliographicOnly": true,
+      "limitations": [
+        "Vendor-authored evaluation; newer-information invalidation is unsuitable as an automatic scientific truth policy."
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "claim_concentration",
+      "target": "claim_portability",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_concentration",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_concentration",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "doc_decision_information_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_dated_evidence_quality",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_decision_information_result",
+      "target": "exp_decision_information_limits",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_late_rights",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "doc_decision_pilot_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_decision_retention_result",
+      "target": "exp_fresh_decision_comparison",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "erc8004",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "magentic_marketplace",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "rep_control",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_exchange",
+      "target": "x402",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_exchange_quality_gap",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_feedback",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_feedback",
+      "target": "performative_prediction",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "doc_dated_delivery_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "doc_first_dated_delivery_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "exp_dated_evidence_quality",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "doc_fixed_clause_probe_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "exp_control_exchange_decisions",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_fixed_clause_probe_result",
+      "target": "exp_fixed_clause_probe",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "doc_fresh_decision_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_decision_information_limits",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_fresh_decision_retention",
+      "target": "exp_fresh_decision_comparison",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "beir",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "exp_forecast",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "exp_retrieval",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "graphrag",
+      "type": "cites"
+    },
+    {
+      "source": "claim_graph_task",
+      "target": "rag_vs_graphrag",
+      "type": "cites"
+    },
+    {
+      "source": "claim_historical_state_retrieval",
+      "target": "rfc7089_memento",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "nanopublications",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "prov_o",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "rdf11",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "shacl",
+      "type": "cites"
+    },
+    {
+      "source": "claim_interchange",
+      "target": "transform_encode",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_meta",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_meta",
+      "target": "transform_revise",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_newer",
+      "target": "doc_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_newer",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_newer",
+      "target": "zep",
+      "type": "cites"
+    },
+    {
+      "source": "claim_portability",
+      "target": "claim_concentration",
+      "type": "challenges"
+    },
+    {
+      "source": "claim_portability",
+      "target": "doc_research",
+      "type": "cites"
+    },
+    {
+      "source": "claim_portability",
+      "target": "exp_exchange",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_support_bundle_definition",
+      "target": "doc_retrieval_coverage_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_support_bundle_definition",
+      "target": "exp_complete_support",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_temporal",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_temporal",
+      "target": "zep",
+      "type": "cites"
+    },
+    {
+      "source": "claim_transparency_scope",
+      "target": "rfc9943_scitt",
+      "type": "cites"
+    },
+    {
+      "source": "claim_witness",
+      "target": "exp_fidelity",
+      "type": "motivates"
+    },
+    {
+      "source": "claim_witness",
+      "target": "opentimestamps",
+      "type": "cites"
+    },
+    {
+      "source": "claim_witness",
+      "target": "rfc3161_timestamp",
+      "type": "cites"
+    },
+    {
+      "source": "exp_complete_support",
+      "target": "doc_retrieval_coverage_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_control_exchange_decisions",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_dated_evidence_quality",
+      "target": "doc_dated_delivery_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_dated_evidence_quality",
+      "target": "doc_decision_information_result",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_decision_information_limits",
+      "target": "doc_fresh_decision_result",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_exchange",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_exchange",
+      "target": "rep_control",
+      "type": "compares"
+    },
+    {
+      "source": "exp_fixed_clause_probe",
+      "target": "doc_fixed_clause_probe_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_forecast",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_decision_pilot_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_fresh_decision_comparison",
+      "target": "doc_fresh_decision_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_retrieval",
+      "target": "exp_fidelity",
+      "type": "depends_on"
+    }
+  ],
+  "limits": [
+    "This is a reviewed public selection, not the complete research catalog. A citation does not certify that a claim is true.",
+    "External sources are bibliographic references; article bytes were not archived by this map. Publication and review dates are not collection receipts.",
+    "Claim status and basis are curator attributions. Observed local implementation or synthetic results do not establish predictive advantage or independent execution assurance.",
+    "Proposed experiment and representation nodes describe catalog concepts, not the completion status of associated runs. Challenges may describe qualifications or competing mechanisms.",
+    "The source commit and document digests identify retained local bytes. They are not independent timestamps or evidence of historical availability."
+  ],
+  "payloadHash": "9bd4a4c5c616cfa6a8b2074a8097bdb2a961b7d6ba4313412e22549a1f516a93"
+}

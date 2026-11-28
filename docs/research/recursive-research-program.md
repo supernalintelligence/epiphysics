@@ -22,6 +22,8 @@ The first implementation is a local evidence and forecast ledger. It can preserv
 
 [See the five-step overview](/overview) or [inspect the observatory example](/observatory). The example is synthetic and labeled accordingly; its illustrative numbers are not live research results.
 
+The [public research map](/research-map) makes a curated set of claims and their relationships inspectable. Search a claim, read its status and basis, then follow directed citations, qualifications, and proposed next tests. Bibliographic sources remain distinct from measured results; the diagram uses the same relationships as the text list.
+
 ## Start with the description, not a fixed list of things
 
 Consider an AI service that depends on a model provider, a data source, and a distribution platform. One description treats the service as a single company. Another treats it as a network of dependencies. A third follows the people and decisions that control access. Different descriptions may help predict an outage, a product release, or the cost of switching providers.

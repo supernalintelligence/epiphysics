@@ -772,6 +772,146 @@
       "kind": "experiment",
       "title": "Prepare a future artifact delivery with fixed quality criteria and dated evidence",
       "status": "proposed"
+    },
+    {
+      "id": "doc_dated_delivery_protocol",
+      "kind": "document",
+      "title": "Fixed first-delivery and timing protocol",
+      "repo_path": "docs/experiments/dated-artifact-delivery.md"
+    },
+    {
+      "id": "doc_dated_delivery_preparation_result",
+      "kind": "document",
+      "title": "Accepted dated-delivery preparation",
+      "repo_path": "docs/experiments/results/2026-11-26-dated-delivery-preparation.md"
+    },
+    {
+      "id": "doc_dated_delivery_preparation_run",
+      "kind": "document",
+      "title": "Preparation validation, review and acceptance audit",
+      "repo_path": "docs/planning/runs/2026-11-26-dated-delivery-preparation.md"
+    },
+    {
+      "id": "claim_dated_delivery_preparation",
+      "kind": "claim",
+      "title": "Checked preparation advances to a real maintenance-task registration",
+      "statement": "One accepted preparation binds the reviewed four-phase implementation and fixed criteria to C9 evidence. An independent 48-check audit validates its local record and unchanged inputs. The successor is task registration; no task, delivery, quality or predictive benefit is established at this acceptance.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "rfc3161_timestamp",
+      "kind": "source",
+      "title": "RFC 3161: Time-Stamp Protocol",
+      "url": "https://www.rfc-editor.org/rfc/rfc3161.html",
+      "date": "2001-08",
+      "date_type": "rfc_publication_month",
+      "reviewed_on": "2026-11-25",
+      "bibliographic_only": true,
+      "claim_supported": "Defines hash-imprint requests and signed time-stamp tokens from a time-stamping authority as evidence of prior existence.",
+      "limitation": "Requires appropriate TSA trust, policy and token validation; it does not inspect the source meaning or establish model knowledge."
+    },
+    {
+      "id": "rfc7089_memento",
+      "kind": "source",
+      "title": "RFC 7089: HTTP Framework for Time-Based Access to Resource States — Memento",
+      "url": "https://www.rfc-editor.org/rfc/rfc7089.html",
+      "date": "2013-12",
+      "date_type": "rfc_publication_month",
+      "reviewed_on": "2026-11-25",
+      "bibliographic_only": true,
+      "claim_supported": "Defines datetime negotiation and TimeMaps for locating representations of prior resource states.",
+      "limitation": "Informational retrieval protocol; locating an archived state does not by itself establish complete historical collection or model access."
+    },
+    {
+      "id": "rfc9943_scitt",
+      "kind": "source",
+      "title": "RFC 9943: An Architecture for Trustworthy and Transparent Digital Supply Chains",
+      "url": "https://www.rfc-editor.org/rfc/rfc9943.html",
+      "date": "2026-06",
+      "date_type": "rfc_publication_month",
+      "reviewed_on": "2026-11-25",
+      "bibliographic_only": true,
+      "claim_supported": "Defines signed-statement transparency with registration receipts, auditable registration policies and trust anchors.",
+      "limitation": "Registration does not establish statement accuracy; sequence order need not equal issuance order; issuers can selectively submit statements. No SCITT integration has been performed."
+    },
+    {
+      "id": "claim_transparency_scope",
+      "kind": "claim",
+      "title": "Receipt inclusion, statement accuracy and issuance order are separate",
+      "statement": "RFC 9943 distinguishes signed statements and registration receipts from factual accuracy. A relying party cannot assume registration sequence matches issuance order unless the service policy promises it, and selective issuer submission remains possible.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_historical_state_retrieval",
+      "kind": "claim",
+      "title": "Historical-state retrieval needs its own provenance assessment",
+      "statement": "Memento provides datetime negotiation and TimeMaps for prior resource states. In this project, an archive response would still require retained bytes, collection timing and separately assessed provenance before use as historical evidence; retrieval alone is not a complete knowledge snapshot.",
+      "status": "hypothesis",
+      "basis": "inferred"
+    },
+    {
+      "id": "doc_first_dated_delivery_result",
+      "kind": "document",
+      "title": "First registered maintenance delivery and independent check",
+      "repo_path": "docs/experiments/results/2026-11-26-first-dated-delivery.md"
+    },
+    {
+      "id": "claim_first_dated_delivery",
+      "kind": "claim",
+      "title": "One first inventory passed a separately implemented check",
+      "statement": "The first registered inventory of one committed theory document accounted for 20 supported links and 28 exclusions. A separate checker and non-producer review passed its original bytes; the producer claim agreed in one eligible delivery. This establishes one artifact’s scoped conformance, not general reliability, rendered navigation, predictive advantage or independent time assurance.",
+      "status": "reported_result",
+      "basis": "observed"
+    },
+    {
+      "id": "doc_knowledge_snapshots",
+      "kind": "document",
+      "title": "Draft essay on knowledge snapshots and witness limits",
+      "repo_path": "docs/research/knowledge-snapshots.md"
+    },
+    {
+      "id": "doc_time_witness_research_run",
+      "kind": "document",
+      "title": "Time-witness research and a bounded verifier proposal",
+      "repo_path": "docs/planning/runs/2026-11-27-time-witness-research.md"
+    },
+    {
+      "id": "opentimestamps_client",
+      "kind": "source",
+      "title": "OpenTimestamps Python client documentation",
+      "url": "https://github.com/opentimestamps/opentimestamps-client",
+      "date": null,
+      "date_type": "mutable_main_revision_unverified",
+      "reviewed_on": "2026-11-27",
+      "bibliographic_only": true,
+      "claim_supported": "The client documentation distinguishes pending and complete proofs, describes confirmation taking hours, and requires Bitcoin Core for local verification.",
+      "limitation": "Mutable client documentation was read without retaining remote-response bytes or an immutable revision. These are reported client requirements, not measured latency, a service guarantee, or evidence that this project verified a proof."
+    },
+    {
+      "id": "claim_timestamp_accuracy_interval",
+      "kind": "claim",
+      "title": "RFC 3161 time has an explicit accuracy boundary",
+      "statement": "RFC 3161 section 2.4.2 defines accuracy as an interval around genTime. When the whole accuracy field is absent, accuracy may be available through the authority's policy; absence is not an assertion of zero uncertainty. Trust and token validation remain separate requirements.",
+      "status": "definition",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_opentimestamps_pending",
+      "kind": "claim",
+      "title": "Pending OpenTimestamps proofs require a later completion step",
+      "statement": "The OpenTimestamps Python client documentation distinguishes pending from complete proofs, provides an upgrade operation, describes Bitcoin confirmation taking hours, and requires Bitcoin Core for local verification. Those reported client constraints are not measured service performance or a completed witness for this project.",
+      "status": "reported_result",
+      "basis": "reported"
+    },
+    {
+      "id": "claim_timestamp_cutoff_proposal",
+      "kind": "claim",
+      "title": "A conservative cutoff rule needs a separate trust policy",
+      "statement": "The reviewed research proposes an offline verifier over exact retained bytes and a saved proof: under an accepted RFC 3161 authority policy and validated token with known accuracy, genTime plus accuracy at or before the cutoff is a sufficient pre-existence bound. A later upper bound leaves earlier existence unestablished, rather than proving late creation. This is an unimplemented proposal; no backend, library or provider is selected, and the current pilot's external witness remains null.",
+      "status": "hypothesis",
+      "basis": "inferred"
     }
   ],
   "edges": [
@@ -1628,6 +1768,101 @@
     {
       "source": "exp_dated_evidence_quality",
       "target": "doc_decision_information_result",
+      "type": "depends_on"
+    },
+    {
+      "source": "exp_dated_evidence_quality",
+      "target": "doc_dated_delivery_protocol",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_dated_delivery_preparation",
+      "target": "doc_dated_delivery_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_dated_delivery_preparation",
+      "target": "doc_dated_delivery_preparation_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_dated_delivery_preparation",
+      "target": "doc_dated_delivery_preparation_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_dated_delivery_preparation",
+      "target": "exp_dated_evidence_quality",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_witness",
+      "target": "rfc3161_timestamp",
+      "type": "cites"
+    },
+    {
+      "source": "claim_transparency_scope",
+      "target": "rfc9943_scitt",
+      "type": "cites"
+    },
+    {
+      "source": "claim_historical_state_retrieval",
+      "target": "rfc7089_memento",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "doc_first_dated_delivery_result",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "doc_dated_delivery_protocol",
+      "type": "cites"
+    },
+    {
+      "source": "claim_first_dated_delivery",
+      "target": "exp_dated_evidence_quality",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_timestamp_accuracy_interval",
+      "target": "rfc3161_timestamp",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_accuracy_interval",
+      "target": "doc_knowledge_snapshots",
+      "type": "cites"
+    },
+    {
+      "source": "claim_opentimestamps_pending",
+      "target": "opentimestamps_client",
+      "type": "cites"
+    },
+    {
+      "source": "claim_opentimestamps_pending",
+      "target": "doc_time_witness_research_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "doc_knowledge_snapshots",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "doc_time_witness_research_run",
+      "type": "cites"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "claim_timestamp_accuracy_interval",
+      "type": "depends_on"
+    },
+    {
+      "source": "claim_timestamp_cutoff_proposal",
+      "target": "claim_witness",
       "type": "depends_on"
     }
   ]
